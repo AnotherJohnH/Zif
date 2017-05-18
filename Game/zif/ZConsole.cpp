@@ -50,8 +50,8 @@ ZConsole::ZConsole(PLT::Device* device_)
       input_fp = fopen("fast.in", "r");
    }
 
-   print_fp = NULL;
-   snoop_fp = NULL;
+   print_fp = nullptr;
+   snoop_fp = nullptr;
 }
 
 ZConsole::~ZConsole()
@@ -78,14 +78,14 @@ void ZConsole::print(uint16_t zscii)
       newline_count = 0;
    }
 
-   if (print_fp == NULL) print_fp = fopen("print.log", "w");
+   if (print_fp == nullptr) print_fp = fopen("print.log", "w");
    assert(print_fp);
    fputc(zscii, print_fp);
 }
 
 void ZConsole::snoop(uint16_t zscii)
 {
-   if (snoop_fp == NULL) snoop_fp = fopen("snoop.in", "w");
+   if (snoop_fp == nullptr) snoop_fp = fopen("snoop.in", "w");
    assert(snoop_fp);
    fputc(zscii, snoop_fp);
 }
@@ -93,30 +93,43 @@ void ZConsole::snoop(uint16_t zscii)
 bool ZConsole::read(uint16_t& zscii, unsigned timeout)
 {
    // TODO timeout
-   if ((input_fp == NULL) || feof(input_fp))
+   if ((input_fp == nullptr) || feof(input_fp))
    {
-      input_fp = NULL;
-      int ch = getch();
-      if (ch < 0)
+      input_fp = nullptr;
+
+      int ch;
+
+      while(true)
       {
-         exit(0);
+         int ch = getch();
+         if (ch < 0)
+         {
+            exit(0);
+         }
+         else if (ch == 0x7F)
+         {
+            ch = '\b';
+         }
+         else if (ch < 0x7F)
+         {
+            break;
+         }
       }
-      if (ch == 0x7F) ch = '\b';
-      zscii = ch;
    }
    else
    {
-      zscii = fgetc(input_fp);
+      ch = fgetc(input_fp);
    }
+   zscii = ch;
    return true;
 }
 
 void tprintf(const char* format, ...)
 {
-   static FILE* fp = NULL;
+   static FILE* fp = nullptr;
    va_list  ap;
 
-   if (fp == NULL)
+   if (fp == nullptr)
    {
       fp = fopen("zif.log", "w");
    }
