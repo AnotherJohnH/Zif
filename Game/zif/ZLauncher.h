@@ -333,6 +333,8 @@ public:
          }
       }
 
+      clear();
+
       return 0;
    }
 };
