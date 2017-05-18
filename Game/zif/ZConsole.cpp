@@ -92,16 +92,16 @@ void ZConsole::snoop(uint16_t zscii)
 
 bool ZConsole::read(uint16_t& zscii, unsigned timeout)
 {
+   int ch;
+
    // TODO timeout
    if ((input_fp == nullptr) || feof(input_fp))
    {
       input_fp = nullptr;
 
-      int ch;
-
       while(true)
       {
-         int ch = getch();
+         ch = getch();
          if (ch < 0)
          {
             exit(0);
@@ -120,7 +120,9 @@ bool ZConsole::read(uint16_t& zscii, unsigned timeout)
    {
       ch = fgetc(input_fp);
    }
+
    zscii = ch;
+
    return true;
 }
 

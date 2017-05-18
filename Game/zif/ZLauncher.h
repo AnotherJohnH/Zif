@@ -313,6 +313,7 @@ public:
          case '\n':
          case PLT::SELECT:
          case PLT::RIGHT:
+         case PLT::PAGE_DOWN:
             if (selection_is_dir)
             {
                openDir();
@@ -323,6 +324,7 @@ public:
             }
             break;
 
+         case PLT::PAGE_UP:
          case PLT::LEFT:
             closeDir();
             break;
