@@ -323,6 +323,8 @@ public:
         printf("Copyright (c) %s %s\n", copyright_year, author);
         printf("\n");
         printf("%s", license);
+        printf("\n");
+        printf("\n");
 
         exit(0);
     }
