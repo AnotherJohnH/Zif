@@ -221,6 +221,14 @@ private:
 
    void action(const char* cmd)
    {
+#ifdef PROJ_TARGET_Kindle3
+      const uint32_t dark  = 0x000000;
+      const uint32_t light = 0xFFFFFF;
+#else
+      const uint32_t dark  = 0x382800;
+      const uint32_t light = 0xF0F0E0;
+#endif
+
       if (cmd[0] == '!')
       {
          ++cmd;
@@ -235,13 +243,13 @@ private:
          }
          else if (strcmp(cmd,  "Inverse") == 0)
          {
-            term.ioctl(PLT::Device::IOCTL_TERM_PALETTE, 0, 0xFFFFFF);
-            term.ioctl(PLT::Device::IOCTL_TERM_PALETTE, 7, 0x000000);
+            term.ioctl(PLT::Device::IOCTL_TERM_PALETTE, 0, light);
+            term.ioctl(PLT::Device::IOCTL_TERM_PALETTE, 7, dark);
          }
          else if (strcmp(cmd,  "Normal") == 0)
          {
-            term.ioctl(PLT::Device::IOCTL_TERM_PALETTE, 0, 0x000000);
-            term.ioctl(PLT::Device::IOCTL_TERM_PALETTE, 7, 0xFFFFFF);
+            term.ioctl(PLT::Device::IOCTL_TERM_PALETTE, 0, dark);
+            term.ioctl(PLT::Device::IOCTL_TERM_PALETTE, 7, light);
          }
          else if (strncmp(cmd, "Border=", 7) == 0)
          {
