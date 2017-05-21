@@ -98,6 +98,9 @@ private:
          case DISP_SVGA:    return launchDisplay< 800,600>();
          case DISP_XGA:     return launchDisplay<1024,768>();
          }
+
+         assert(!"Display selection bug");
+         return 1;
       }
    }
 
