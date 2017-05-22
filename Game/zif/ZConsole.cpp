@@ -20,126 +20,52 @@
 // SOFTWARE.
 //------------------------------------------------------------------------------
 
-#include <cassert>
 #include <cstdio>
-#include <cstdarg>
-#include <cstdlib>
 
 #include "ZConsole.h"
 
-
 static FILE*  input_fp = nullptr;
-static FILE*  print_fp = nullptr;
-static FILE*  snoop_fp = nullptr;
 
 
 ZConsole::ZConsole(PLT::Device* device_)
-   : Curses(device_)
+   : curses(device_)
 {
-   raw();
-   noecho();
+   curses.raw();
+   curses.noecho();
 
    input_fp = fopen("test.in", "r");
    if (input_fp)
    {
        // Fixed width
-       cols = 80;
+       curses.cols = 80;
    }
    else
    {
       input_fp = fopen("fast.in", "r");
    }
-
-   print_fp = nullptr;
-   snoop_fp = nullptr;
 }
+
 
 ZConsole::~ZConsole()
 {
-   if (print_fp) fclose(print_fp);
-   if (snoop_fp) fclose(snoop_fp);
+   if (input_fp) fclose(input_fp);
 }
 
 
-void ZConsole::print(uint16_t zscii)
+int ZConsole::getChar()
 {
-   // Filter repeated new-line
-   static unsigned newline_count = 1;
-   if (zscii == 0xD)
+   if (input_fp != nullptr)
    {
-      zscii = '\n';
-   }
-   if (zscii == '\n')
-   {
-      if (++newline_count >= 3) return;
-   }
-   else
-   {
-      newline_count = 0;
-   }
-
-   if (print_fp == nullptr) print_fp = fopen("print.log", "w");
-   assert(print_fp);
-   fputc(zscii, print_fp);
-}
-
-void ZConsole::snoop(uint16_t zscii)
-{
-   if (snoop_fp == nullptr) snoop_fp = fopen("snoop.in", "w");
-   assert(snoop_fp);
-   fputc(zscii, snoop_fp);
-}
-
-bool ZConsole::read(uint16_t& zscii, unsigned timeout)
-{
-   int ch;
-
-   // TODO timeout
-   if ((input_fp == nullptr) || feof(input_fp))
-   {
-      input_fp = nullptr;
-
-      while(true)
+      if (feof(input_fp))
       {
-         ch = getch();
-         if (ch < 0)
-         {
-            exit(0);
-         }
-         else if (ch == 0x7F)
-         {
-            ch = '\b';
-         }
-         else if (ch < 0x7F)
-         {
-            break;
-         }
+         input_fp = nullptr;
+      }
+      else
+      {
+         return fgetc(input_fp);
       }
    }
-   else
-   {
-      ch = fgetc(input_fp);
-   }
 
-   zscii = ch;
-
-   return true;
-}
-
-void tprintf(const char* format, ...)
-{
-   static FILE* fp = nullptr;
-   va_list  ap;
-
-   if (fp == nullptr)
-   {
-      fp = fopen("zif.log", "w");
-   }
-
-   va_start(ap, format);
-   vfprintf(fp, format, ap);
-   va_end(ap);
-
-   fflush(fp);
+   return curses.getch();
 }
 

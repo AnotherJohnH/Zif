@@ -26,11 +26,11 @@
 #include <stdint.h>
 
 #include "ZMemory.h"
-#include "ZWindow.h"
+#include "ZConsole.h"
 
 // See the Z specification section 3.
 
-class ZText : public ZWindowManager
+class ZText
 {
 private:
    enum State : uint8_t
@@ -44,6 +44,7 @@ private:
        ASCII_LOWER
    };
 
+   ZStream&   stream;
    ZMemory*   memory;
    uint8_t    version;
    uint16_t   abbr;
@@ -92,7 +93,7 @@ private:
          return;
 
       case ASCII_LOWER:
-         writeChar((ascii<<5) | code);
+         stream.writeChar((ascii<<5) | code);
          state = NORMAL;
          return;
 
@@ -105,14 +106,14 @@ private:
       {
       case 0:
          // Z char 0 is a space [3.5.1]
-         writeChar(' ');
+         stream.writeChar(' ');
          return;
 
       case 1:
          if (version == 1)
          {
             // Z char 1 is a new line (v1) [3.5.2]
-            writeChar('\n');
+            stream.writeChar('\n');
          }
          else if (state == NORMAL)
          {
@@ -174,7 +175,7 @@ private:
             }
             else if ((code == 7) && (version != 1))
             {
-               writeChar('\n');
+               stream.writeChar('\n');
                break;
             }
          }
@@ -190,7 +191,7 @@ private:
             {
             }
 
-            writeChar(table[(a * 26)+code-6]);
+            stream.writeChar(table[(a * 26)+code-6]);
          }
          break;
       }
@@ -209,8 +210,8 @@ private:
    }
 
 public:
-   ZText(PLT::Device* device_, ZMemory& memory_)
-      : ZWindowManager(device_, memory_)
+   ZText(ZStream& stream_, ZMemory& memory_)
+      : stream(stream_)
       , memory(&memory_)
       , version(0)
       , abbr(0)
@@ -220,10 +221,6 @@ public:
    {
       version = version_;
       abbr    = abbr_;
-
-      clear();
-
-      initStreams(version_);
    }
 
    //! Write text starting at the given address
@@ -246,7 +243,7 @@ public:
       {
          for(unsigned col=0; col<width; col++)
          {
-            writeChar(memory->fetchByte(addr));
+            stream.writeChar(memory->fetchByte(addr));
          }
 
          addr += skip;

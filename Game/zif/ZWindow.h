@@ -77,8 +77,8 @@ public:
       UPPER = 1
    };
 
-   ZWindowManager(PLT::Device* device, ZMemory& memory)
-      : ZStream(device, memory)
+   ZWindowManager(ZConsole& console_, ZMemory& memory)
+      : ZStream(console_, memory)
       , index(LOWER)
       , lower_buffering(true)
    {
@@ -115,16 +115,16 @@ public:
    {
       enableStream(2, false); // Printer
 
-      move(1, 1);
+      console.moveCursor(1, 1);
 
-      for(unsigned i=0; i<cols; i++)
+      for(unsigned i=0; i<console.getAttr(ZConsole::COLS); i++)
       {
          if (left[i] == '\0') break;
 
-         addch(left[i]);
+         console.write(left[i]);
       }
 
-      move(1, 999);
+      console.moveCursor(1, 999);
 
       // TODO this needs sorting out
 
@@ -147,18 +147,18 @@ public:
          enableStream(2, false); // Printer
 
          unsigned line, col;
-         getyx(line, col);
+         console.getCursorPos(line, col);
          window[LOWER].cursor.y = line;
          window[LOWER].cursor.x = col;
          lower_buffering = setBuffering(false);
          setCol(1);
-         move(1, 1);
+         console.moveCursor(1, 1);
       }
       else
       {
          enableStream(2, true); // Printer
 
-         move(window[LOWER].cursor.y, window[LOWER].cursor.x);
+         console.moveCursor(window[LOWER].cursor.y, window[LOWER].cursor.x);
          setBuffering(lower_buffering);
          setCol(window[LOWER].cursor.x);
       }

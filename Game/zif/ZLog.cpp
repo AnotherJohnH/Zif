@@ -20,24 +20,53 @@
 // SOFTWARE.
 //------------------------------------------------------------------------------
 
-#ifndef ZLOG_H
-#define ZLOG_H
+#include <cassert>
+#include <cstdio>
+#include <cstdarg>
 
-//! Log file
-class ZLog
+#include "ZLog.h"
+
+
+ZLog::~ZLog()
 {
-public:
-   ZLog(const char* name_) : name(name_) {}
-   ~ZLog();
+   if (handle != nullptr)
+   {
+      fclose((FILE*)handle);
+   }
+}
 
-   void write(char ch);
-   void printf(const char* format, ...);
 
-private:
-   const char*  name;
-   void*        handle{nullptr};
+void ZLog::ensureOpen()
+{
+   if (handle == nullptr)
+   {
+      char filename[FILENAME_MAX];
+      sprintf(filename, "%s.log", name);
+      handle = fopen(filename, "w");
+      assert(handle); // TODO report an error to the user
+   }
+}
 
-   void ensureOpen();
-};
 
-#endif
+void ZLog::write(char ch)
+{
+   ensureOpen();
+
+   fputc(ch, (FILE*)handle);
+}
+
+
+void ZLog::printf(const char* format, ...)
+{
+   ensureOpen();
+
+   FILE* fp = (FILE*)handle;
+
+   va_list  ap;
+   va_start(ap, format);
+   vfprintf(fp, format, ap);
+   va_end(ap);
+
+   fflush(fp);
+}
+

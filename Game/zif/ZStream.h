@@ -26,10 +26,11 @@
 #include <cassert>
 
 #include "ZConsole.h"
+#include "ZLog.h"
 #include "ZMemory.h"
 
 //! Stream handling
-class ZStream : public ZConsole
+class ZStream
 {
 private:
    static const unsigned NUM_STREAM      = 4;
@@ -53,7 +54,7 @@ private:
       else
          col++;
 
-      if (enable[SCREEN])  addch(zscii);
+      if (enable[SCREEN])  console.write(zscii);
       if (enable[PRINTER]) print(zscii);
    }
 
@@ -72,7 +73,7 @@ private:
    {
       if ((zscii == ' ') || (zscii == '\n') || (buffer_size == MAX_WORD_LENGTH))
       {
-         if ((col + buffer_size) > getAttr(ZConsole::COLS))
+         if ((col + buffer_size) > console.getAttr(ZConsole::COLS))
          {
             send('\n');
          }
@@ -87,13 +88,32 @@ private:
       }
    }
 
+   //! Write ZSCII character to printer
+   void print(uint16_t zscii)
+   {
+      // Filter repeated new-line
+      if (zscii == 0xD)
+      {
+         zscii = '\n';
+      }
+      if (zscii == '\n')
+      {
+         if (++printer_newline_count >= 3) return;
+      }
+      else
+      {
+         printer_newline_count = 0;
+      }
+
+      printer.write(zscii);
+   }
+
 public:
-   ZStream(PLT::Device* device_, ZMemory& memory_)
-      : ZConsole(device_)
+   ZStream(ZConsole& console_, ZMemory& memory_)
+      : console(console_)
       , col(1)
       , buffer_enable(false)
       , buffer_size(0)
-      , print_input(false)
       , memory(&memory_)
    {
       for(unsigned i=0; i<NUM_STREAM; i++)
@@ -110,6 +130,8 @@ public:
       buffer_enable   = true;
       buffer_size     = 0;
       print_input     = version <= 5;
+
+      console.clear();
    }
 
    void setCol(unsigned col_)
@@ -153,13 +175,13 @@ public:
    {
       flushOutput();
 
-      bool ok = read(zscii, timeout);
+      bool ok = console.read(zscii, timeout);
       if (ok)
       {
          // Echo input to enabled output streams
-         if (enable[SCREEN])                 addch(zscii);
+         if (enable[SCREEN])                 console.write(zscii);
          if (enable[PRINTER] && print_input) print(zscii);
-         if (enable[SNOOP])                  snoop(zscii);
+         if (enable[SNOOP])                  snooper.write(zscii);
 
          if (zscii == '\n') col = 1;
       }
@@ -220,17 +242,29 @@ public:
       }
    }
 
+protected:
+   ZConsole&  console;
+
 private:
    unsigned   col;
+
    bool       buffer_enable;
    uint8_t    buffer_size;
    uint8_t    buffer[MAX_WORD_LENGTH];
-   bool       print_input;
+
    bool       enable[4];
    ZMemory*   memory;
    uint32_t   table;
    uint32_t   table_ptr;
    int16_t    width;
+
+private:
+   ZLog       snooper{"input"};
+
+   bool       print_input{false};
+   ZLog       printer{"print"};
+   unsigned   printer_newline_count{ 1 };
+
 };
 
 #endif

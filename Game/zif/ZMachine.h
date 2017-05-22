@@ -34,9 +34,10 @@
 #include "ZObject.h"
 #include "ZText.h"
 #include "ZParser.h"
+#include "ZLog.h"
 
 
-#define TRACE if (1) ; else tprintf
+#define TRACE if (1) ; else debug.printf
 
 
 class ZMachine
@@ -55,6 +56,9 @@ private:
       OP_NONE        = 3
    };
 
+   ZLog                  debug{"debug"};
+   ZConsole              console;
+   ZWindowManager        window_mgr;
    ZMemory               memory;
    ZStack<STACK_SIZE>    stack;
    ZObject               object;
@@ -82,27 +86,13 @@ private:
    void warning(const char* message)
    {
 #if 0
-      text.clear();
-      text.attron(PLT::A_REVERSE);
-      text.move(1, 1);
-      text.clrtoeol();
-      text.mvaddstr(1, 1, "ZIF WARNING");
-      text.attroff(PLT::A_REVERSE);
-      text.mvaddstr(3, 1, message);
-      (void) text.getch();
+      console.message("WARNING", message);
 #endif
    }
 
    void error(const char* message)
    {
-      text.clear();
-      text.attron(PLT::A_REVERSE);
-      text.move(1, 1);
-      text.clrtoeol();
-      text.mvaddstr(1, 1, "ZIF ERROR");
-      text.attroff(PLT::A_REVERSE);
-      text.mvaddstr(3, 1, message);
-      (void) text.getch();
+      console.message("ERROR", message);
       quit = true;
    }
 
@@ -354,7 +344,7 @@ private:
    void op0_quit()         { quit = true; }
 
    //! new_line
-   void op0_new_line()     { text.writeChar('\n'); }
+   void op0_new_line()     { window_mgr.writeChar('\n'); }
 
    //! show_status
    void op0_show_status()  { showStatus(); }
@@ -498,7 +488,7 @@ private:
 
    void op2_call_2s()           { subCall(0, uarg[0], 1, &uarg[1]); }
    void op2_call_2n()           { subCall(1, uarg[0], 1, &uarg[1]); }
-   void op2_set_colour()        { text.colourset(uarg[0], uarg[1]); /* TODO v6 window */ }
+   void op2_set_colour()        { console.setColours(uarg[0], uarg[1]); /* TODO v6 window */ }
    void op2_throw()             { TODO(); }
 
    //============================================================================
@@ -542,7 +532,7 @@ private:
       {
           uint16_t ch;
 
-          if (!text.readChar(ch, timeout))
+          if (!window_mgr.readChar(ch, timeout))
           {
              // TODO branch to routine
              (void) routine;
@@ -554,7 +544,7 @@ private:
              // => delete
              if (buffer > start)
              {
-                text.writeRaw(" \b");
+                window_mgr.writeRaw(" \b");
                 --buffer;
                 --len;
              }
@@ -590,7 +580,7 @@ private:
       {
           uint16_t ch;
 
-          if (!text.readChar(ch, timeout))
+          if (!window_mgr.readChar(ch, timeout))
           {
              // TODO branch to routine
              (void) routine;
@@ -602,7 +592,7 @@ private:
              // => delete
              if (buffer > start)
              {
-                text.writeRaw(" \b");
+                window_mgr.writeRaw(" \b");
                 --buffer;
                 --len;
              }
@@ -626,8 +616,8 @@ private:
       }
    }
 
-   void opV_print_char()     { text.writeChar(uarg[0]); }
-   void opV_print_num()      { text.writeNumber(sarg[0]); }
+   void opV_print_char()     { window_mgr.writeChar(uarg[0]); }
+   void opV_print_num()      { window_mgr.writeNumber(sarg[0]); }
    void opV_random()         { varWrite(fetchByte(), random(sarg[0])); }
    void opV_push()           { stack.push(uarg[0]); }
 
@@ -655,31 +645,31 @@ private:
       varWrite(fetchByte(), value, true);
    }
 
-   void opV_split_window()   { text.split(uarg[0]); }
-   void opV_set_window()     { text.select(uarg[0]); }
+   void opV_split_window()   { window_mgr.split(uarg[0]); }
+   void opV_set_window()     { window_mgr.select(uarg[0]); }
    void opV_call_vs2()       { subCall(0, uarg[0], num_arg-1, &uarg[1]); }
-   void opV_erase_window()   { text.eraseWindow(uarg[0]); }
+   void opV_erase_window()   { window_mgr.eraseWindow(uarg[0]); }
    void opV_erase_line_v4()  { TODO(); }
    void opV_erase_line_v6()  { TODO(); }
-   void opV_set_cursor_v4()  { text.move(uarg[0], uarg[1]); }
+   void opV_set_cursor_v4()  { console.moveCursor(uarg[0], uarg[1]); }
    void opV_set_cursor_v6()  { TODO_IGNORE("set_cursor_v6"); }
    void opV_get_cursor()     { TODO(); }
 
    void opV_set_text_style()
    {
-      text.flush();
+      window_mgr.flush();
 
       unsigned attr = 0;
       if (uarg[0] & (1<<0)) attr |= PLT::A_REVERSE;;
       if (uarg[0] & (1<<1)) attr |= PLT::A_BOLD;;
       if (uarg[0] & (1<<2)) attr |= PLT::A_ITALIC;;
       if (uarg[0] & (1<<3)) attr |= PLT::A_FIXED;;
-      text.attrset(attr);
+      console.setAttributes(attr);
    }
 
    void opV_buffer_mode()
    {
-      text.setBuffering(uarg[0] != 0);
+      window_mgr.setBuffering(uarg[0] != 0);
    }
 
    void opV_output_stream()
@@ -691,15 +681,15 @@ private:
          uint32_t  table  = num_arg >= 2 ? uarg[1] : 0;
          int16_t   width  = num_arg == 3 ? sarg[2] : 0;
 
-         text.enableMemoryStream(table, width);
+         window_mgr.enableMemoryStream(table, width);
       }
       else if (number > 0)
       {
-         text.enableStream(number, true);
+         window_mgr.enableStream(number, true);
       }
       else if (number < 0)
       {
-         text.enableStream(-number, false);
+         window_mgr.enableStream(-number, false);
       }
    }
 
@@ -719,7 +709,7 @@ private:
       uint16_t routine = uarg[1];
 
       uint16_t ch;
-      if (!text.readChar(ch, timeout))
+      if (!window_mgr.readChar(ch, timeout))
       {
          pc = routine;
       }
@@ -905,7 +895,7 @@ private:
       uint16_t wind = uarg[0];
       uint16_t prop = uarg[1];
 
-      varWrite(fetchByte(), text.getWindowProp(wind, prop));
+      varWrite(fetchByte(), window_mgr.getWindowProp(wind, prop));
    }
 
    void initDecoder()
@@ -1228,8 +1218,10 @@ private:
 
 public:
    ZMachine(PLT::Device* device_)
-      : object(&memory)
-      , text(device_, memory)
+      : console(device_)
+      , window_mgr(console, memory)
+      , object(&memory)
+      , text(window_mgr, memory)
       , quit(false)
       , rand_state(1)
    {}
@@ -1244,11 +1236,12 @@ public:
       config.interp_major_version = 1;
       config.interp_minor_version = 0;
 
-      header->init(text, config);
+      header->init(console, config);
 
       memory.init();
       stack.init();
       text.init(header->version, header->abbr);
+      window_mgr.initStreams(header->version);
       parser.init(header->version);
       object.init(header->obj, header->version);
 
