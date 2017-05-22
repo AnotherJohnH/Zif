@@ -325,7 +325,7 @@ public:
    {
       doAction("Border",    "0");
       doAction("FontSize",  "18");
-      doAction("LineSpace", "1");
+      doAction("LineSpace", "0");
       doAction("Video",     "Inverse");
    }
 
