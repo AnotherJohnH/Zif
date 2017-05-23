@@ -31,6 +31,8 @@
 
 #include "ZifVersion.h"
 #include "ZMachine.h"
+#include "ZOptions.h"
+
 
 //! ZMachine launcher
 class ZLauncher : public PLT::Curses
@@ -38,6 +40,7 @@ class ZLauncher : public PLT::Curses
 private:
    PLT::Device&   term;
    const char*    config_file{nullptr};
+   ZOptions       zoptions;
    unsigned       cursor{0};
    unsigned       cursor_limit{0};
    bool           quit{false};
@@ -318,10 +321,11 @@ private:
    }
 
 public:
-   ZLauncher(PLT::Device& term_, const char* config_file_)
+   ZLauncher(PLT::Device& term_, const char* config_file_, ZOptions& zoptions_)
       : Curses(&term_)
       , term(term_)
       , config_file(config_file_)
+      , zoptions(zoptions_)
    {
       doAction("Border",    "0");
       doAction("FontSize",  "18");
@@ -332,7 +336,7 @@ public:
    //! Load and run a story file
    int run(const char* story)
    {
-      ZMachine(&term).open(story);
+      ZMachine(&term, zoptions).open(story);
       return 0;
    }
 

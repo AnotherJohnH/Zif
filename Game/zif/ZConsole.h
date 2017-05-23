@@ -55,6 +55,18 @@ public:
 
    ~ZConsole();
 
+   void init()
+   {
+      curses.raw();
+      curses.noecho();
+      curses.clear();
+   }
+
+   void setWidth(unsigned width)
+   {
+      curses.cols = width;
+   }
+
    //! Return console attribute
    unsigned getAttr(Attr attr) const
    {
@@ -83,11 +95,6 @@ public:
    void getCursorPos(unsigned& line, unsigned& col)
    {
       curses.getyx(line, col);
-   }
-
-   void clear()
-   {
-      curses.clear();
    }
 
    //! Select the current font

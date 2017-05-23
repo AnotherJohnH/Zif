@@ -27,6 +27,7 @@
 
 #include  "ZifVersion.h"
 #include  "ZLauncher.h"
+#include  "ZOptions.h"
 
 
 class Zif : public STB::ConsoleApp
@@ -48,15 +49,19 @@ private:
 
    STB::Option<const char*>  opt_config{ 'c', "config", "Config file", "zif.cfg"};
    STB::Option<bool>         opt_term{   't', "term",   "Use the parent terminal"};
+
    STB::Option<bool>         opt_k3{     'K', "k3",     "Kindle display 800x600"};
    STB::Option<bool>         opt_vga{    'V', "vga",    "VGA display    640x480"};
    STB::Option<bool>         opt_svga{   'S', "svga",   "SVGA display   800x600"};
    STB::Option<bool>         opt_xga{    'X', "xga",    "XGA display   1024x768"};
+
+   ZOptions                  zoptions;
+
    const char*               filename{nullptr};
 
    int launch(PLT::Device& term)
    {
-      ZLauncher  launcher(term, opt_config);
+      ZLauncher  launcher(term, opt_config, zoptions);
 
       return filename ? launcher.run(filename)
                       : launcher.menu();

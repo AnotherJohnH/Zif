@@ -26,6 +26,7 @@
 #include <stdint.h>
 #include <cstring>
 
+#include "ZOptions.h"
 #include "ZWindow.h"
 #include "ZMemory.h"
 #include "ZStack.h"
@@ -57,6 +58,7 @@ private:
    };
 
    ZLog                  debug{"debug"};
+   ZOptions&             options;
    ZConsole              console;
    ZStream               stream;
    ZWindowManager        window_mgr;
@@ -1218,15 +1220,18 @@ private:
    }
 
 public:
-   ZMachine(PLT::Device* device_)
-      : console(device_)
+   ZMachine(PLT::Device* device_, ZOptions& options_)
+      : options(options_)
+      , console(device_)
       , stream(console, memory)
       , window_mgr(console, stream)
       , object(&memory)
       , text(stream, memory)
       , quit(false)
       , rand_state(1)
-   {}
+   {
+      if (options.screen_width != 0) console.setWidth(options.screen_width);
+   }
 
    //! Play a Z file
    void open(const char* filename)
@@ -1242,14 +1247,14 @@ public:
 
       memory.init();
       stack.init();
-      console.clear();
+      console.init();
       stream.init(header->version);
       text.init(header->version, header->abbr);
       parser.init(header->version);
       object.init(header->obj, header->version);
 
-      stream.enableStream(/* PRINTER */ 2);
-      stream.enableStream(/* SNOOPER */ 4);
+      stream.enableStream(/* PRINTER */ 2, options.output_log);
+      stream.enableStream(/* SNOOPER */ 4, options.input_log);
 
       TRACE("version=%d\n", header->version);
 

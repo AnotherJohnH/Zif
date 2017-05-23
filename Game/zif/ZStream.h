@@ -266,7 +266,7 @@ private:
    bool       printer_enable{false};
    bool       printer_echo_input{false};
    unsigned   printer_newline_count{ 1 };
-   ZLog       printer{"print"};
+   ZLog       printer{"output"};
 
    // Memory stream state
    bool       memory_enable{false};

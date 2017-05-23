@@ -30,19 +30,7 @@ static FILE*  input_fp = nullptr;
 ZConsole::ZConsole(PLT::Device* device_)
    : curses(device_)
 {
-   curses.raw();
-   curses.noecho();
-
-   input_fp = fopen("test.in", "r");
-   if (input_fp)
-   {
-       // Fixed width
-       curses.cols = 80;
-   }
-   else
-   {
-      input_fp = fopen("fast.in", "r");
-   }
+   input_fp = fopen("fast.in", "r");
 }
 
 
