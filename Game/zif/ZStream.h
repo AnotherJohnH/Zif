@@ -145,8 +145,10 @@ public:
    }
 
    //! Write signed integer value (may be buffered)
-   void writeNumber(int16_t value)
+   void writeNumber(int16_t value_)
    {
+      int32_t value = value_; // So that 32768 can be represented
+
       if (value < 0)
       {
          writeChar('-');
