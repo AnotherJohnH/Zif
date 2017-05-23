@@ -1269,10 +1269,17 @@ public:
 
       quit = false;
 
+#ifndef CO_OP_MULTI_TASK
       while(!quit)
       {
          fetchDecodeExecute();
       }
+#endif
+   }
+
+   void run()
+   {
+      fetchDecodeExecute();
    }
 };
 
