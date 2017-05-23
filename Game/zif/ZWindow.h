@@ -20,15 +20,14 @@
 // SOFTWARE.
 //------------------------------------------------------------------------------
 
-#ifndef Z_WINDOW_H
-#define Z_WINDOW_H
+#ifndef Z_WINDOW_MANAGER_H
+#define Z_WINDOW_MANAGER_H
 
-#include "ZLog.h"
-
+#include "ZConsole.h"
 #include "ZStream.h"
 
-//! Interface to console implementation
-class ZWindowManager : public ZStream
+//! 
+class ZWindowManager
 {
 private:
    static const unsigned MAX_WINDOW = 8;
@@ -77,13 +76,10 @@ public:
       UPPER = 1
    };
 
-   ZWindowManager(ZConsole& console_, ZMemory& memory)
-      : ZStream(console_, memory)
-      , index(LOWER)
-      , lower_buffering(true)
-   {
-      enableStream(2, true); // Printer
-   }
+   ZWindowManager(ZConsole& console_, ZStream& stream_)
+      : console(console_)
+      , stream(stream_)
+   {}
 
    uint16_t getWindowProp(unsigned index_, unsigned prop_)
    {
@@ -113,7 +109,7 @@ public:
    // Update the status line (v1-3)
    void showStatus(const char* left, const char* right)
    {
-      enableStream(2, false); // Printer
+      printer_enabled = stream.enableStream(2, false);
 
       console.moveCursor(1, 1);
 
@@ -126,9 +122,7 @@ public:
 
       console.moveCursor(1, 999);
 
-      // TODO this needs sorting out
-
-      enableStream(2, true); // Printer
+      stream.enableStream(2, printer_enabled);
    }
 
    void split(unsigned upper_height_)
@@ -144,23 +138,23 @@ public:
 
       if (index == UPPER)
       {
-         enableStream(2, false); // Printer
+         printer_enabled = stream.enableStream(2, false); 
 
          unsigned line, col;
          console.getCursorPos(line, col);
          window[LOWER].cursor.y = line;
          window[LOWER].cursor.x = col;
-         lower_buffering = setBuffering(false);
-         setCol(1);
+         lower_buffering = stream.setBuffering(false);
+         stream.setCol(1);
          console.moveCursor(1, 1);
       }
       else
       {
-         enableStream(2, true); // Printer
+         stream.enableStream(2, printer_enabled);
 
          console.moveCursor(window[LOWER].cursor.y, window[LOWER].cursor.x);
-         setBuffering(lower_buffering);
-         setCol(window[LOWER].cursor.x);
+         stream.setBuffering(lower_buffering);
+         stream.setCol(window[LOWER].cursor.x);
       }
    }
 
@@ -170,9 +164,12 @@ public:
    }
 
 private:
+   ZConsole&  console;
+   ZStream&   stream;
    ZWindow    window[MAX_WINDOW];
-   unsigned   index;
-   bool       lower_buffering;
+   unsigned   index{LOWER};
+   bool       lower_buffering{true};
+   bool       printer_enabled{false};
 };
 
 #endif

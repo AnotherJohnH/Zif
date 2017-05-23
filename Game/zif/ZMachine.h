@@ -58,6 +58,7 @@ private:
 
    ZLog                  debug{"debug"};
    ZConsole              console;
+   ZStream               stream;
    ZWindowManager        window_mgr;
    ZMemory               memory;
    ZStack<STACK_SIZE>    stack;
@@ -344,7 +345,7 @@ private:
    void op0_quit()         { quit = true; }
 
    //! new_line
-   void op0_new_line()     { window_mgr.writeChar('\n'); }
+   void op0_new_line()     { stream.writeChar('\n'); }
 
    //! show_status
    void op0_show_status()  { showStatus(); }
@@ -532,7 +533,7 @@ private:
       {
           uint16_t ch;
 
-          if (!window_mgr.readChar(ch, timeout))
+          if (!stream.readChar(ch, timeout))
           {
              // TODO branch to routine
              (void) routine;
@@ -544,7 +545,7 @@ private:
              // => delete
              if (buffer > start)
              {
-                window_mgr.writeRaw(" \b");
+                stream.writeRaw(" \b");
                 --buffer;
                 --len;
              }
@@ -580,7 +581,7 @@ private:
       {
           uint16_t ch;
 
-          if (!window_mgr.readChar(ch, timeout))
+          if (!stream.readChar(ch, timeout))
           {
              // TODO branch to routine
              (void) routine;
@@ -592,7 +593,7 @@ private:
              // => delete
              if (buffer > start)
              {
-                window_mgr.writeRaw(" \b");
+                stream.writeRaw(" \b");
                 --buffer;
                 --len;
              }
@@ -616,8 +617,8 @@ private:
       }
    }
 
-   void opV_print_char()     { window_mgr.writeChar(uarg[0]); }
-   void opV_print_num()      { window_mgr.writeNumber(sarg[0]); }
+   void opV_print_char()     { stream.writeChar(uarg[0]); }
+   void opV_print_num()      { stream.writeNumber(sarg[0]); }
    void opV_random()         { varWrite(fetchByte(), random(sarg[0])); }
    void opV_push()           { stack.push(uarg[0]); }
 
@@ -657,7 +658,7 @@ private:
 
    void opV_set_text_style()
    {
-      window_mgr.flush();
+      stream.flush();
 
       unsigned attr = 0;
       if (uarg[0] & (1<<0)) attr |= PLT::A_REVERSE;;
@@ -669,7 +670,7 @@ private:
 
    void opV_buffer_mode()
    {
-      window_mgr.setBuffering(uarg[0] != 0);
+      stream.setBuffering(uarg[0] != 0);
    }
 
    void opV_output_stream()
@@ -681,15 +682,15 @@ private:
          uint32_t  table  = num_arg >= 2 ? uarg[1] : 0;
          int16_t   width  = num_arg == 3 ? sarg[2] : 0;
 
-         window_mgr.enableMemoryStream(table, width);
+         stream.enableMemoryStream(table, width);
       }
       else if (number > 0)
       {
-         window_mgr.enableStream(number, true);
+         stream.enableStream(number, true);
       }
       else if (number < 0)
       {
-         window_mgr.enableStream(-number, false);
+         stream.enableStream(-number, false);
       }
    }
 
@@ -709,7 +710,7 @@ private:
       uint16_t routine = uarg[1];
 
       uint16_t ch;
-      if (!window_mgr.readChar(ch, timeout))
+      if (!stream.readChar(ch, timeout))
       {
          pc = routine;
       }
@@ -1219,9 +1220,10 @@ private:
 public:
    ZMachine(PLT::Device* device_)
       : console(device_)
-      , window_mgr(console, memory)
+      , stream(console, memory)
+      , window_mgr(console, stream)
       , object(&memory)
-      , text(window_mgr, memory)
+      , text(stream, memory)
       , quit(false)
       , rand_state(1)
    {}
@@ -1240,10 +1242,14 @@ public:
 
       memory.init();
       stack.init();
+      console.clear();
+      stream.init(header->version);
       text.init(header->version, header->abbr);
-      window_mgr.initStreams(header->version);
       parser.init(header->version);
       object.init(header->obj, header->version);
+
+      stream.enableStream(/* PRINTER */ 2);
+      stream.enableStream(/* SNOOPER */ 4);
 
       TRACE("version=%d\n", header->version);
 

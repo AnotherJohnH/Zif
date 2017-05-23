@@ -29,114 +29,35 @@
 #include "ZLog.h"
 #include "ZMemory.h"
 
-//! Stream handling
+
+//! Input/output stream handler
 class ZStream
 {
-private:
-   static const unsigned NUM_STREAM      = 4;
-   static const unsigned MAX_WORD_LENGTH = 16;
-
-   enum Stream
-   {
-      SCREEN  = 0,
-      PRINTER = 1,
-      MEMORY  = 2,
-      SNOOP   = 3
-   };
-
-   //! Unbuffered write of an output character
-   void send(uint16_t zscii)
-   {
-      if (zscii == '\0') return;
-
-      if (zscii == '\n')
-         col = 1;
-      else
-         col++;
-
-      if (enable[SCREEN])  console.write(zscii);
-      if (enable[PRINTER]) print(zscii);
-   }
-
-   void flushOutput()
-   {
-      for(unsigned i=0; i<buffer_size; i++)
-      {
-         send(buffer[i]);
-      }
-
-      buffer_size = 0;
-   }
-
-   //! Buffered write of an output character
-   void sendBuffered(uint16_t zscii)
-   {
-      if ((zscii == ' ') || (zscii == '\n') || (buffer_size == MAX_WORD_LENGTH))
-      {
-         if ((col + buffer_size) > console.getAttr(ZConsole::COLS))
-         {
-            send('\n');
-         }
-
-         flushOutput();
-
-         send(zscii);
-      }
-      else
-      {
-         buffer[buffer_size++] = zscii;
-      }
-   }
-
-   //! Write ZSCII character to printer
-   void print(uint16_t zscii)
-   {
-      // Filter repeated new-line
-      if (zscii == 0xD)
-      {
-         zscii = '\n';
-      }
-      if (zscii == '\n')
-      {
-         if (++printer_newline_count >= 3) return;
-      }
-      else
-      {
-         printer_newline_count = 0;
-      }
-
-      printer.write(zscii);
-   }
-
 public:
    ZStream(ZConsole& console_, ZMemory& memory_)
       : console(console_)
-      , col(1)
-      , buffer_enable(false)
-      , buffer_size(0)
-      , memory(&memory_)
+      , memory(memory_)
+   {}
+
+   //! Initialise streams for a new story
+   void init(uint8_t version)
    {
-      for(unsigned i=0; i<NUM_STREAM; i++)
-      {
-         enable[i] = false;
-      }
+      console_enable     = true;
+      printer_enable     = false;
+      memory_enable      = false;
+      snooper_enable     = false;
+
+      buffer_enable      = true;
+      buffer_size        = 0;
+      buffer_col         = 1;
+
+      printer_echo_input = version <= 5;
    }
 
-   void initStreams(uint8_t version)
-   {
-      enable[SCREEN]  = true;
-      enable[PRINTER] = true;
-      enable[SNOOP]   = true;
-      buffer_enable   = true;
-      buffer_size     = 0;
-      print_input     = version <= 5;
-
-      console.clear();
-   }
-
+   //! Synchronise current col used for line breaking
    void setCol(unsigned col_)
    {
-      col = col_;
+      buffer_col = col_;
    }
 
    //! Control automatic line breaking
@@ -147,55 +68,71 @@ public:
       return prev;
    }
 
+   //! Flush any output that has been buffered
    void flush()
    {
-      if (buffer_enable)  flushOutput();
+      // TODO is the test required? flush else where in this module
+      //      is not conditional
+      if (buffer_enable)  flushOutputBuffer();
    }
 
    //! Control state of output streams
-   void enableStream(unsigned index, bool enable_ = true)
+   bool enableStream(unsigned index, bool next = true)
    {
-      assert((index >= 1) && (index <= 4));
-      enable[index - 1] = enable_;
+      bool* state = nullptr;
+
+      switch(index)
+      {
+      case 1: state = &console_enable; break;
+      case 2: state = &printer_enable; break;
+      case 3: state = &memory_enable;  break;
+      case 4: state = &snooper_enable; break;
+
+      default: assert(!"unexpected index"); break;
+      }
+
+      bool prev = *state;
+      *state = next;
+      return prev;
    }
 
-   void enableMemoryStream(uint32_t table_, int16_t width_)
+   //! Enable use of memory stream
+   void enableMemoryStream(uint32_t ptr_, int16_t width_)
    {
-      table     = table_;
-      table_ptr = table + 2;
-      width     = width_;
+      memory_len_ptr = ptr_;
+      memory_ptr     = ptr_ + 2;
+      memory_width   = width_;
+      memory_enable  = true;
 
-      enable[MEMORY] = true;
-
-      memory->writeWord(table, 0);
+      memory.writeWord(memory_len_ptr, 0);
    }
 
    //! Read ZSCII character
    bool readChar(uint16_t& zscii, unsigned timeout)
    {
-      flushOutput();
+      flushOutputBuffer();
 
       bool ok = console.read(zscii, timeout);
       if (ok)
       {
          // Echo input to enabled output streams
-         if (enable[SCREEN])                 console.write(zscii);
-         if (enable[PRINTER] && print_input) print(zscii);
-         if (enable[SNOOP])                  snooper.write(zscii);
+         if (console_enable)                        console.write(zscii);
+         if (printer_enable && printer_echo_input)  print(zscii);
+         if (snooper_enable)                        snooper.write(zscii);
 
-         if (zscii == '\n') col = 1;
+         if (zscii == '\n') buffer_col = 1;
       }
 
       return ok;
    }
 
-   //! Write ZSCII character
+   //! Write ZSCII character (may be buffered)
    void writeChar(uint16_t zscii)
    {
-      if (enable[MEMORY])
+      if (memory_enable)
       {
-         memory->writeWord(table, memory->readWord(table) + 1);
-         memory->writeByte(table_ptr++, zscii);
+         memory.writeWord(memory_len_ptr, memory.readWord(memory_len_ptr) + 1);
+         memory.writeByte(memory_ptr++, zscii);
       }
       else if (buffer_enable)
       {
@@ -207,8 +144,8 @@ public:
       }
    }
 
-   //! Write signed integer value
-   void writeNumber(int32_t value)
+   //! Write signed integer value (may be buffered)
+   void writeNumber(int16_t value)
    {
       if (value < 0)
       {
@@ -242,29 +179,103 @@ public:
       }
    }
 
+private:
+   static const unsigned MAX_WORD_LENGTH       = 16;
+   static const unsigned PRINTER_NEWLINE_LIMIT = 3;
+
+   //! Unbuffered write of an output character
+   void send(uint16_t zscii)
+   {
+      if (zscii == '\0') return;
+
+      if (zscii == '\n')
+         buffer_col = 1;
+      else
+         buffer_col++;
+
+      if (console_enable)  console.write(zscii);
+      if (printer_enable)  print(zscii);
+   }
+
+   //! Flush any output that has been buffered
+   void flushOutputBuffer()
+   {
+      for(unsigned i=0; i<buffer_size; i++)
+      {
+         send(buffer[i]);
+      }
+
+      buffer_size = 0;
+   }
+
+   //! Buffered write of an output character
+   void sendBuffered(uint16_t zscii)
+   {
+      if ((zscii == ' ') || (zscii == '\n') || (buffer_size == MAX_WORD_LENGTH))
+      {
+         if ((buffer_col + buffer_size) > console.getAttr(ZConsole::COLS))
+         {
+            send('\n');
+         }
+
+         flushOutputBuffer();
+
+         send(zscii);
+      }
+      else
+      {
+         buffer[buffer_size++] = zscii;
+      }
+   }
+
+   //! Send ZSCII character to the printer
+   void print(uint16_t zscii)
+   {
+      // Filter repeated new-line
+      if (zscii == '\r')
+      {
+         zscii = '\n';
+      }
+      if (zscii == '\n')
+      {
+         if (++printer_newline_count >= PRINTER_NEWLINE_LIMIT) return;
+      }
+      else
+      {
+         printer_newline_count = 0;
+      }
+
+      printer.write(zscii);
+   }
+
 protected:
+   // Console stream state
+   bool       console_enable{true};
    ZConsole&  console;
 
 private:
-   unsigned   col;
-
-   bool       buffer_enable;
-   uint8_t    buffer_size;
+   // Buffer used for automatic line breaks
+   bool       buffer_enable{false};
+   uint8_t    buffer_size{0};
    uint8_t    buffer[MAX_WORD_LENGTH];
+   unsigned   buffer_col{1};
 
-   bool       enable[4];
-   ZMemory*   memory;
-   uint32_t   table;
-   uint32_t   table_ptr;
-   int16_t    width;
-
-private:
-   ZLog       snooper{"input"};
-
-   bool       print_input{false};
-   ZLog       printer{"print"};
+   // Printer stream state
+   bool       printer_enable{false};
+   bool       printer_echo_input{false};
    unsigned   printer_newline_count{ 1 };
+   ZLog       printer{"print"};
 
+   // Memory stream state
+   bool       memory_enable{false};
+   int16_t    memory_width;
+   uint32_t   memory_len_ptr;
+   uint32_t   memory_ptr;
+   ZMemory&   memory;
+
+   // Input snooper stream state
+   bool       snooper_enable{false};
+   ZLog       snooper{"input"};
 };
 
 #endif
