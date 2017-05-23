@@ -21,6 +21,7 @@
 #-------------------------------------------------------------------------------
 
 source = ['Game/zif/zif.cpp',
+          'Game/zif/ZLog.cpp',
           'Game/zif/ZConsole.cpp']
 
 binary = 'zif'
