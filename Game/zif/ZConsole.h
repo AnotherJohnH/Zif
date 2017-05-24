@@ -146,6 +146,8 @@ public:
 
       zscii = ch;
 
+      scroll = 0;
+
       return true;
    }
 
@@ -153,6 +155,19 @@ public:
    void write(uint16_t zscii)
    {
       curses.addch(zscii);
+
+      if (zscii == '\n')
+      {
+         scroll++;
+         if (scroll == (curses.lines - 1))
+         {
+            curses.addstr("...");
+            curses.getch();
+            curses.addstr("\b\b\b");
+            curses.clrtoeol();
+            scroll = 0;
+         }
+      }
    }
 
    //! Report a message
@@ -174,6 +189,8 @@ protected:
 
 private:
    int getChar();
+
+   unsigned scroll{0};
 };
 
 #endif
