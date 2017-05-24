@@ -122,6 +122,12 @@ public:
 
 int main(int argc, const char *argv[])
 {
-   Zif(argc, argv);
+#if defined(PROJ_TARGET_Emscripten)
+    // TODO this is just a confidence test
+    const char* local_argv[] = {"zif", "-v"};
+    Zif(2, local_argv);
+#else
+    Zif(argc, argv);
+#endif
 }
 
