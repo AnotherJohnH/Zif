@@ -28,6 +28,8 @@
 #include "PLT/Curses.h"
 #include "PLT/Device.h"
 
+#include "ZOptions.h"
+
 //! Console interface
 class ZConsole
 {
@@ -55,8 +57,12 @@ public:
 
    ~ZConsole();
 
-   void init()
+   void init(ZOptions& options)
    {
+      enable = !options.batch;
+
+      if (!enable) return;
+
       curses.raw();
       curses.noecho();
       curses.clear();
@@ -100,24 +106,32 @@ public:
    //! Select the current font
    void setFont(unsigned font_idx)
    {
+      if (!enable) return;
+
       // TODO
    }
 
    //! Set (curses format) attributes
    void setAttributes(unsigned attr)
    {
+      if (!enable) return;
+
       curses.attrset(attr);
    }
 
    //! Set (curses format) colours
    void setColours(unsigned fg_col, unsigned bg_col)
    {
+      if (!enable) return;
+
       curses.colourset(fg_col, bg_col);
    }
 
    //! Move cursor
    void moveCursor(unsigned line, unsigned col)
    {
+      if (!enable) return;
+
       curses.move(line, col);
    }
 
@@ -154,6 +168,8 @@ public:
    //! Write ZSCII character
    void write(uint16_t zscii)
    {
+      if (!enable) return;
+
       curses.addch(zscii);
 
       if (zscii == '\n')
@@ -173,6 +189,8 @@ public:
    //! Report a message
    void message(const char* type, const char* message)
    {
+      if (!enable) return;
+
       curses.clear();
       curses.attron(PLT::A_REVERSE);
       curses.move(1, 1);
@@ -191,6 +209,7 @@ private:
    int getChar();
 
    unsigned scroll{0};
+   bool     enable{true};
 };
 
 #endif

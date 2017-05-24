@@ -1247,7 +1247,7 @@ public:
 
       memory.init();
       stack.init();
-      console.init();
+      console.init(options);
       stream.init(options, header->version);
       window_mgr.init(options);
       text.init(header->version, header->abbr);

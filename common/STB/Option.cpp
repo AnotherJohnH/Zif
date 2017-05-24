@@ -1,5 +1,5 @@
 //------------------------------------------------------------------------------
-// Copyright (c) 2016-2017 John D. Haughton
+// Copyright (c) 2015-2017 John D. Haughton
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -20,19 +20,39 @@
 // SOFTWARE.
 //------------------------------------------------------------------------------
 
-#ifndef Z_OPTIONS_H
-#define Z_OPTIONS_H
+#include <stdlib.h>
 
-#include "STB/ConsoleApp.h"
+#include "STB/Option.h"
 
-//! 
-struct ZOptions
+namespace STB {
+
+template <>
+bool Option<bool>::set(const char* arg_)
 {
-   STB::Option<bool>      output_log{   'o', "output", "Write 'output.log'"};
-   STB::Option<bool>      input_log{    'i', "input",  "Write 'input.log'"};
-   STB::Option<unsigned>  screen_width{ 'w', "width",  "Screen width", 0};
-   STB::Option<bool>      batch{        'b', "batch",  "Batch mode, no console"};
-};
+   value = true;
+   return false;
+}
 
-#endif
+template <>
+bool Option<int>::set(const char* arg_)
+{
+   if (arg_ != nullptr) value = strtol(arg_, nullptr, 0);
+   return true;
+}
+
+template <>
+bool Option<unsigned>::set(const char* arg_)
+{
+   if (arg_ != nullptr) value = strtoul(arg_, nullptr, 0);
+   return true;
+}
+
+template <>
+bool Option<const char*>::set(const char* arg_)
+{
+   if (arg_ != nullptr) value = arg_;
+   return true;
+}
+
+} // namespace STB
 
