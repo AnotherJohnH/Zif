@@ -21,6 +21,14 @@ Many popular Z-code games downloaded from the interactive fiction archive start 
 although further testing is necessary. But a significant number of issues need to be addressed
 before zif is ready for it's intended purpose.
 
+|Target|Build|Run|
+|---|---|---|
+|Linux|OK|OK|
+|macOS|OK|OK|
+|Kindle3|OK|OK|
+|Android|OK|Only using thrid party terminal e.g. --term|
+|Emscripten|OK|Not working, only simple command line options --help etc.|
+
 ## How to build
 
 Type scons in the top level directory to run the SConstruct file.
