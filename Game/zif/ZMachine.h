@@ -850,8 +850,8 @@ private:
    //  set_font font
    void opE_set_font()
    {
-      // text.setFont(uarg[0]); TODO
-      varWrite(fetchByte(), 0);
+      bool ok = console.setFont(uarg[0]);
+      varWrite(fetchByte(), ok);
    }
 
    void opE_move_window()

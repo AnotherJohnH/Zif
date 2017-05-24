@@ -104,11 +104,13 @@ public:
    }
 
    //! Select the current font
-   void setFont(unsigned font_idx)
+   bool setFont(unsigned font_idx)
    {
-      if (!enable) return;
+      if (!enable) return true;
 
       // TODO
+
+      return font_idx == 1;
    }
 
    //! Set (curses format) attributes
