@@ -26,8 +26,22 @@ before zif is ready for it's intended purpose.
 |Linux|OK|OK|
 |macOS|OK|OK|
 |Kindle3|OK|OK|
-|Android|OK|Only using thrid party terminal e.g. --term|
+|Android|OK|Only using third party terminal e.g. --term|
 |Emscripten|OK|Not working, only simple command line options --help etc.|
+
+## How to run
+
+Running with no command line arguments will load the default launcher configuration file
+"zif.cfg" from the current working directory and will start the launcher front-end using the
+built-in terminal emulator.
+
+The command line option --help (or -h) provides basic help. Supplying a Z-code game
+file as a command line argument will load and run the game file directly bypassing
+the front-end.
+
+The launcher configuration file ("zif.cfg") file is used to provide a front-end menu where
+z-code games available in the local file system can be selected and certain aspects of
+the terminal emulation configured.
 
 ## How to build
 
@@ -37,12 +51,19 @@ The build files will work out whether the host system is Linux or macOS and conf
 build environment for the host system as the target. The automatic target selection can be
 overriden by setting the PROJ\_TARGET environment variable. e.g.
 
-PROJ\_TARGET=macOS
-PROJ\_TARGET=Linux
+   PROJ\_TARGET=macOS
+
+or
+
+   PROJ\_TARGET=Linux
 
 Cross targets are also selected via the PROJ\_TARGET environment variable. e.g.
 
-PROJ\_TARGET=Kindle3
+   PROJ\_TARGET=Kindle3
+
+The BUILD\_... .env scripts are provided to initialise PROJ\_TARGET and set other
+environment variables required by each specific build. These scripts should
+be sourced and then the top level SConstruct invoked in the normal way.
 
 ### Linux and macOS
 
@@ -56,23 +77,14 @@ Requires gcc built for arm-linux-gnueabihf and a set of headers and static runti
 that are compatible with the Linux installed on the Kindle3. The original ARMv6 Raspberry Pi
 running a Debian based Linux has been found to be suitable platform to build the Kindle3 version.
 
-### Windows
+### Emscripten
 
-Not supported.
-
-## How to run
-
-From the command line the -h or --help option provides basic help. Supplying a Z-code game file
-as a command line argument will load and run the game file.
-
-Alternatively the "zif.cfg" file is used to provide a menu front end, where z-code games
-available in the local file system can be navigated to and certain aspects of the terminal
-emulation configured.
+Uses the SDL library supplied with Emscripten.
 
 ## Coding style
 
 The source is C++ but has the following non-typical for modern C++ features ...
 * Memory is statically or stack allocated i.e. no new/delete
 * Use of C style stdio API
-* In some places have re-invented the wheel avoiding functionality that is in the standard librarys
+* In some places have re-invented the wheel avoiding functionality that is in standard librarys
 * 3 space indent
