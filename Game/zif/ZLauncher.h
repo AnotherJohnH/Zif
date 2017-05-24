@@ -73,28 +73,39 @@ private:
       curses.attron(PLT::A_REVERSE);
 
       curses.move(1,1);
-      curses.clrtoeol();
-      curses.mvaddstr(1, 3, PROGRAM);
-      curses.attroff(PLT::A_REVERSE);
+      for(unsigned i=0; i<curses.cols; ++i)
+      {
+         curses.addch(' ');
+      }
 
       curses.attron(PLT::A_BOLD);
-      curses.mvaddstr(3, 3, path);
+      curses.mvaddstr(1, 3, PROGRAM);
       curses.attroff(PLT::A_BOLD);
+
+      curses.mvaddstr(1, 3 + strlen(PROGRAM) + 2, path);
+
+      curses.attroff(PLT::A_REVERSE);
    }
 
    //! 
    void drawList()
    {
+      selection_is_dir = false;
+      strcpy(selection, "!Quit");
+
+      const unsigned first_row = 3;
+
       FILE* fp = fopen(config_file, "r");
       if (fp == nullptr)
       {
+         curses.mvaddstr(first_row, 3, "ERROR - failed to open \"");
+         curses.addstr(config_file);
+         curses.addstr("\"");
          return;
       }
 
       char prev[FILENAME_MAX];
       prev[0] = '\0';
-
-      const unsigned first_row = 4;
 
       for(unsigned index = 0; (first_row + index)<curses.lines; )
       {
