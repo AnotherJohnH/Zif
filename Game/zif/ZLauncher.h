@@ -35,10 +35,11 @@
 
 
 //! ZMachine launcher
-class ZLauncher : public PLT::Curses
+class ZLauncher
 {
 private:
    PLT::Device&   term;
+   PLT::Curses    curses;
    const char*    config_file{nullptr};
    ZOptions       zoptions;
    unsigned       cursor{0};
@@ -67,17 +68,18 @@ private:
    //! 
    void drawHeader()
    {
-      clear();
+      curses.clear();
 
-      attron(PLT::A_REVERSE);
-      move(1,1);
-      clrtoeol();
-      mvaddstr(1, 3, PROGRAM);
-      attroff(PLT::A_REVERSE);
+      curses.attron(PLT::A_REVERSE);
 
-      attron(PLT::A_BOLD);
-      mvaddstr(3, 3, path);
-      attroff(PLT::A_BOLD);
+      curses.move(1,1);
+      curses.clrtoeol();
+      curses.mvaddstr(1, 3, PROGRAM);
+      curses.attroff(PLT::A_REVERSE);
+
+      curses.attron(PLT::A_BOLD);
+      curses.mvaddstr(3, 3, path);
+      curses.attroff(PLT::A_BOLD);
    }
 
    //! 
@@ -94,7 +96,7 @@ private:
 
       const unsigned first_row = 4;
 
-      for(unsigned index = 0; (first_row + index)<lines; )
+      for(unsigned index = 0; (first_row + index)<curses.lines; )
       {
          // Read one line from the config gile
          char line[FILENAME_MAX];
@@ -129,7 +131,7 @@ private:
                   strcpy(selection, entry);
                   selection_is_dir = is_dir;
 
-                  attron(PLT::A_REVERSE);
+                  curses.attron(PLT::A_REVERSE);
                }
 
                if (entry[0] == '!')
@@ -137,9 +139,9 @@ private:
                   entry++;
                }
 
-               mvaddstr(first_row + index, 3, entry);
+               curses.mvaddstr(first_row + index, 3, entry);
 
-               attroff(PLT::A_REVERSE);
+               curses.attroff(PLT::A_REVERSE);
             }
          }
       }
@@ -149,7 +151,7 @@ private:
 
    void layoutText(unsigned l, unsigned c, const char* text)
    {
-      move(l, c);
+      curses.move(l, c);
 
       const char* s = text;
       const char* o = s;
@@ -160,16 +162,16 @@ private:
          {
             if ((s - o) == 1)
             {
-               addstr("\n\n");
-               for(x = 1; x < c; ++x) addch(' ');
+               curses.addstr("\n\n");
+               for(x = 1; x < c; ++x) curses.addch(' ');
                o = s + 1;
             }
             else
             {
-               if (x >= cols)
+               if (x >= curses.cols)
                {
-                  addch('\n');
-                  for(x = 1; x < c; ++x) addch(' ');
+                  curses.addch('\n');
+                  for(x = 1; x < c; ++x) curses.addch(' ');
                   o++;
                   x += s - o;
                }
@@ -178,7 +180,7 @@ private:
                {
                   char ch = *o;
                   if (ch == '\n') ch = ' ';
-                  addch(ch);
+                  curses.addch(ch);
                }
             }
          }
@@ -192,20 +194,25 @@ private:
    {
       drawHeader();
 
-      mvaddstr( 3, 3, "Program     : "); addstr(PROGRAM);
-      mvaddstr( 4, 3, "Description : "); addstr(DESCRIPTION);
-      mvaddstr( 5, 3, "Author      : "); addstr(AUTHOR);
-      mvaddstr( 6, 3, "Version     : "); addstr(VERSION);
-      mvaddstr( 7, 3, "Built       : "); addstr(__TIME__); addstr(" "); addstr(__DATE__);
-      mvaddstr( 8, 3, "Compiler    : "); layoutText(8, 17, __VERSION__);
+      curses.mvaddstr( 3, 3, "Program     : "); curses.addstr(PROGRAM);
+      curses.mvaddstr( 4, 3, "Description : "); curses.addstr(DESCRIPTION);
+      curses.mvaddstr( 5, 3, "Author      : "); curses.addstr(AUTHOR);
+      curses.mvaddstr( 6, 3, "Version     : "); curses.addstr(VERSION);
 
-      attron(PLT::A_BOLD);
-      mvaddstr(10, 3, "Copyright (c) "); addstr(COPYRIGHT_YEAR); addstr(" "); addstr(AUTHOR);
-      attroff(PLT::A_BOLD);
+      curses.mvaddstr( 7, 3, "Built       : ");
+      curses.addstr(__TIME__); curses.addstr(" "); curses.addstr(__DATE__);
+
+      curses.mvaddstr( 8, 3, "Compiler    : "); layoutText(8, 17, __VERSION__);
+
+      curses.attron(PLT::A_BOLD);
+      curses.mvaddstr(10, 3, "Copyright (c) ");
+      curses.addstr(COPYRIGHT_YEAR); curses.addstr(" "); curses.addstr(AUTHOR);
+
+      curses.attroff(PLT::A_BOLD);
 
       layoutText(12, 3, LICENSE);
 
-      (void) getch();
+      (void) curses.getch();
    }
 
    //! Implement an action
@@ -243,17 +250,17 @@ private:
       else if (strcmp(cmd, "Border") == 0)
       {
          term.ioctl(PLT::Device::IOCTL_TERM_BORDER, atoi(value));
-         Curses::init();
+         curses.init();
       }
       else if (strcmp(cmd, "LineSpace") == 0)
       {
          term.ioctl(PLT::Device::IOCTL_TERM_LINE_SPACE, atoi(value));
-         Curses::init();
+         curses.init();
       }
       else if (strcmp(cmd, "FontSize") == 0)
       {
          term.ioctl(PLT::Device::IOCTL_TERM_FONT_SIZE, atoi(value));
-         Curses::init();
+         curses.init();
       }
    }
 
@@ -322,8 +329,8 @@ private:
 
 public:
    ZLauncher(PLT::Device& term_, const char* config_file_, ZOptions& zoptions_)
-      : Curses(&term_)
-      , term(term_)
+      : term(term_)
+      , curses(&term_)
       , config_file(config_file_)
       , zoptions(zoptions_)
    {
@@ -348,7 +355,7 @@ public:
          drawHeader();
          drawList();
 
-         int key = getch();
+         int key = curses.getch();
 
          switch(key)
          {
@@ -392,7 +399,7 @@ public:
          }
       }
 
-      clear();
+      curses.clear();
 
       return 0;
    }
