@@ -343,7 +343,8 @@ private:
                         x + 1, y + line_space, font, ch);
       }
 
-      if (at.isUnderline())
+      // TODO use an italic font for italics
+      if (at.isUnderline() || at.isItalic())
       {
          paper.drawLine(palette[at.isInvert() ? bg : fg],
                         x,                    y + font->getHeight() - 1,

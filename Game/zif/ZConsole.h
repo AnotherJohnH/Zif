@@ -77,7 +77,7 @@ public:
 
       case COLOURS:      return true;   // TODO platform specific
       case BOLD:         return true;
-      case ITALIC:       return false;
+      case ITALIC:       return true;
 
       case FONT_HEIGHT:  return 10;     // TODO this value is fake
       case FONT_WIDTH:   return 6;      // TODO this value is fake
