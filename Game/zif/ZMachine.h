@@ -1248,13 +1248,11 @@ public:
       memory.init();
       stack.init();
       console.init();
-      stream.init(header->version);
+      stream.init(options, header->version);
+      window_mgr.init(options);
       text.init(header->version, header->abbr);
       parser.init(header->version);
       object.init(header->obj, header->version);
-
-      stream.enableStream(/* PRINTER */ 2, options.output_log);
-      stream.enableStream(/* SNOOPER */ 4, options.input_log);
 
       TRACE("version=%d\n", header->version);
 
@@ -1269,17 +1267,10 @@ public:
 
       quit = false;
 
-#ifndef CO_OP_MULTI_TASK
       while(!quit)
       {
          fetchDecodeExecute();
       }
-#endif
-   }
-
-   void run()
-   {
-      fetchDecodeExecute();
    }
 };
 

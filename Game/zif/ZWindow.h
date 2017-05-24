@@ -25,6 +25,7 @@
 
 #include "ZConsole.h"
 #include "ZStream.h"
+#include "ZOptions.h"
 
 //! 
 class ZWindowManager
@@ -80,6 +81,11 @@ public:
       : console(console_)
       , stream(stream_)
    {}
+
+   void init(ZOptions& options)
+   {
+      printer_enabled = options.output_log;
+   }
 
    uint16_t getWindowProp(unsigned index_, unsigned prop_)
    {

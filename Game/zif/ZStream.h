@@ -28,6 +28,7 @@
 #include "ZConsole.h"
 #include "ZLog.h"
 #include "ZMemory.h"
+#include "ZOptions.h"
 
 
 //! Input/output stream handler
@@ -40,12 +41,12 @@ public:
    {}
 
    //! Initialise streams for a new story
-   void init(uint8_t version)
+   void init(ZOptions& options, uint8_t version)
    {
       console_enable     = true;
-      printer_enable     = false;
+      printer_enable     = options.output_log;
       memory_enable      = false;
-      snooper_enable     = false;
+      snooper_enable     = options.input_log;
 
       buffer_enable      = true;
       buffer_size        = 0;
