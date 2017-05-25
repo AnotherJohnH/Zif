@@ -119,7 +119,12 @@ public:
    {
       if (!enable) return;
 
-      curses.attrset(attr);
+      // The spec states that styles can be combined but is not required
+      // the following allows combined styles
+      if (attr == 0)
+         curses.attrset(0);
+      else
+         curses.attron(attr);
    }
 
    //! Set (curses format) colours
