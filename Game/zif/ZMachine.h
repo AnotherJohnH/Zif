@@ -663,10 +663,10 @@ private:
       stream.flush();
 
       unsigned attr = 0;
-      if (uarg[0] & (1<<0)) attr |= PLT::A_REVERSE;;
-      if (uarg[0] & (1<<1)) attr |= PLT::A_BOLD;;
-      if (uarg[0] & (1<<2)) attr |= PLT::A_ITALIC;;
-      if (uarg[0] & (1<<3)) attr |= PLT::A_FIXED;;
+      if (uarg[0] & (1<<0)) attr |= PLT::A_REVERSE;
+      if (uarg[0] & (1<<1)) attr |= PLT::A_BOLD;
+      if (uarg[0] & (1<<2)) attr |= PLT::A_ITALIC;
+      if (uarg[0] & (1<<3)) attr |= PLT::A_FIXED;
       stream.setAttributes(attr);
    }
 
