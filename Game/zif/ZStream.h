@@ -58,7 +58,7 @@ public:
    //! Select the current font
    bool setFont(unsigned font_idx)
    {
-      flushOutputBuffer();
+      flush();
 
       return console.setFont(font_idx);
    }
@@ -66,7 +66,7 @@ public:
    //! Set (curses format) attributes
    void setAttributes(unsigned attr)
    {
-      flushOutputBuffer();
+      flush();
 
       console.setAttributes(attr);
    }
@@ -74,7 +74,7 @@ public:
    //! Set colours
    void setColours(signed fg, signed bg)
    {
-      flushOutputBuffer();
+      flush();
 
       console.setColours(fg, bg);
    }
