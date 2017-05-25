@@ -175,7 +175,7 @@ public:
 
       curses.addch(zscii);
 
-      if (zscii == '\n')
+      if ((zscii == '\n') && !isCannedInput())
       {
          scroll++;
          if (scroll == (curses.lines - 1))
@@ -209,7 +209,8 @@ protected:
    PLT::Curses  curses;
 
 private:
-   int getChar();
+   bool isCannedInput();
+   int  getChar();
 
    unsigned scroll{0};
    bool     enable{true};

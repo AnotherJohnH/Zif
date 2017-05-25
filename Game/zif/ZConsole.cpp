@@ -39,6 +39,10 @@ ZConsole::~ZConsole()
    if (input_fp) fclose(input_fp);
 }
 
+bool ZConsole::isCannedInput()
+{
+   return input_fp != nullptr;
+}
 
 int ZConsole::getChar()
 {
