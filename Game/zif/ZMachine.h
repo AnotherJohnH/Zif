@@ -38,7 +38,7 @@
 #include "ZLog.h"
 
 
-#define TRACE if (1) ; else debug.printf
+#define TRACE if (1) ; else trace.printf
 
 
 class ZMachine
@@ -57,7 +57,7 @@ private:
       OP_NONE        = 3
    };
 
-   ZLog                  debug{"debug"};
+   ZLog                  trace{"trace"};
    ZOptions&             options;
    ZConsole              console;
    ZStream               stream;
@@ -1123,18 +1123,12 @@ private:
 
    void fetchDecodeExecute()
    {
-      static unsigned tick = 0;
-
-      TRACE("%4d %06X:", tick++, pc);
-
       clearOperands();
 
       uint8_t opcode = fetchByte();
 
       if (opcode < 0x80)
       {
-         TRACE(" %02X 2OP:%02X    ", opcode, opcode & 0x1F);
-
          fetchOperand(opcode & (1<<6) ? OP_VARIABLE : OP_SMALL_CONST);
          fetchOperand(opcode & (1<<5) ? OP_VARIABLE : OP_SMALL_CONST);
 
@@ -1142,30 +1136,22 @@ private:
       }
       else if (opcode < 0xB0)
       {
-         TRACE(" %02X 1OP:%1X     ", opcode, opcode & 0xF);
-
          fetchOperand((opcode >> 4) & 3);
 
          doOp1(opcode);
       }
       else if (opcode < 0xC0)
       {
-         TRACE(" %02X 0OP:%1X     ", opcode, opcode & 0xF);
-
          doOp0(opcode);
       }
       else if (opcode < 0xE0)
       {
-         TRACE(" %02X 2OP:%02X", opcode, opcode & 0x1F);
-
          fetchOperands(4);
 
          doOp2(opcode);
       }
       else
       {
-         TRACE(" %02X VAR:%02X", opcode, opcode & 0x1F);
-
          if ((opcode == 0xEC) || (opcode == 0xFA))
             fetchOperands(8);
          else
@@ -1173,8 +1159,6 @@ private:
 
          doOpV(opcode);
       }
-
-      TRACE("\n");
    }
 
    bool load(const char* filename)
@@ -1219,6 +1203,38 @@ private:
       return true;
    }
 
+   void printTrace()
+   {
+      static unsigned tick = 0;
+
+      uint8_t opcode = memory.readByte(pc);
+
+      trace.printf("%4d %06X: %02X ", tick++, pc, opcode);
+
+      if (opcode < 0x80)
+      {
+         trace.printf("2OP:%02X", opcode & 0x1F);
+      }
+      else if (opcode < 0xB0)
+      {
+         trace.printf("1OP:%1X", opcode & 0xF);
+      }
+      else if (opcode < 0xC0)
+      {
+         trace.printf("0OP:%1X", opcode & 0xF);
+      }
+      else if (opcode < 0xE0)
+      {
+         trace.printf("2OP:%02X", opcode & 0x1F);
+      }
+      else
+      {
+         trace.printf("VAR:%02X", opcode & 0x1F);
+      }
+
+      trace.printf("\n");
+   }
+
 public:
    ZMachine(PLT::Device* device_, ZOptions& options_)
       : options(options_)
@@ -1254,8 +1270,6 @@ public:
       parser.init(header->version);
       object.init(header->obj, header->version);
 
-      TRACE("version=%d\n", header->version);
-
       initDecoder();
 
       if (header->version != 6)
@@ -1267,9 +1281,22 @@ public:
 
       quit = false;
 
-      while(!quit)
+      if (options.trace)
       {
-         fetchDecodeExecute();
+         trace.printf("version=%d\n", header->version);
+
+         while(!quit)
+         {
+            printTrace();
+            fetchDecodeExecute();
+         }
+      }
+      else
+      {
+         while(!quit)
+         {
+            fetchDecodeExecute();
+         }
       }
    }
 };

@@ -32,6 +32,7 @@ struct ZOptions
    STB::Option<bool>      input_log{    'i', "input",  "Write 'input.log'"};
    STB::Option<unsigned>  screen_width{ 'w', "width",  "Screen width", 0};
    STB::Option<bool>      batch{        'b', "batch",  "Batch mode, no console"};
+   STB::Option<bool>      trace{        'T', "trace",  "Trace execution"};
 };
 
 #endif
