@@ -190,8 +190,7 @@ public:
          {
             curses.addstr("...");
             curses.getch();
-            curses.addstr("\b\b\b");
-            curses.clrtoeol();
+            curses.addstr("\b\b\b   \b\b\b");
             scroll = 0;
          }
       }
