@@ -71,12 +71,12 @@ public:
       console.setAttributes(attr);
    }
 
-   //! Set (curses format) colours
-   void setColours(unsigned fg_col, unsigned bg_col)
+   //! Set colours
+   void setColours(signed fg, signed bg)
    {
       flushOutputBuffer();
 
-      console.setColours(fg_col, bg_col);
+      console.setColours(fg, bg);
    }
 
    //! Synchronise current col used for line breaking

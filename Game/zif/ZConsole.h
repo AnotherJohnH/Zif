@@ -127,10 +127,13 @@ public:
          curses.attron(attr);
    }
 
-   //! Set (curses format) colours
-   void setColours(unsigned fg_col, unsigned bg_col)
+   //! Set colours
+   void setColours(signed fg, signed bg)
    {
       if (!enable) return;
+
+      convertCodeToColour(fg_col, fg, DEFAULT_FG_COL);
+      convertCodeToColour(bg_col, bg, DEFAULT_BG_COL);
 
       curses.colourset(fg_col, bg_col);
    }
@@ -217,8 +220,43 @@ private:
    bool isCannedInput();
    int  getChar();
 
-   unsigned scroll{0};
-   bool     enable{true};
+   // Convert Z colour codes to a curses colour index
+   void convertCodeToColour(unsigned& current, signed code, const unsigned DEFAULT)
+   {
+      if (code == 0)
+      {
+         // no change
+      }
+      else if (code == 1)
+      {
+         current = DEFAULT;
+      }
+      else if ((code >= 2) && (code <= 9))
+      {
+         // black, red, green, yellow, blue, magenta, cyan, white
+         current = code - 2;
+      }
+      else if (extended_colours)
+      {
+         switch(code)
+         {
+         case -1:              break; // TODO colour of pixel under cursor
+         case 10: current = 7; break; // TODO light grey
+         case 11: current = 7; break; // TODO medium grey
+         case 12: current = 7; break; // TODO dark grey
+         default: break;
+         }
+      }
+   }
+
+   static const unsigned DEFAULT_FG_COL = 9;
+   static const unsigned DEFAULT_BG_COL = 9;
+
+   unsigned  scroll{0};
+   bool      enable{true};
+   bool      extended_colours{false};  // TODO v6 only
+   unsigned  fg_col{DEFAULT_FG_COL};
+   unsigned  bg_col{DEFAULT_BG_COL};
 };
 
 #endif

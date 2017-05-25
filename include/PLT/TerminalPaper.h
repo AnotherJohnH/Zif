@@ -49,6 +49,7 @@ private:
    static const unsigned MIN_FONT_HEIGHT = 8;
    static const unsigned MAX_COLS = WIDTH  / MIN_FONT_WIDTH;
    static const unsigned MAX_ROWS = HEIGHT / MIN_FONT_HEIGHT;
+   static const unsigned PALETTE_SIZE = 10;
 
    enum Flash     { OFF, SLOW, FAST };
    enum Intensity { NORMAL, BOLD, FAINT };
@@ -86,8 +87,8 @@ private:
          setUnderline(false);
          setInvert(false);
          setFont(0);
-         setFgCol(7);
-         setBgCol(0);
+         setFgCol(8);
+         setBgCol(9);
          setFlash(OFF);
       }
 
@@ -95,10 +96,10 @@ private:
       bool       isItalic()     const { return      bool(unpack( 2,  2)); }
       bool       isUnderline()  const { return      bool(unpack( 3,  3)); }
       bool       isInvert()     const { return      bool(unpack( 4,  4)); }
-      unsigned   getFont()      const { return           unpack( 7,  5);  }
-      unsigned   getFgCol()     const { return           unpack(10,  8);  }
-      unsigned   getBgCol()     const { return           unpack(13, 11);  }
-      Flash      getFlash()     const { return     Block(unpack(15, 14)); }
+      unsigned   getFont()      const { return           unpack( 6,  5);  }
+      unsigned   getFgCol()     const { return           unpack(10,  7);  }
+      unsigned   getBgCol()     const { return           unpack(14, 11);  }
+      Flash      getFlash()     const { return           unpack(15, 15) ? SLOW : OFF; }
 
       bool       isBold()       const { return getIntensity() == BOLD;   }
       bool       isNormal()     const { return getIntensity() == NORMAL; }
@@ -108,10 +109,10 @@ private:
       void  setItalic(bool on)                { pack( 2,  2, on ? 1 : 0); }
       void  setUnderline(bool on)             { pack( 3,  3, on ? 1 : 0); }
       void  setInvert(bool on)                { pack( 4,  4, on ? 1 : 0); }
-      void  setFont(unsigned font)            { pack( 7,  5, font); }
-      void  setFgCol(unsigned col)            { pack(10,  8, col); }
-      void  setBgCol(unsigned col)            { pack(13, 11, col); }
-      void  setFlash(Flash flash)             { pack(15, 14, unsigned(flash)); }
+      void  setFont(unsigned font)            { pack( 6,  5, font); }
+      void  setFgCol(unsigned col)            { pack(10,  7, col); }
+      void  setBgCol(unsigned col)            { pack(14, 11, col); }
+      void  setFlash(Flash flash)             { pack(15, 15, flash != OFF ? 1 : 0); }
    };
 
    // Resources
@@ -124,7 +125,7 @@ private:
    GUI::Vector       org;
 
    // State
-   GUI::Colour           palette[8];
+   GUI::Colour           palette[PALETTE_SIZE];
    signed                col{}, row{};
    signed                save_col{}, save_row{};
    Attr                  attr;
@@ -227,8 +228,8 @@ private:
       case 27: attr.setInvert(false);     break;
       case  7: attr.setInvert(true);      break;
 
-      case 39: attr.setFgCol(7);          break;
-      case 49: attr.setBgCol(0);          break;
+      case 39: attr.setFgCol(8);          break;
+      case 49: attr.setBgCol(9);          break;
 
       default:
          if ((n >= 10) && (n <= 19))
@@ -299,7 +300,7 @@ private:
       for(unsigned c=1; c<=num_cols; ++c)
       {
          cell_char[c-1][num_rows-1] = ' ';
-         cell_attr[c-1][num_rows-1] = attr;
+         cell_attr[c-1][num_rows-1].reset();
 
          drawChar(c, num_rows);
       }
@@ -370,6 +371,9 @@ private:
       palette[5] = GUI::MAGENTA;
       palette[6] = GUI::CYAN;
       palette[7] = GUI::WHITE;
+
+      palette[8] = GUI::WHITE; // Default foreground
+      palette[9] = GUI::BLACK; // Default background
    }
 
    virtual void ansiGraphic(uint8_t ch) override
@@ -599,7 +603,11 @@ public:
       case IOCTL_TERM_PALETTE:
          {
             unsigned col = va_arg(ap, unsigned);
-            palette[col] = va_arg(ap, uint32_t);
+            uint32_t rgb = va_arg(ap, uint32_t);
+            if (col < PALETTE_SIZE)
+            {
+               palette[col] = rgb;
+            }
             init();
             status = 0;
          }

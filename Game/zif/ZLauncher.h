@@ -249,13 +249,13 @@ private:
 
          if (strcmp(value, "Inverse") == 0)
          {
-            term.ioctl(PLT::Device::IOCTL_TERM_PALETTE, 0, light);
-            term.ioctl(PLT::Device::IOCTL_TERM_PALETTE, 7, dark);
+            term.ioctl(PLT::Device::IOCTL_TERM_PALETTE, 8, dark);
+            term.ioctl(PLT::Device::IOCTL_TERM_PALETTE, 9, light);
          }
-         else if (strcmp(value,  "Normal") == 0)
+         else if (strcmp(value, "Normal") == 0)
          {
-            term.ioctl(PLT::Device::IOCTL_TERM_PALETTE, 0, dark);
-            term.ioctl(PLT::Device::IOCTL_TERM_PALETTE, 7, light);
+            term.ioctl(PLT::Device::IOCTL_TERM_PALETTE, 8, light);
+            term.ioctl(PLT::Device::IOCTL_TERM_PALETTE, 9, dark);
          }
       }
       else if (strcmp(cmd, "Border") == 0)

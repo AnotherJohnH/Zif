@@ -194,9 +194,9 @@ public:
    void colourset(unsigned fg_col, unsigned bg_col)
    {
       addstr("\033[");
-      adduint(30+fg_col-2);
+      adduint(30+fg_col);
       addch(';');
-      adduint(40+bg_col-2);
+      adduint(40+bg_col);
       addch('m');
    }
 
