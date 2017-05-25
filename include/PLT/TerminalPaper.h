@@ -322,32 +322,40 @@ private:
       uint8_t ch = cell_char[c-1][r-1];
       Attr    at = cell_attr[c-1][r-1];
 
-      unsigned fg = at.getFgCol();
-      unsigned bg = at.getBgCol();
+      unsigned fg, bg;
+
+      if (at.isInvert())
+      {
+         fg = at.getBgCol();
+         bg = at.getFgCol();
+      }
+      else
+      {
+         fg = at.getFgCol();
+         bg = at.getBgCol();
+      }
 
       unsigned x = org.x + (c-1) * font->getWidth();
       unsigned y = org.y + (r-1) * (font->getHeight() + line_space);
 
-      paper.fillRect(palette[attr.isInvert() ? fg : bg],
+      paper.fillRect(palette[bg],
                      x, y,
                      x + font->getWidth(),
                      y + font->getHeight() + line_space);
 
-      paper.drawChar(palette[at.isInvert() ? bg : fg],
-                     palette[at.isInvert() ? fg : bg],
+      paper.drawChar(palette[fg], palette[bg],
                      x, y + line_space, font, ch);
 
       if (at.isBold())
       {
-         paper.drawChar(palette[at.isInvert() ? bg : fg],
-                        palette[at.isInvert() ? fg : bg],
+         paper.drawChar(palette[fg], palette[bg],
                         x + 1, y + line_space, font, ch);
       }
 
       // TODO use an italic font for italics
       if (at.isUnderline() || at.isItalic())
       {
-         paper.drawLine(palette[at.isInvert() ? bg : fg],
+         paper.drawLine(palette[fg],
                         x,                    y + font->getHeight() - 1,
                         x + font->getWidth(), y + font->getHeight() - 1);
       }
