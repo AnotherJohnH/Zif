@@ -106,9 +106,10 @@ public:
    //! Select the current font
    bool setFont(unsigned font_idx)
    {
-      if (!enable) return true;
-
-      // TODO
+      if (enable)
+      {
+         // TODO
+      }
 
       return font_idx == 1;
    }

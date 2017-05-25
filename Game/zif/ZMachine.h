@@ -491,7 +491,7 @@ private:
 
    void op2_call_2s()           { subCall(0, uarg[0], 1, &uarg[1]); }
    void op2_call_2n()           { subCall(1, uarg[0], 1, &uarg[1]); }
-   void op2_set_colour()        { console.setColours(uarg[0], uarg[1]); /* TODO v6 window */ }
+   void op2_set_colour()        { stream.setColours(uarg[0], uarg[1]); /* TODO v6 window */ }
    void op2_throw()             { TODO(); }
 
    //============================================================================
@@ -667,7 +667,7 @@ private:
       if (uarg[0] & (1<<1)) attr |= PLT::A_BOLD;;
       if (uarg[0] & (1<<2)) attr |= PLT::A_ITALIC;;
       if (uarg[0] & (1<<3)) attr |= PLT::A_FIXED;;
-      console.setAttributes(attr);
+      stream.setAttributes(attr);
    }
 
    void opV_buffer_mode()
@@ -850,7 +850,7 @@ private:
    //  set_font font
    void opE_set_font()
    {
-      bool ok = console.setFont(uarg[0]);
+      bool ok = stream.setFont(uarg[0]);
       varWrite(fetchByte(), ok);
    }
 

@@ -55,6 +55,30 @@ public:
       printer_echo_input = version <= 5;
    }
 
+   //! Select the current font
+   bool setFont(unsigned font_idx)
+   {
+      flushOutputBuffer();
+
+      return console.setFont(font_idx);
+   }
+
+   //! Set (curses format) attributes
+   void setAttributes(unsigned attr)
+   {
+      flushOutputBuffer();
+
+      console.setAttributes(attr);
+   }
+
+   //! Set (curses format) colours
+   void setColours(unsigned fg_col, unsigned bg_col)
+   {
+      flushOutputBuffer();
+
+      console.setColours(fg_col, bg_col);
+   }
+
    //! Synchronise current col used for line breaking
    void setCol(unsigned col_)
    {
