@@ -186,7 +186,14 @@ public:
    {
       if (!enable) return;
 
-      curses.addch(zscii);
+      if (zscii >= 128 )
+      {
+         curses.addch('?');
+      }
+      else
+      {
+         curses.addch(zscii);
+      }
 
       if ((zscii == '\n') && !isCannedInput())
       {
