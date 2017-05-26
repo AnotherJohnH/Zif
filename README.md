@@ -43,6 +43,15 @@ The launcher configuration file ("zif.cfg") file is used to provide a front-end 
 z-code games available in the local file system can be selected and certain aspects of
 the terminal emulation configured.
 
+## Thanks & Acknowledgements
+
+Graham Nelson for his "Z-Machine Standards Document" and test programs. Andrew Plotkin
+for his "Z-machine Exerciser". The contributers to Frotz, which has been an invaluable
+reference of correct Z-Machine behaviour. The Z-Code authors, and everyone else
+involved, for enabling their Z-code files to be freely available at the Interactive
+Fiction Archive (http://ifarchive.org/) and the Interactive Fiction Database
+(http://ifdb.tads.org/).
+
 ## How to build
 
 Type scons in the top level directory to run the SConstruct file.
