@@ -1221,7 +1221,15 @@ private:
       }
       else if (opcode < 0xC0)
       {
-         trace.printf("0OP:%1X", opcode & 0xF);
+         if ((opcode & 0xF) == 0xE)
+         {
+            uint8_t ext_opcode = memory.readByte(pc + 1);
+            trace.printf("EXT:%02X", ext_opcode & 0x1F);
+         }
+         else
+         {
+            trace.printf("0OP:%1X", opcode & 0xF);
+         }
       }
       else if (opcode < 0xE0)
       {

@@ -166,7 +166,8 @@ public:
 
    void eraseWindow(unsigned index_)
    {
-      // TODO
+      // TODO properly
+      console.clear();
    }
 
 private:

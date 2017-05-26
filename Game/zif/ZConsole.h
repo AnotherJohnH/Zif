@@ -103,6 +103,11 @@ public:
       curses.getyx(line, col);
    }
 
+   void clear()
+   {
+      curses.clear();
+   }
+
    //! Select the current font
    bool setFont(unsigned font_idx)
    {
