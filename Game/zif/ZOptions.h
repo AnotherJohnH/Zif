@@ -28,11 +28,12 @@
 //! 
 struct ZOptions
 {
-   STB::Option<bool>      output_log{   'o', "output", "Write 'output.log'"};
-   STB::Option<bool>      input_log{    'i', "input",  "Write 'input.log'"};
-   STB::Option<unsigned>  screen_width{ 'w', "width",  "Screen width", 0};
-   STB::Option<bool>      batch{        'b', "batch",  "Batch mode, no console"};
-   STB::Option<bool>      trace{        'T', "trace",  "Trace execution"};
+   STB::Option<bool>         print{ 'p', "print",  "Print output to \"print.log\""};
+   STB::Option<unsigned>     width{ 'w', "width",  "Override output width", 0};
+   STB::Option<bool>         batch{ 'b', "batch",  "Batch mode, disable output to screen"};
+   STB::Option<bool>         key{   'k', "key",    "Log key presses to \"key.log\""};
+   STB::Option<const char*>  input{ 'i', "input",  "Read keyboard input from a file"};
+   STB::Option<bool>         trace{ 'T', "trace",  "Trace execution"};
 };
 
 #endif

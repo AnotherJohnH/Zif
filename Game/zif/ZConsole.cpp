@@ -24,27 +24,28 @@
 
 #include "ZConsole.h"
 
+
 static FILE*  input_fp = nullptr;
 
 
-ZConsole::ZConsole(PLT::Device* device_)
-   : curses(device_)
+bool ZConsole::openInputFile(const char* filename)
 {
-   input_fp = fopen("fast.in", "r");
+   input_fp = fopen(filename, "r");
+   return isInputFileOpen();
 }
 
-
-ZConsole::~ZConsole()
-{
-   if (input_fp) fclose(input_fp);
-}
-
-bool ZConsole::isCannedInput()
+bool ZConsole::isInputFileOpen()
 {
    return input_fp != nullptr;
 }
 
-int ZConsole::getChar()
+void ZConsole::closeInputFile()
+{
+   fclose(input_fp);
+}
+
+
+int ZConsole::getInput()
 {
    if (input_fp != nullptr)
    {

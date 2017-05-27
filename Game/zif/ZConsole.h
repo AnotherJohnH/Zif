@@ -53,24 +53,41 @@ public:
       READ_TIMEOUT
    };
 
-   ZConsole(PLT::Device* dev_);
+   ZConsole(PLT::Device* device_)
+      : curses(device_)
+   {}
 
-   ~ZConsole();
+   ~ZConsole()
+   {
+      if (isInputFileOpen())
+      {
+         closeInputFile();
+      }
+   }
 
    void init(ZOptions& options)
    {
-      enable = !options.batch;
+      if (options.input != nullptr)
+      {
+         openInputFile(options.input);
+         if (!isInputFileOpen())
+         {
+            message("ERROR", "Failed to open input file");
+         }
+      }
 
-      if (!enable) return;
+      if (options.width != 0)
+      {
+         curses.cols = options.width;
+      }
+
+      screen_enable = !options.batch;
+
+      if (!screen_enable) return;
 
       curses.raw();
       curses.noecho();
       curses.clear();
-   }
-
-   void setWidth(unsigned width)
-   {
-      curses.cols = width;
    }
 
    //! Return console attribute
@@ -111,7 +128,7 @@ public:
    //! Select the current font
    bool setFont(unsigned font_idx)
    {
-      if (enable)
+      if (screen_enable)
       {
          // TODO
       }
@@ -122,7 +139,7 @@ public:
    //! Set (curses format) attributes
    void setAttributes(unsigned attr)
    {
-      if (!enable) return;
+      if (!screen_enable) return;
 
       // The spec states that styles can be combined but is not required
       // the following allows combined styles
@@ -135,7 +152,7 @@ public:
    //! Set colours
    void setColours(signed fg, signed bg)
    {
-      if (!enable) return;
+      if (!screen_enable) return;
 
       convertCodeToColour(fg_col, fg, DEFAULT_FG_COL);
       convertCodeToColour(bg_col, bg, DEFAULT_BG_COL);
@@ -146,7 +163,7 @@ public:
    //! Move cursor
    void moveCursor(unsigned line, unsigned col)
    {
-      if (!enable) return;
+      if (!screen_enable) return;
 
       curses.move(line, col);
    }
@@ -159,7 +176,7 @@ public:
       while(true)
       {
          // TODO timeout
-         ch = getChar();
+         ch = getInput();
          if (ch < 0)
          {
             exit(0); // TODO this seems a bit severe!
@@ -184,7 +201,7 @@ public:
    //! Write ZSCII character
    void write(uint16_t zscii)
    {
-      if (!enable) return;
+      if (!screen_enable) return;
 
       if (zscii >= 128 )
       {
@@ -195,7 +212,7 @@ public:
          curses.addch(zscii);
       }
 
-      if ((zscii == '\n') && !isCannedInput())
+      if ((zscii == '\n') && !isInputFileOpen())
       {
          scroll++;
          if (scroll == (curses.lines - 1))
@@ -211,7 +228,7 @@ public:
    //! Report a message
    void message(const char* type, const char* message)
    {
-      if (!enable) return;
+      if (!screen_enable) return;
 
       curses.clear();
       curses.attron(PLT::A_REVERSE);
@@ -228,8 +245,11 @@ protected:
    PLT::Curses  curses;
 
 private:
-   bool isCannedInput();
-   int  getChar();
+   bool openInputFile(const char* filename_);
+   void closeInputFile();
+   bool isInputFileOpen();
+
+   int  getInput();
 
    // Convert Z colour codes to a curses colour index
    void convertCodeToColour(unsigned& current, signed code, const unsigned DEFAULT)
@@ -264,7 +284,7 @@ private:
    static const unsigned DEFAULT_BG_COL = 9;
 
    unsigned  scroll{0};
-   bool      enable{true};
+   bool      screen_enable{true};
    bool      extended_colours{false};  // TODO v6 only
    unsigned  fg_col{DEFAULT_FG_COL};
    unsigned  bg_col{DEFAULT_BG_COL};

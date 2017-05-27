@@ -84,7 +84,7 @@ public:
 
    void init(ZOptions& options)
    {
-      printer_enabled = options.output_log;
+      printer_enabled = options.print;
    }
 
    uint16_t getWindowProp(unsigned index_, unsigned prop_)

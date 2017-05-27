@@ -1253,14 +1253,14 @@ public:
       , text(stream, memory)
       , quit(false)
       , rand_state(1)
-   {
-      if (options.screen_width != 0) console.setWidth(options.screen_width);
-   }
+   {}
 
    //! Play a Z file
    void open(const char* filename)
    {
       if (!load(filename)) return;
+
+      console.init(options);
 
       ZConfig  config;
 
@@ -1271,7 +1271,6 @@ public:
 
       memory.init();
       stack.init();
-      console.init(options);
       stream.init(options, header->version);
       window_mgr.init(options);
       text.init(header->version, header->abbr);

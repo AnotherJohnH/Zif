@@ -44,9 +44,9 @@ public:
    void init(ZOptions& options, uint8_t version)
    {
       console_enable     = true;
-      printer_enable     = options.output_log;
+      printer_enable     = options.print;
       memory_enable      = false;
-      snooper_enable     = options.input_log;
+      snooper_enable     = options.key;
 
       buffer_enable      = true;
       buffer_size        = 0;
@@ -291,7 +291,7 @@ private:
    bool       printer_enable{false};
    bool       printer_echo_input{false};
    unsigned   printer_newline_count{ 1 };
-   ZLog       printer{"output"};
+   ZLog       printer{"print"};
 
    // Memory stream state
    bool       memory_enable{false};
@@ -302,7 +302,7 @@ private:
 
    // Input snooper stream state
    bool       snooper_enable{false};
-   ZLog       snooper{"input"};
+   ZLog       snooper{"key"};
 };
 
 #endif

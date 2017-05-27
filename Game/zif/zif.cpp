@@ -47,8 +47,12 @@ private:
    Display display = DISP_SVGA;
 #endif
 
-   STB::Option<const char*>  opt_config{ 'c', "config", "Config file", "zif.cfg"};
-   STB::Option<bool>         opt_term{   't', "term",   "Use the parent terminal"};
+   STB::Option<const char*>  opt_config{ 'c', "config",
+                                         "Use alternate config file (default is \"zif.cfg\")",
+                                         "zif.cfg"};
+
+   STB::Option<bool>         opt_term{   't', "term",
+                                         "Use the parent terminal (not the built in terminal)"};
 
    STB::Option<bool>         opt_k3{     'K', "k3",     "Kindle display 800x600"};
    STB::Option<bool>         opt_vga{    'V', "vga",    "VGA display    640x480"};
