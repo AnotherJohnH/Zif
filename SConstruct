@@ -23,6 +23,7 @@
 source = ['Game/zif/zif.cpp',
           'Game/zif/ZLog.cpp',
           'Game/zif/ZConsole.cpp',
+          'Game/zif/ZStream.cpp',
           'common/STB/Option.cpp']
 
 binary = 'zif'

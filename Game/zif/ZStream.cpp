@@ -1,5 +1,5 @@
 //------------------------------------------------------------------------------
-// Copyright (c) 2016-2017 John D. Haughton
+// Copyright (c) 2016 John D. Haughton
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -20,23 +20,19 @@
 // SOFTWARE.
 //------------------------------------------------------------------------------
 
-#ifndef Z_OPTIONS_H
-#define Z_OPTIONS_H
+#include <cstdio>
+#include <cstdarg>
 
-#include "STB/ConsoleApp.h"
+#include "ZStream.h"
 
-//! 
-struct ZOptions
+
+void ZStream::vWritef(const char* format, va_list ap)
 {
-   STB::Option<bool>         print{ 'p', "print",  "Print output to \"print.log\""};
-   STB::Option<bool>         info{   0, "info",   "Report information messages"};
-   STB::Option<bool>         warn{   0, "warn",   "Report warning messages"};
-   STB::Option<unsigned>     width{ 'w', "width",  "Override output width", 0};
-   STB::Option<bool>         batch{ 'b', "batch",  "Batch mode, disable output to screen"};
-   STB::Option<bool>         key{   'k', "key",    "Log key presses to \"key.log\""};
-   STB::Option<const char*>  input{ 'i', "input",  "Read keyboard input from a file"};
-   STB::Option<bool>         trace{ 'T', "trace",  "Trace execution"};
-};
+   char  message[256]; // XXX this is unsafe
 
-#endif
+   vsprintf(message, format, ap);
+
+   writeRaw(message);
+}
+
 

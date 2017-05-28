@@ -86,16 +86,28 @@ private:
    OpPtr  opV[0x20];
    OpPtr  opE[0x20];
 
-   void warning(const char* message)
+   void info(const char* format, ...)
    {
-#if 0
-      console.message("WARNING", message);
-#endif
+      va_list  ap;
+      va_start(ap, format);
+      stream.vmessage(ZStream::INFO, format, ap);
+      va_end(ap);
    }
 
-   void error(const char* message)
+   void warning(const char* format, ...)
    {
-      console.message("ERROR", message);
+      va_list  ap;
+      va_start(ap, format);
+      stream.vmessage(ZStream::WARNING, format, ap);
+      va_end(ap);
+   }
+
+   void error(const char* format, ...)
+   {
+      va_list  ap;
+      va_start(ap, format);
+      stream.vmessage(ZStream::ERROR, format, ap);
+      va_end(ap);
       quit = true;
    }
 
@@ -229,7 +241,7 @@ private:
       case 1: /* throw return value away */ break;
       case 2: stack.push(value);            break;
 
-      default: error("Bad call type");
+      default: error("Subroutine return, bad call type %u", call_type);
       }
 
       TRACE("   // ret %06X", pc);
@@ -237,7 +249,7 @@ private:
 
    void showStatus()
    {
-      TODO_IGNORE("show_status");
+      TODO_WARN("show_status");
    }
 
    uint16_t random(int16_t arg)
@@ -267,11 +279,11 @@ private:
       }
    }
 
-   void ILLEGAL()  { error("Illegal operation"); }
+   void ILLEGAL()     { error("Illegal operation"); }
 
-   void TODO()     { error("Unimplemented operation"); }
+   void TODO_ERROR()  { error("Unimplemented operation"); }
 
-   void TODO_IGNORE(const char* op)
+   void TODO_WARN(const char* op)
    {
       warning(op);
    }
@@ -332,7 +344,7 @@ private:
    void op0_restore_v4()   { varWrite(fetchByte(), false); } // TODO
 
    //! restart
-   void op0_restart()      { TODO(); }
+   void op0_restart()      { TODO_ERROR(); }
 
    //! ret_popped
    void op0_ret_popped()   { subRet(stack.pop()); }
@@ -344,7 +356,11 @@ private:
    void op0_catch()        { varWrite(fetchByte(), stack.framePtr()); }
 
    //! quit
-   void op0_quit()         { quit = true; }
+   void op0_quit()
+   {
+      info("quit");
+      quit = true;
+   }
 
    //! new_line
    void op0_new_line()     { stream.writeChar('\n'); }
@@ -492,7 +508,7 @@ private:
    void op2_call_2s()           { subCall(0, uarg[0], 1, &uarg[1]); }
    void op2_call_2n()           { subCall(1, uarg[0], 1, &uarg[1]); }
    void op2_set_colour()        { stream.setColours(uarg[0], uarg[1]); /* TODO v6 window */ }
-   void op2_throw()             { TODO(); }
+   void op2_throw()             { TODO_ERROR(); }
 
    //============================================================================
    // Variable operand instructions
@@ -652,11 +668,11 @@ private:
    void opV_set_window()     { window_mgr.select(uarg[0]); }
    void opV_call_vs2()       { subCall(0, uarg[0], num_arg-1, &uarg[1]); }
    void opV_erase_window()   { window_mgr.eraseWindow(uarg[0]); }
-   void opV_erase_line_v4()  { TODO(); }
-   void opV_erase_line_v6()  { TODO(); }
+   void opV_erase_line_v4()  { TODO_ERROR(); }
+   void opV_erase_line_v6()  { TODO_ERROR(); }
    void opV_set_cursor_v4()  { console.moveCursor(uarg[0], uarg[1]); }
-   void opV_set_cursor_v6()  { TODO_IGNORE("set_cursor_v6"); }
-   void opV_get_cursor()     { TODO(); }
+   void opV_set_cursor_v6()  { TODO_WARN("set_cursor_v6"); }
+   void opV_get_cursor()     { TODO_ERROR(); }
 
    void opV_set_text_style()
    {
@@ -698,12 +714,12 @@ private:
 
    void opV_input_stream()
    {
-      TODO();
+      TODO_ERROR();
    }
 
    void opV_sound_effect()
    {
-      TODO();
+      TODO_WARN("sound_effect");
    }
 
    void opV_read_char()
@@ -759,7 +775,7 @@ private:
 
    void opV_encode_text()
    {
-      TODO();
+      TODO_ERROR();
    }
 
    void opV_copy_table()
@@ -802,12 +818,12 @@ private:
 
    void opE_save_table()
    {
-      TODO();
+      TODO_ERROR();
    }
 
    void opE_restore_table()
    {
-      TODO();
+      TODO_ERROR();
    }
 
    void opE_log_shift()
@@ -833,17 +849,17 @@ private:
 
    void opE_restore_undo()
    {
-      TODO();
+      TODO_ERROR();
    }
 
    void opE_print_unicode()
    {
-      TODO();
+      TODO_ERROR();
    }
 
    void opE_check_unicode()
    {
-      TODO();
+      TODO_ERROR();
    }
 
    //! EXT:4
@@ -864,7 +880,7 @@ private:
       (void) y;
       (void) x;
 
-      TODO_IGNORE("move_window");
+      TODO_WARN("move_window");
    }
 
    void opE_window_size()
@@ -877,7 +893,7 @@ private:
       (void) y;
       (void) x;
 
-      TODO_IGNORE("window_size");
+      TODO_WARN("window_size");
    }
 
    void opE_window_style()
@@ -890,7 +906,7 @@ private:
       (void) flags;
       (void) operation;
 
-      TODO_IGNORE("set_wind_style");
+      TODO_WARN("set_wind_style");
    }
 
    void opE_get_wind_prop()
@@ -1055,24 +1071,24 @@ private:
 
       if (version() < 6) return;
 
-      opE[0x05] = &ZMachine::TODO;
-      opE[0x06] = &ZMachine::TODO;
-      opE[0x07] = &ZMachine::TODO;
-      opE[0x08] = &ZMachine::TODO;
+      opE[0x05] = &ZMachine::TODO_ERROR;
+      opE[0x06] = &ZMachine::TODO_ERROR;
+      opE[0x07] = &ZMachine::TODO_ERROR;
+      opE[0x08] = &ZMachine::TODO_ERROR;
 
       opE[0x10] = &ZMachine::opE_move_window;
       opE[0x11] = &ZMachine::opE_window_size;
       opE[0x12] = &ZMachine::opE_window_style;
       opE[0x13] = &ZMachine::opE_get_wind_prop;
-      opE[0x14] = &ZMachine::TODO;
-      opE[0x15] = &ZMachine::TODO;
-      opE[0x16] = &ZMachine::TODO;
-      opE[0x17] = &ZMachine::TODO;
-      opE[0x18] = &ZMachine::TODO;
-      opE[0x19] = &ZMachine::TODO;
-      opE[0x1A] = &ZMachine::TODO;
-      opE[0x1B] = &ZMachine::TODO;
-      opE[0x1C] = &ZMachine::TODO;
+      opE[0x14] = &ZMachine::TODO_ERROR;
+      opE[0x15] = &ZMachine::TODO_ERROR;
+      opE[0x16] = &ZMachine::TODO_ERROR;
+      opE[0x17] = &ZMachine::TODO_ERROR;
+      opE[0x18] = &ZMachine::TODO_ERROR;
+      opE[0x19] = &ZMachine::TODO_ERROR;
+      opE[0x1A] = &ZMachine::TODO_ERROR;
+      opE[0x1B] = &ZMachine::TODO_ERROR;
+      opE[0x1C] = &ZMachine::TODO_ERROR;
    }
 
    //============================================================================
@@ -1166,7 +1182,7 @@ private:
       FILE* fp = fopen(filename, "r");
       if (fp == 0)
       {
-         error("Failed to open story z-file");
+         error("Failed to open story z-file \"%s\"", filename);
          return false;
       }
 
@@ -1180,7 +1196,7 @@ private:
 
       if (!header->isVersionValid())
       {
-         error("Unexpected version");
+         error("Unexpected version %u", header->version);
          return false;
       }
 
@@ -1279,6 +1295,8 @@ public:
 
       initDecoder();
 
+      info("Version : z%d\n", header->version);
+
       if (header->version != 6)
          pc = header->init_pc;
       else
@@ -1290,8 +1308,6 @@ public:
 
       if (options.trace)
       {
-         trace.printf("version=%d\n", header->version);
-
          while(!quit)
          {
             printTrace();

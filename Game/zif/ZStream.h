@@ -24,6 +24,7 @@
 #define Z_STREAM_H
 
 #include <cassert>
+#include <cstdarg>
 
 #include "ZConsole.h"
 #include "ZLog.h"
@@ -35,6 +36,13 @@
 class ZStream
 {
 public:
+   enum MessageLevel
+   {
+      INFO,
+      WARNING,
+      ERROR
+   };
+
    ZStream(ZConsole& console_, ZMemory& memory_)
       : console(console_)
       , memory(memory_)
@@ -53,6 +61,15 @@ public:
       buffer_col         = 1;
 
       printer_echo_input = version <= 5;
+
+      if (options.info)
+      {
+         message_filter = INFO;
+      }
+      else if (options.warn)
+      {
+         message_filter = WARNING;
+      }
    }
 
    //! Select the current font
@@ -206,6 +223,43 @@ public:
       }
    }
 
+   //! Report a message (with variable args)
+   void vmessage(MessageLevel level, const char* format, va_list ap)
+   {
+      if (level < message_filter) return;
+
+      // Start message on a new-line
+      unsigned line, col;
+      console.getCursorPos(line, col);
+      if (col != 1)
+      {
+         writeRaw("\n");
+      }
+
+      // Identify message source
+      console.setAttributes(PLT::A_REVERSE);
+      writeRaw("ZIF");
+      console.setAttributes(0);
+
+      switch(level)
+      {
+      case INFO:    writeRaw(" ");      break;
+      case WARNING: writeRaw(" WRN: "); break;
+      case ERROR:   writeRaw(" ERR: "); break;
+      }
+
+      vWritef(format, ap);
+
+      writeRaw("\n");
+
+      // TODO wait for keypress on any exit
+      if (level == ERROR)
+      {
+         uint16_t zscii;
+         console.read(zscii, 0);
+      }
+   }
+
 private:
    static const unsigned MAX_WORD_LENGTH       = 16;
    static const unsigned PRINTER_NEWLINE_LIMIT = 3;
@@ -275,6 +329,9 @@ private:
       printer.write(zscii);
    }
 
+   //! printf style write to output streams
+   void vWritef(const char* format, va_list ap);
+
 protected:
    // Console stream state
    bool       console_enable{true};
@@ -303,6 +360,8 @@ private:
    // Input snooper stream state
    bool       snooper_enable{false};
    ZLog       snooper{"key"};
+
+   MessageLevel message_filter{ERROR};
 };
 
 #endif

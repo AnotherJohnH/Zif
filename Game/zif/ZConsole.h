@@ -72,7 +72,7 @@ public:
          openInputFile(options.input);
          if (!isInputFileOpen())
          {
-            message("ERROR", "Failed to open input file");
+            // error("Failed to open input file \"%s\"", options.input);
          }
       }
 
@@ -223,22 +223,6 @@ public:
             scroll = 0;
          }
       }
-   }
-
-   //! Report a message
-   void message(const char* type, const char* message)
-   {
-      if (!screen_enable) return;
-
-      curses.clear();
-      curses.attron(PLT::A_REVERSE);
-      curses.move(1, 1);
-      curses.clrtoeol();
-      curses.mvaddstr(1, 1, "ZIF ");
-      curses.addstr(type);
-      curses.attroff(PLT::A_REVERSE);
-      curses.mvaddstr(3, 1, message);
-      (void) curses.getch();
    }
 
 protected:
