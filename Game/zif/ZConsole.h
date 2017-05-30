@@ -24,6 +24,7 @@
 #define Z_CONSOLE_H
 
 #include <cstdint>
+#include <cctype>
 
 #include "PLT/Curses.h"
 #include "PLT/Device.h"
@@ -194,6 +195,7 @@ public:
       zscii = ch;
 
       scroll = 0;
+      only_white_space = true;
 
       return true;
    }
@@ -212,17 +214,31 @@ public:
          curses.addch(zscii);
       }
 
+      if (!isspace(zscii))
+      {
+         only_white_space = false;
+      }
+
       if ((zscii == '\n') && !isInputFileOpen())
       {
          scroll++;
          if (scroll == (curses.lines - 1))
          {
-            curses.addstr("...");
-            curses.getch();
-            curses.addstr("\b\b\b   \b\b\b");
-            scroll = 0;
+            waitForKey();
          }
       }
+   }
+
+   void waitForKey()
+   {
+      if (only_white_space) return;
+
+      curses.addstr("...");
+      curses.getch();
+      curses.addstr("\b\b\b   \b\b\b");
+
+      scroll = 0;
+      only_white_space = true;
    }
 
 protected:
@@ -268,6 +284,7 @@ private:
    static const unsigned DEFAULT_BG_COL = 9;
 
    unsigned  scroll{0};
+   bool      only_white_space{true};
    bool      screen_enable{true};
    bool      extended_colours{false};  // TODO v6 only
    unsigned  fg_col{DEFAULT_FG_COL};
