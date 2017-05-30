@@ -62,16 +62,19 @@ private:
    ZConsole              console;
    ZStream               stream;
    ZWindowManager        window_mgr;
-   ZMemory               memory;
-   ZStack<STACK_SIZE>    stack;
    ZObject               object;
    ZText                 text;
    ZParser               parser;
    ZHeader*              header;
    uint16_t              initial_checksum;
    bool                  quit;
+
+   // Machine state
    uint32_t              pc;
    uint32_t              rand_state;
+   ZStack<STACK_SIZE>    stack;
+   ZMemory               memory;
+
    unsigned              num_arg;
    union
    {
@@ -344,7 +347,7 @@ private:
    void op0_restore_v4()   { varWrite(fetchByte(), false); } // TODO
 
    //! restart
-   void op0_restart()      { TODO_ERROR(); }
+   void op0_restart()      { reset(); }
 
    //! ret_popped
    void op0_ret_popped()   { subRet(stack.pop()); }
@@ -1137,6 +1140,22 @@ private:
       }
    }
 
+   //! Reset machine state to intial condion
+   void reset()
+   {
+      console.clear();
+
+      memory.init();
+      stack.init();
+
+      if (header->version != 6)
+         pc = header->init_pc;
+      else
+         pc = unpackAddr(header->init_pc, /* routine */ true) + 1;
+
+      rand_state = 1;
+   }
+
    void fetchDecodeExecute()
    {
       clearOperands();
@@ -1285,8 +1304,6 @@ public:
 
       header->init(console, config);
 
-      memory.init();
-      stack.init();
       stream.init(options, header->version);
       window_mgr.init(options);
       text.init(header->version, header->abbr);
@@ -1297,12 +1314,7 @@ public:
 
       info("Version : z%d\n", header->version);
 
-      if (header->version != 6)
-         pc = header->init_pc;
-      else
-         pc = unpackAddr(header->init_pc, /* routine */ true) + 1;
-
-      rand_state = 1;
+      reset();
 
       quit = false;
 
