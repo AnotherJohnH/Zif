@@ -28,6 +28,7 @@ before zif is ready for it's intended purpose.
 |Kindle3|OK|OK|
 |Android|OK|Only using third party terminal e.g. --term|
 |Emscripten|OK|Not working, only simple command line options --help etc.|
+|iOS|Links (but no app yet)|-|
 
 ## How to run
 
