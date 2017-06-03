@@ -71,7 +71,7 @@ Cross targets are also selected via the PROJ\_TARGET environment variable. e.g.
 
    PROJ\_TARGET=Kindle3
 
-The BUILD\_... .env scripts are provided to initialise PROJ\_TARGET and set other
+The BUILD\_... .sh scripts are provided to initialise PROJ\_TARGET and set other
 environment variables required by each specific build. These scripts should
 be sourced and then the top level SConstruct invoked in the normal way.
 
@@ -89,7 +89,17 @@ running a Debian based Linux has been found to be suitable platform to build the
 
 ### Emscripten
 
-Uses the SDL library supplied with Emscripten.
+Uses the SDL2 library supplied with Emscripten.
+
+### iOS
+
+Requires access to a source installation of SDL2 which is built into a linSDL2.a as part of
+the appliacation build process.
+
+### Android
+
+Requires an NDK installation. Currently builds as a console only app as an integration with
+an Android build of SDL2 has not been achieved yet.
 
 ## Coding style
 
