@@ -9,7 +9,7 @@
 #    EMSDK                     (Emscripten builds)
 
 for build in NATIVE \
-             IOS_ARMv7 IOS_ARM64 IOS_X86_64 \
+             IOS_ARMv7 IOS_ARM64 IOS_I386 IOS_X86_64 \
              ANDROID_ARM ANDROID_ARM64 \
              EMSCRIPTEN
 do

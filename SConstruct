@@ -28,8 +28,10 @@ source = ['Game/zif/zif.cpp',
 
 binary = 'zif'
 
+app = 'Zif'
+
 # Get a build environment
-env = SConscript('Platform/build.scons', 'source')
+env = SConscript('Platform/build.scons', ['source', 'app'])
 
 # Project specific build config
 env.Append(CCFLAGS = '-O3')
@@ -37,6 +39,7 @@ env.Append(CPPPATH = 'include')
 
 # Builders
 exe = env.Program(binary, source)
+
 env.Tar(binary+'_'+env['target']+'_'+env['machine']+'_'+env['version']+'.tgz',
         [exe, env['platform_files'], 'LICENSE', 'zif.cfg', 'Games'])
 

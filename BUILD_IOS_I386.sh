@@ -1,11 +1,11 @@
 #!/bin/echo "source this file then type 'scons' to run SConstruct"
 #
-# Setup environment for iOS cross build for ARMv8 iOS devices
+# Setup environment for iOS cross build for the iOS Simulator
 
 export PROJ_TARGET=iOS
 
-export IOS_PLATFORM=iPhoneOS
-export IOS_ARCH=arm64
+export IOS_PLATFORM=iPhoneSimulator
+export IOS_ARCH=i386
 
 # XXX edit to actual installed version
 export IOS_VERSION=10.3
