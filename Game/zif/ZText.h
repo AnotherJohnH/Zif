@@ -23,10 +23,10 @@
 #ifndef ZTEXT_H
 #define ZTEXT_H
 
-#include <stdint.h>
+#include <cstdint>
 
 #include "ZMemory.h"
-#include "ZConsole.h"
+#include "ZStream.h"
 
 // See the Z specification section 3.
 
@@ -44,11 +44,15 @@ private:
        ASCII_LOWER
    };
 
-   ZStream&   stream;
-   ZMemory*   memory;
-   uint8_t    version;
-   uint16_t   abbr;
+   // Linkage
+   ZStream&        stream;
+   const ZMemory&  memory;
 
+   // Configuration
+   uint8_t         version;
+   uint16_t        abbr;
+
+   // Decoder state
    State      state;
    uint8_t    a;
    uint8_t    next_a;
@@ -56,11 +60,19 @@ private:
 
    void decodeAbbr(unsigned index)
    {
-      uint32_t entry = memory->readWord(abbr + index*2) * 2;
+      uint32_t entry = memory.readWord(abbr + index*2) * 2;
 
       state = DECODE_ABBR;
 
-      while(!decode(memory->fetchWord(entry)));
+      while(decode(memory.fetchWord(entry)));
+   }
+
+   void resetDecoder()
+   {
+      state   = NORMAL;
+      a       = 0;
+      next_a  = 0;
+      ascii   = 0;
    }
 
    void decodeZChar(uint8_t code)
@@ -199,20 +211,22 @@ private:
       a = next_a;
    }
 
-   //! Decode some text
+   //! Decode text packed into a 16bit word
    bool decode(uint16_t word)
    {
+      bool cont = (word & (1<<15)) == 0;
+
       decodeZChar((word >> 10) & 0x1F);
       decodeZChar((word >>  5) & 0x1F);
       decodeZChar((word >>  0) & 0x1F);
 
-      return (word & (1<<15)) != 0;
+      return cont;
    }
 
 public:
    ZText(ZStream& stream_, ZMemory& memory_)
       : stream(stream_)
-      , memory(&memory_)
+      , memory(memory_)
       , version(0)
       , abbr(0)
    {}
@@ -223,27 +237,24 @@ public:
       abbr    = abbr_;
    }
 
-   //! Write text starting at the given address
+   //! Write packed text starting at the given address
    uint32_t print(uint32_t addr)
    {
-      state   = NORMAL;
-      a       = 0;
-      next_a  = 0;
-      ascii   = 0;
+      resetDecoder();
 
-      while(!decode(memory->fetchWord(addr)));
+      while(decode(memory.fetchWord(addr)));
 
       return addr;
    }
 
-   //! Write text starting at the given address
+   //! Write raw text starting at the given address
    void printTable(uint32_t addr, unsigned width, unsigned height, unsigned skip)
    {
       for(unsigned line=0; line<height; line++)
       {
          for(unsigned col=0; col<width; col++)
          {
-            stream.writeChar(memory->fetchByte(addr));
+            stream.writeChar(memory.fetchByte(addr));
          }
 
          addr += skip;
