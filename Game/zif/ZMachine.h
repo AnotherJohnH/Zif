@@ -28,8 +28,7 @@
 
 #include "ZOptions.h"
 #include "ZWindow.h"
-#include "ZMemory.h"
-#include "ZStack.h"
+#include "ZState.h"
 #include "ZHeader.h"
 #include "ZConfig.h"
 #include "ZObject.h"
@@ -41,12 +40,11 @@
 #define TRACE if (1) ; else trace.printf
 
 
-class ZMachine
+class ZMachine : public ZState
 {
 private:
    typedef void (ZMachine::*OpPtr)();
 
-   static const unsigned STACK_SIZE   = 1024;
    static const unsigned MAX_OPERANDS = 8;
 
    enum OperandType
@@ -66,16 +64,9 @@ private:
    ZText                 text;
    ZParser               parser;
    ZHeader*              header;
-   uint16_t              initial_checksum;
    bool                  quit;
 
    const char*           filename{};
-
-   // Machine state
-   uint32_t              pc;
-   uint32_t              rand_state;
-   ZStack<STACK_SIZE>    stack;
-   ZMemory               memory;
 
    unsigned              num_arg;
    union
@@ -117,12 +108,6 @@ private:
    }
 
    unsigned version() const { return header->version; }
-
-   //! Returns true if the initial checksum matches the header checksum
-   bool isChecksumOk()    const { return initial_checksum == header->checksum; }
-
-   uint8_t  fetchByte()     { return memory.fetchByte(pc); }
-   uint16_t fetchWord()     { return memory.fetchWord(pc); }
 
    //! Convert a 16-but oacked address to a 32-bit address
    uint32_t unpackAddr(uint16_t packed_address, bool routine) const
@@ -280,33 +265,6 @@ private:
       TODO_WARN("show_status");
    }
 
-   uint16_t random(int16_t arg)
-   {
-      if (arg <= 0)
-      {
-         arg = -arg;
-
-         if (arg == 0)
-         {
-         }
-         else if (arg < 1000)
-         {
-         }
-         else
-         {
-            rand_state = arg;
-         }
-
-         return 0;
-      }
-      else
-      {
-         rand_state = 0x015A4E35 * rand_state + 1;
-         uint16_t value = (rand_state >> 16) & 0x7FFF;
-         return (value % arg) + 1;
-      }
-   }
-
    void ILLEGAL()     { error("Illegal operation"); }
 
    void TODO_ERROR()  { error("Unimplemented operation"); }
@@ -372,7 +330,7 @@ private:
    void op0_restore_v4()   { varWrite(fetchByte(), false); } // TODO
 
    //! restart
-   void op0_restart()      { reset(); }
+   void op0_restart()      { start(); }
 
    //! ret_popped
    void op0_ret_popped()   { subRet(stack.pop()); }
@@ -1165,50 +1123,6 @@ private:
       }
    }
 
-   //! Reset machine state to intial condion
-   void reset()
-   {
-      console.clear();
-
-      stack.reset();
-
-      if (header->version != 6)
-         pc = header->init_pc;
-      else
-         pc = unpackAddr(header->init_pc, /* routine */ true) + 1;
-
-
-      rand_state = 1;
-
-
-      memory.clear(header->getStorySize(), header->getMemoryLimit());
-
-      FILE* fp = fopen(filename, "r");
-      if (fp == NULL)
-      {
-         error("Failed to open story z-file \"%s\"", filename);
-         return;
-      }
-
-      fseek(fp, sizeof(ZHeader), SEEK_SET);
-
-      if (!memory.load(fp,
-                       sizeof(ZHeader),
-                       header->getStorySize(),
-                       &initial_checksum))
-      {
-         error("Z-file read error");
-         return;
-      }
-
-      fclose(fp);
-
-      if (!isChecksumOk())
-      {
-         warning("checksum fail");
-      }
-   }
-
    void fetchDecodeExecute()
    {
       clearOperands();
@@ -1249,6 +1163,28 @@ private:
       }
    }
 
+   //! Reset machine state to intial conditions
+   void start()
+   {
+      console.clear();
+
+      uint32_t entry_point;
+      if (header->version != 6)
+         entry_point = header->init_pc;
+      else
+         entry_point = unpackAddr(header->init_pc, /* routine */ true) + 1;
+
+      if (!ZState::reset(filename, entry_point, header->checksum))
+      {
+         error("Failed to read story z-file \"%s\"", filename);
+      }
+
+      if (!isChecksumOk())
+      {
+         warning("checksum fail");
+      }
+   }
+
    bool loadHeader()
    {
       FILE* fp = fopen(filename, "r");
@@ -1265,6 +1201,8 @@ private:
          return false;
       }
 
+      fclose(fp);
+
       header = (ZHeader*) &memory.readByte(0);
 
       if (!header->isVersionValid())
@@ -1272,10 +1210,6 @@ private:
          error("Unexpected version %u", header->version);
          return false;
       }
-
-      memory.setLimit(header->getMemoryLimit());
-
-      fclose(fp);
 
       return true;
    }
@@ -1329,7 +1263,6 @@ public:
       , object(&memory)
       , text(stream, memory)
       , quit(false)
-      , rand_state(1)
    {}
 
    //! Play a Z file
@@ -1354,11 +1287,15 @@ public:
       parser.init(header->version);
       object.init(header->obj, header->version);
 
+      ZState::init(sizeof(ZHeader),
+                   header->getStorySize(),
+                   header->getMemoryLimit());
+
       initDecoder();
 
       info("Version : z%d\n", header->version);
 
-      reset();
+      start();
 
       quit = false;
 
