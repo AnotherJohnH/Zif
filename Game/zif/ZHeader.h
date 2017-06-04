@@ -129,6 +129,33 @@ struct ZHeader
       }
    }
 
+   //! Return memory size limit (bytes)
+   uint32_t getMemoryLimit() const
+   {
+      switch(version)
+      {
+      case 1:
+      case 2:
+      case 3:
+         return 128*1024;
+
+      case 4:
+      case 5:
+         return 256*1024;
+
+      case 7:
+         return 320*1024;
+
+      case 6:
+      case 8:
+         return 512*1024;
+
+      default:
+         assert(!"unexpected version");
+         return 0;
+      }
+   }
+
    //! 
    void print() const
    {

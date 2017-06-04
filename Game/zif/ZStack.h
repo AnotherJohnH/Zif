@@ -32,36 +32,17 @@
 template <unsigned SIZE>
 class ZStack
 {
-private:
-   STB::Stack<uint16_t,SIZE,uint16_t>   impl;
-   uint16_t  fp{};
-
 public:
-   void init()
+   void reset()
    {
       impl.clear();
       fp = 0;
    }
 
-   uint16_t framePtr() const { return fp; }
 
    void push(uint16_t value)
    {
       impl.push_back(value);
-      //tprintf("\npush %5u => stack[%u]", value, sp - 1);
-   }
-
-   void push(uint32_t value)
-   {
-      push(uint16_t(value));
-      push(uint16_t(value >> 16));
-   }
-
-   void pushFrame(uint16_t num_arg)
-   {
-      push(fp);
-      fp = impl.size();
-      push(num_arg);
    }
 
    uint16_t& peek()
@@ -71,39 +52,63 @@ public:
 
    uint16_t pop()
    {
-      //tprintf("\npop stack[%u] => %u", sp - 1, elem[sp-1]);
       uint16_t value = impl.back();
       impl.pop_back();
       return value;
    }
 
-   void pop(uint16_t& value)
+
+   //! Start a new call-frame
+   void pushFrame(uint16_t call_type, uint32_t pc, uint16_t num_arg)
    {
-      value = pop();
+      push(call_type);
+      push32(pc);
+      push(fp);
+      fp = impl.size();
+      push(num_arg);
    }
 
-   void pop(uint32_t& value)
+   //! End the current call-frame
+   void popFrame(uint16_t& call_type, uint32_t& pc)
    {
-      value =  pop()<<16;
-      value |= pop();
-   }
-
-   void popFrame()
-   {
+      assert(fp != 0);
       impl.resize(fp);
       fp = pop();
+      pc = pop32();
+      call_type = pop();
    }
 
-   uint16_t frameArgs() const
+
+   //! Returns the current frame pointer
+   uint16_t getFramePtr() const { return fp; }
+
+   uint16_t getNumFrameArgs() const
    {
+      assert(fp != 0);
       return impl[fp];
    }
 
-   uint16_t& frame(unsigned index)
+   uint16_t& peekFrame(unsigned index)
    {
       assert(index <= 14);
       return impl[fp + 1 + index];
    }
+
+   void push32(uint32_t value)
+   {
+      push(uint16_t(value));
+      push(uint16_t(value >> 16));
+   }
+
+   uint32_t pop32()
+   {
+      uint32_t value = pop()<<16;
+      return value | pop();
+   }
+
+private:
+   STB::Stack<uint16_t,SIZE,uint16_t>   impl;
+   uint16_t                             fp{};
 };
 
 #endif

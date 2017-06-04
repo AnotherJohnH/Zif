@@ -69,6 +69,8 @@ private:
    uint16_t              initial_checksum;
    bool                  quit;
 
+   const char*           filename{};
+
    // Machine state
    uint32_t              pc;
    uint32_t              rand_state;
@@ -122,9 +124,32 @@ private:
    uint8_t  fetchByte()     { return memory.fetchByte(pc); }
    uint16_t fetchWord()     { return memory.fetchWord(pc); }
 
-   uint32_t unpackAddr(uint16_t paddr, bool routine) const
+   //! Convert a 16-but oacked address to a 32-bit address
+   uint32_t unpackAddr(uint16_t packed_address, bool routine) const
    {
-      return memory.unpackAddr(paddr, routine);
+      switch(header->version)
+      {
+      case 1:
+      case 2:
+      case 3:
+         return packed_address<<1;
+
+      case 4:
+      case 5:
+         return packed_address<<2;
+
+      case 6:
+      case 7:
+         return (packed_address<<2) + (routine ? header->routines<<3
+                                               : header->static_strings<<3);
+
+      case 8:
+         return packed_address<<3;
+
+      default:
+         assert(!"unexpected version");
+         return 0;
+      }
    }
 
    //! Read a variable
@@ -136,11 +161,12 @@ private:
       }
       else if (index < 16)
       {
-         return stack.frame(index - 1);
+         return stack.peekFrame(index - 1);
       }
       else
       {
-         return memory.readGlobal(index - 16);
+         uint32_t addr = header->glob + (index - 16) * 2;
+         return memory.readWord(addr);
       }
    }
 
@@ -156,11 +182,12 @@ private:
       }
       else if (index < 16)
       {
-         stack.frame(index - 1) = value;
+         stack.peekFrame(index - 1) = value;
       }
       else
       {
-         memory.writeGlobal(index - 16, value);
+         uint32_t addr = header->glob + (index - 16) * 2;
+         memory.writeWord(addr, value);
       }
 
       TRACE(" [W%02X=%04X]", index, value);
@@ -197,14 +224,12 @@ private:
    }
 
    //! Call a sub-routine
-   void subCall(unsigned         call_type,
+   void subCall(uint16_t         call_type,
                 uint16_t         packed_addr,
-                unsigned         argc,
+                uint16_t         argc,
                 const uint16_t*  argv)
    {
-      stack.push(uint16_t(call_type));
-      stack.push(pc);
-      stack.pushFrame(argc);
+      stack.pushFrame(call_type, pc, argc);
 
       pc = unpackAddr(packed_addr, /* routine */ true);
 
@@ -234,10 +259,10 @@ private:
    //! Return from a sub-routine
    void subRet(uint16_t value)
    {
-      stack.popFrame();
-      stack.pop(pc);
+      uint16_t call_type;
 
-      uint16_t call_type = stack.pop();
+      stack.popFrame(call_type, pc);
+
       switch(call_type)
       {
       case 0: varWrite(fetchByte(), value); break;
@@ -356,7 +381,7 @@ private:
    void op0_pop()          { stack.pop(); }
 
    //! catch -> (result)
-   void op0_catch()        { varWrite(fetchByte(), stack.framePtr()); }
+   void op0_catch()        { varWrite(fetchByte(), stack.getFramePtr()); }
 
    //! quit
    void op0_quit()
@@ -789,9 +814,9 @@ private:
 
       if (to == 0)
       {
-         memory.clear(from, size);
+         memory.clear(from, from + size);
       }
-      else if ((size < 0) || (from < to))
+      else if ((size < 0) || (from > to))
       {
          memory.copyForward(from, to, abs(size));
       }
@@ -813,7 +838,7 @@ private:
 
    void opV_check_arg_count()
    {
-      branch(uarg[0] <= stack.frameArgs());
+      branch(uarg[0] <= stack.getNumFrameArgs());
    }
 
    //============================================================================
@@ -1145,15 +1170,43 @@ private:
    {
       console.clear();
 
-      memory.init();
-      stack.init();
+      stack.reset();
 
       if (header->version != 6)
          pc = header->init_pc;
       else
          pc = unpackAddr(header->init_pc, /* routine */ true) + 1;
 
+
       rand_state = 1;
+
+
+      memory.clear(header->getStorySize(), header->getMemoryLimit());
+
+      FILE* fp = fopen(filename, "r");
+      if (fp == NULL)
+      {
+         error("Failed to open story z-file \"%s\"", filename);
+         return;
+      }
+
+      fseek(fp, sizeof(ZHeader), SEEK_SET);
+
+      if (!memory.load(fp,
+                       sizeof(ZHeader),
+                       header->getStorySize(),
+                       &initial_checksum))
+      {
+         error("Z-file read error");
+         return;
+      }
+
+      fclose(fp);
+
+      if (!isChecksumOk())
+      {
+         warning("checksum fail");
+      }
    }
 
    void fetchDecodeExecute()
@@ -1196,7 +1249,7 @@ private:
       }
    }
 
-   bool load(const char* filename)
+   bool loadHeader()
    {
       FILE* fp = fopen(filename, "r");
       if (fp == 0)
@@ -1206,12 +1259,13 @@ private:
       }
 
       // Read header
-      header = memory.getHeader();
-      if (fread(header, sizeof(ZHeader), 1, fp) != 1)
+      if (!memory.load(fp, 0, sizeof(ZHeader)))
       {
          error("Z-file header read failed");
          return false;
       }
+
+      header = (ZHeader*) &memory.readByte(0);
 
       if (!header->isVersionValid())
       {
@@ -1219,21 +1273,9 @@ private:
          return false;
       }
 
-      // Read story
-      if (fread(header + 1, header->getStorySize() - sizeof(ZHeader), 1, fp) != 1)
-      {
-         error("Z-file read error");
-         return false;
-      }
+      memory.setLimit(header->getMemoryLimit());
 
       fclose(fp);
-
-      initial_checksum = memory.getChecksum();
-
-      if (!isChecksumOk())
-      {
-         warning("checksum fail");
-      }
 
       return true;
    }
@@ -1291,9 +1333,11 @@ public:
    {}
 
    //! Play a Z file
-   void open(const char* filename)
+   void open(const char* filename_)
    {
-      if (!load(filename)) return;
+      filename = filename_;
+
+      if (!loadHeader()) return;
 
       console.init(options);
 

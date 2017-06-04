@@ -26,132 +26,55 @@
 #include  <cassert>
 #include  <cstdint>
 
-#include "ZHeader.h"
-
-#include "ZLog.h"
 
 //! Memory for ZMachine
 class ZMemory
 {
 private:
-   static const unsigned MAX_SIZE = 512 * 1024;
+   static const uint32_t MAX_SIZE = 512 * 1024;
 
-   uint8_t   memory[MAX_SIZE];
-
-   uint32_t getLimit() const
-   {
-      const ZHeader* header = getHeader();
-
-      switch(header->version)
-      {
-      case 1:
-      case 2:
-      case 3:
-         return 128*1024;
-
-      case 4:
-      case 5:
-         return 256*1024;
-
-      case 7:
-         return 320*1024;
-
-      case 6:
-      case 8:
-         return 512*1024;
-
-      default:
-         assert(!"unexpected version");
-         return 0;
-      }
-   }
+   uint32_t  limit{MAX_SIZE};
+   uint8_t   data[MAX_SIZE];
 
 public:
    ZMemory()
    {
-      memset(memory, 0, MAX_SIZE);
+      clear(0, MAX_SIZE);
    }
 
-         ZHeader* getHeader()       { return (ZHeader*)memory; }
-   const ZHeader* getHeader() const { return (ZHeader*)memory; }
-
-   void init()
+   //! Set memory size limit (bytes)
+   void setLimit(uint32_t limit_)
    {
-      assert(getHeader()->getStorySize() < getLimit());
+      assert(limit_ <= MAX_SIZE);
+      limit = limit_;
    }
 
-   //! 
-   uint32_t unpackAddr(uint16_t packed_address, bool routine) const
+   // Byte access
+
+   const uint8_t& readByte(uint32_t addr) const
    {
-      const ZHeader* header = getHeader();
-
-      switch(header->version)
-      {
-      case 1:
-      case 2:
-      case 3:
-         return packed_address<<1;
-
-      case 4:
-      case 5:
-         return packed_address<<2;
-
-      case 6:
-      case 7:
-         return (packed_address<<2) + (routine ? header->routines<<3
-                                               : header->static_strings<<3);
-
-      case 8:
-         return packed_address<<3;
-
-      default:
-         assert(!"unexpected version");
-         return 0;
-      }
+      assert(addr < limit);
+      return data[addr];
    }
 
-   uint16_t getChecksum() const
+   uint8_t fetchByte(uint32_t& addr) const
    {
-      uint16_t sum = 0;
-
-      for(unsigned i=sizeof(ZHeader); i<getHeader()->getStorySize(); ++i)
-      {
-         sum += memory[i];
-      }
-
-      return sum;
-   }
-
-   uint8_t readByte(uint32_t addr) const
-   {
-      assert(addr < getLimit());
-      //tprintf(" {%04X=>%02X}", addr, memory[addr]);
-      return memory[addr];
+      assert(addr < limit);
+      return data[addr++];
    }
 
    void writeByte(uint32_t addr, uint8_t value)
    {
-      assert(addr < getLimit());
-      //tprintf(" {%04X<=%02X}", addr, value);
-      memory[addr] = value;
+      assert(addr < limit);
+      data[addr] = value;
    }
+
+   // Word access
 
    uint16_t readWord(uint32_t addr) const
    {
       uint16_t word = readByte(addr);
       return (word << 8) | readByte(addr + 1);
-   }
-
-   void writeWord(uint32_t addr, uint16_t value)
-   {
-      writeByte(addr,     value >> 8);
-      writeByte(addr + 1, value & 0xFF);
-   }
-
-   uint8_t fetchByte(uint32_t& addr) const
-   {
-      assert(addr < getLimit());
-      return memory[addr++];
    }
 
    uint16_t fetchWord(uint32_t& addr) const
@@ -160,37 +83,71 @@ public:
       return (value<<8) | fetchByte(addr);
    }
 
-   uint16_t readGlobal(unsigned index)
+   void writeWord(uint32_t addr, uint16_t value)
    {
-      return readWord(getHeader()->glob + index*2);
+      writeByte(addr,     value >> 8);
+      writeByte(addr + 1, value & 0xFF);
    }
 
-   void writeGlobal(unsigned index, uint16_t value)
-   {
-      writeWord(getHeader()->glob + index*2, value);
-   }
 
-   void clear(uint32_t addr, uint16_t size)
+   //! Load a block of memory from an open file stream
+   //  With optional checksum calculation
+   bool load(FILE* fp, uint32_t start, uint32_t end, uint16_t* checksum_ptr = nullptr)
    {
-      for(size_t i=0; i<size; i++)
+      assert((start < MAX_SIZE) && (end <= MAX_SIZE));
+
+      if (fread(&data[start], end - start, 1, fp) != 1)
       {
-         memory[addr + i] = 0;
+         return false;
+      }
+
+      if (checksum_ptr != nullptr)
+      {
+         uint16_t checksum = 0;
+
+         for(uint32_t addr=start; addr<end; ++addr)
+         {
+            checksum += data[addr];
+         }
+
+         *checksum_ptr = checksum;
+      }
+
+      return true;
+   }
+
+   //! Save a block of memory to an open file stream
+   bool save(FILE* fp, uint32_t start, uint32_t end) const
+   {
+      assert((start < MAX_SIZE) && (end <= MAX_SIZE));
+
+      return fwrite(&data[start], end - start, 1, fp) == 1;
+   }
+
+   //! Clear a block of memory
+   void clear(uint32_t start, uint32_t end)
+   {
+      for(uint32_t addr=start; addr<end; addr++)
+      {
+         writeByte(addr, 0);
       }
    }
 
-   void copyForward(uint32_t from, uint32_t to, uint16_t size)
+   //! Copy a block of memory (copy lowest address first)
+   void copyForward(uint32_t from, uint32_t to, uint32_t size)
    {
-      for(size_t i=0; i<size; i++)
+      for(uint32_t i=0; i<size; i++)
       {
-         memory[to + i] = memory[from + i];
+         writeByte(to + i, readByte(from + i));
       }
    }
 
-   void copyBackward(uint32_t from, uint32_t to, uint16_t size)
+   //! Copy a block of memory (copy highest address first)
+   void copyBackward(uint32_t from, uint32_t to, uint32_t size)
    {
-      for(size_t i=size; i>0; i--)
+      for(uint32_t i=size; i>0; i--)
       {
-         memory[to + i - 1] = memory[from + i - 1];
+         writeByte(to + i - 1, readByte(from + i - 1));
       }
    }
 };
