@@ -96,30 +96,33 @@ public:
       return true;
    }
 
-   void save()
+   bool save()
    {
-      stack.push(checksum_ok);
-      stack.push32(rand_state);
-      stack.push32(pc);
+      FILE* fp = fopen("zif.save", "w");
+      if (fp != nullptr) return false;
 
-      // TODO write the stack and memory to a file
-      // memory.save(fp, game_start, memory_limit);
-      // stack.save(fp);
+      pushContext();
 
-      checksum_ok = stack.pop();
-      pc = stack.pop32();
-      rand_state = stack.pop32();
+      memory.save(fp, game_start, memory_limit);
+      stack.save(fp);
+      fclose(fp);
+
+      popContext();
+
+      return true;
    }
 
-   void restore()
+   bool restore()
    {
-      // TODO read the stack and memory from a file
-      // memory.load(fp, game_start, memory_limit);
-      // stack.load(fp);
+      FILE* fp = fopen("zif.save", "r");
+      if (fp == nullptr) return false;
 
-      checksum_ok = stack.pop();
-      pc = stack.pop32();
-      rand_state = stack.pop32();
+      memory.load(fp, game_start, memory_limit);
+      stack.load(fp);
+
+      popContext();
+
+      return true;
    }
 
    uint8_t fetchByte()
@@ -159,6 +162,23 @@ public:
          uint16_t value = (rand_state >> 16) & 0x7FFF;
          return (value % arg) + 1;
       }
+   }
+
+private:
+   //! Save all registers on the stack
+   void pushContext()
+   {
+      stack.push(checksum_ok);
+      stack.push32(rand_state);
+      stack.push32(pc);
+   }
+
+   //! Restore all registers from the stack
+   void popContext()
+   {
+      pc          = stack.pop32();
+      rand_state  = stack.pop32();
+      checksum_ok = stack.pop();
    }
 };
 

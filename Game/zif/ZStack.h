@@ -24,7 +24,8 @@
 #define ZSTACK_H
 
 #include <cassert>
-#include <stdint.h>
+#include <cstdint>
+#include <cstdio>
 
 #include "STB/Stack.h"
 
@@ -36,7 +37,7 @@ public:
    void reset()
    {
       impl.clear();
-      fp = 0;
+      frame_ptr = 0;
    }
 
 
@@ -63,35 +64,35 @@ public:
    {
       push(call_type);
       push32(pc);
-      push(fp);
-      fp = impl.size();
+      push(frame_ptr);
+      frame_ptr = impl.size();
       push(num_arg);
    }
 
    //! End the current call-frame
    void popFrame(uint16_t& call_type, uint32_t& pc)
    {
-      assert(fp != 0);
-      impl.resize(fp);
-      fp = pop();
+      assert(frame_ptr != 0);
+      impl.resize(frame_ptr);
+      frame_ptr = pop();
       pc = pop32();
       call_type = pop();
    }
 
 
    //! Returns the current frame pointer
-   uint16_t getFramePtr() const { return fp; }
+   uint16_t getFramePtr() const { return frame_ptr; }
 
    uint16_t getNumFrameArgs() const
    {
-      assert(fp != 0);
-      return impl[fp];
+      assert(frame_ptr != 0);
+      return impl[frame_ptr];
    }
 
    uint16_t& peekFrame(unsigned index)
    {
       assert(index <= 14);
-      return impl[fp + 1 + index];
+      return impl[frame_ptr + 1 + index];
    }
 
    void push32(uint32_t value)
@@ -106,9 +107,22 @@ public:
       return value | pop();
    }
 
+   bool save(FILE* fp)
+   {
+      push(frame_ptr);
+      return fwrite(&impl, sizeof(impl), 1, fp) == 1;
+   }
+
+   bool load(FILE* fp)
+   {
+      if (fread(&impl, sizeof(impl), 1, fp) != 1) return false;
+      frame_ptr = pop();
+      return true;
+   }
+
 private:
    STB::Stack<uint16_t,SIZE,uint16_t>   impl;
-   uint16_t                             fp{};
+   uint16_t                             frame_ptr{0};
 };
 
 #endif
