@@ -320,16 +320,16 @@ private:
    void op0_nop()          {}
 
    //! v1 save ?(label)
-   void op0_save_v1()      { branch(false); } // TODO
+   void op0_save_v1()      { branch(ZState::save()); }
 
    //! v4 save -> (result)
-   void op0_save_v4()      { varWrite(fetchByte(), false); } // TODO
+   void op0_save_v4()      { varWrite(fetchByte(), ZState::save() ? 1 : 0); }
 
    //! v1 restore ?(label)
-   void op0_restore_v1()   { branch(false); } // TODO
+   void op0_restore_v1()   { if (!ZState::restore()) branch(false); }
 
    //! v4 restore -> (result)
-   void op0_restore_v4()   { varWrite(fetchByte(), false); } // TODO
+   void op0_restore_v4()   { if (!ZState::restore()) varWrite(fetchByte(), 0); }
 
    //! restart
    void op0_restart()      { start(); }
@@ -806,12 +806,23 @@ private:
 
    void opE_save_table()
    {
-      TODO_ERROR();
+      uint16_t table = uarg[0];
+      uint16_t bytes = uarg[1];
+      uint16_t name  = uarg[2];
+      (void) table; (void) bytes; (void) name; // TODO use supplied parameters
+      uint8_t  ret   = fetchByte();
+      varWrite(ret, 2);
+      varWrite(ret, ZState::save() ? 1 : 0);
    }
 
    void opE_restore_table()
    {
-      TODO_ERROR();
+      uint16_t table = uarg[0];
+      uint16_t bytes = uarg[1];
+      uint16_t name  = uarg[2];
+      (void) table; (void) bytes; (void) name; // TODO use supplied parameters
+      varWrite(fetchByte(), 0);
+      ZState::restore();
    }
 
    void opE_log_shift()
@@ -1169,6 +1180,9 @@ private:
    void start()
    {
       console.clear();
+
+      // TODO the header should be reset (only bits 0 and 1 from Flags 2
+      //      shoud be preserved)
 
       uint32_t entry_point;
       if (header->version != 6)

@@ -111,7 +111,9 @@ public:
    bool save(FILE* fp)
    {
       push(frame_ptr);
-      return fwrite(&impl, sizeof(impl), 1, fp) == 1;
+      bool ok = fwrite(&impl, sizeof(impl), 1, fp) == 1;
+      frame_ptr = pop();
+      return ok;
    }
 
    bool load(FILE* fp)

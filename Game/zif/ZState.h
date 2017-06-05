@@ -108,7 +108,7 @@ public:
    bool save()
    {
       FILE* fp = fopen("zif.save", "w");
-      if (fp != nullptr) return false;
+      if (fp == nullptr) return false;
 
       pushContext();
 
