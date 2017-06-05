@@ -323,10 +323,15 @@ private:
    void op0_save_v1()      { branch(ZState::save()); }
 
    //! v4 save -> (result)
-   void op0_save_v4()      { varWrite(fetchByte(), ZState::save() ? 1 : 0); }
+   void op0_save_v4()
+   {
+      uint8_t ret = fetchByte();
+      varWrite(ret, 2);
+      varWrite(ret, ZState::save() ? 1 : 0);
+   }
 
    //! v1 restore ?(label)
-   void op0_restore_v1()   { if (!ZState::restore()) branch(false); }
+   void op0_restore_v1()   { branch(ZState::restore()); }
 
    //! v4 restore -> (result)
    void op0_restore_v4()   { if (!ZState::restore()) varWrite(fetchByte(), 0); }
@@ -821,8 +826,7 @@ private:
       uint16_t bytes = uarg[1];
       uint16_t name  = uarg[2];
       (void) table; (void) bytes; (void) name; // TODO use supplied parameters
-      varWrite(fetchByte(), 0);
-      ZState::restore();
+      if (!ZState::restore()) varWrite(fetchByte(), 0);
    }
 
    void opE_log_shift()
