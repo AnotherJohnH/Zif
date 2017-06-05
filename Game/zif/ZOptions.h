@@ -36,6 +36,7 @@ struct ZOptions
    STB::Option<bool>         key{   'k', "key",    "Log key presses to \"key.log\""};
    STB::Option<const char*>  input{ 'i', "input",  "Read keyboard input from a file"};
    STB::Option<bool>         trace{ 'T', "trace",  "Trace execution"};
+   STB::Option<unsigned>     seed{  's', "seed",   "Initial random seed", 0};
 };
 
 #endif

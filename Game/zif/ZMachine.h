@@ -1289,7 +1289,8 @@ public:
       parser.init(header->version);
       object.init(header->obj, header->version);
 
-      ZState::init(sizeof(ZHeader),
+      ZState::init(options.seed,
+                   sizeof(ZHeader),
                    header->getStorySize(),
                    header->getMemoryLimit());
 

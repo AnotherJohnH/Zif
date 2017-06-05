@@ -38,6 +38,7 @@ private:
    uint32_t              memory_limit{0};
    uint32_t              game_start{0};
    uint32_t              game_end{0};
+   uint16_t              initial_rand_seed{0};
 
    // Dynamic state
    bool                  checksum_ok{false};
@@ -54,10 +55,13 @@ public:
    uint32_t getPC() const { return pc; }
 
    //! Initialise with the game configuration
-   void init(uint32_t game_start_,
+   void init(uint16_t initial_rand_seed_,
+             uint32_t game_start_,
              uint32_t game_end_,
              uint32_t memory_limit_)
    {
+      initial_rand_seed = initial_rand_seed_;
+
       game_start   = game_start_;
       game_end     = game_end_;
       memory_limit = memory_limit_;
@@ -69,7 +73,7 @@ public:
    //  This includes loading the body of the game file
    bool reset(const char* filename, uint32_t pc_, uint16_t header_checksum)
    {
-      rand_state = 1;
+      random(-(initial_rand_seed & 0x7FFF));
 
       jump(pc_);
 
@@ -160,21 +164,8 @@ public:
    {
       if (arg <= 0)
       {
-         arg = -arg;
-
-         if (arg == 0)
-         {
-            // TODO
-         }
-         else if (arg < 1000)
-         {
-            // TODO
-         }
-         else
-         {
-            rand_state = arg;
-         }
-
+         rand_state = arg == 0 ? randomSeed()
+                               : -arg;
          return 0;
       }
       else
@@ -200,6 +191,12 @@ private:
       pc          = stack.pop32();
       rand_state  = stack.pop32();
       checksum_ok = stack.pop();
+   }
+
+   uint32_t randomSeed()
+   {
+      // TODO re-seed with an unpredictable value
+      return 1;
    }
 };
 
