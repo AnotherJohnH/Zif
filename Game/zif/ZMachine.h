@@ -178,10 +178,10 @@ private:
       TRACE(" [W%02X=%04X]", index, value);
    }
 
-   //! Conditional branch
+   //! Conditional branch (4.7)
    void branch(bool cond)
    {
-      uint8_t  type           = fetchByte();
+      uint8_t  type           = ZState::fetchByte();
       bool     branch_if_true = (type & (1<<7)) != 0;
       bool     long_branch    = (type & (1<<6)) == 0;
       int16_t  offset         = type & 0x3F;
@@ -190,7 +190,7 @@ private:
       {
          offset = (offset<<8) | fetchByte();
          // Sign extend
-         offset = int16_t(offset << 3) >> 3;
+         offset = int16_t(offset << 2) >> 2;
       }
 
       TRACE(" B%c %04X", branch_if_true ? 'T' : 'F', offset & 0xFFFF);
@@ -199,11 +199,13 @@ private:
       {
          if ((offset == 0) || (offset == 1))
          {
+            // return false or true from the current routine (4.7.1)
             subRet(offset);
          }
          else
          {
-            pc += offset - 2;
+            // branch (4.7.2)
+            ZState::branch(offset - 2);
          }
       }
    }
@@ -214,9 +216,9 @@ private:
                 uint16_t         argc,
                 const uint16_t*  argv)
    {
-      stack.pushFrame(call_type, pc, argc);
+      stack.pushFrame(ZState::getPC(), call_type, argc);
 
-      pc = unpackAddr(packed_addr, /* routine */ true);
+      ZState::jump(unpackAddr(packed_addr, /* routine */ true));
 
       uint8_t num_locals = fetchByte();
 
@@ -238,7 +240,7 @@ private:
       }
 
       TRACE("   // call %06x args=%d locals=%d",
-            pc, argc, num_locals - argc);
+            ZState::getPC(), argc, num_locals - argc);
    }
 
    //! Return from a sub-routine
@@ -246,7 +248,7 @@ private:
    {
       uint16_t call_type;
 
-      stack.popFrame(call_type, pc);
+      ZState::jump(stack.popFrame(call_type));
 
       switch(call_type)
       {
@@ -257,7 +259,7 @@ private:
       default: error("Subroutine return, bad call type %u", call_type);
       }
 
-      TRACE("   // ret %06X", pc);
+      TRACE("   // ret %06X", ZState::getPC());
    }
 
    void showStatus()
@@ -309,7 +311,7 @@ private:
    void op0_rfalse()       { subRet(0); }
 
    //! print - Print the literal Z-encoded string
-   void op0_print()        { pc = text.print(pc); }
+   void op0_print()        { ZState::jump(text.print(ZState::getPC())); }
 
    //! print_ret - Print the literal Z-encoded string, a new-line then return true
    void op0_print_ret()    { op0_print(); op0_new_line(); op0_rtrue(); }
@@ -412,7 +414,7 @@ private:
 
    void op1_ret()           { subRet(uarg[0]); }
 
-   void op1_jump()          { pc += sarg[0] - 2; }
+   void op1_jump()          { ZState::branch(sarg[0] - 2); }
 
    void op1_print_paddr()   { text.print(unpackAddr(uarg[0], /* routine */false)); }
 
@@ -716,7 +718,7 @@ private:
       uint16_t ch;
       if (!stream.readChar(ch, timeout))
       {
-         pc = routine;
+         ZState::jump(routine);
       }
 
       varWrite(fetchByte(), ch);
@@ -1218,9 +1220,9 @@ private:
    {
       static unsigned tick = 0;
 
-      uint8_t opcode = memory.readByte(pc);
+      uint8_t opcode = memory.readByte(ZState::getPC());
 
-      trace.printf("%4d %06X: %02X ", tick++, pc, opcode);
+      trace.printf("%4d %06X: %02X ", tick++, ZState::getPC(), opcode);
 
       if (opcode < 0x80)
       {
@@ -1234,7 +1236,7 @@ private:
       {
          if ((opcode & 0xF) == 0xE)
          {
-            uint8_t ext_opcode = memory.readByte(pc + 1);
+            uint8_t ext_opcode = memory.readByte(ZState::getPC() + 1);
             trace.printf("EXT:%02X", ext_opcode & 0x1F);
          }
          else

@@ -42,13 +42,16 @@ private:
    // Dynamic state
    bool                  checksum_ok{false};
    uint32_t              rand_state{1};
-public:
    uint32_t              pc{0};
+public:
    ZStack<STACK_SIZE>    stack;
    ZMemory               memory;
 
    //! Return whether the loaded checksum was valid
    bool isChecksumOk() const { return checksum_ok; }
+
+   //! Current value of program counter
+   uint32_t getPC() const { return pc; }
 
    //! Initialise with the game configuration
    void init(uint32_t game_start_,
@@ -67,7 +70,8 @@ public:
    bool reset(const char* filename, uint32_t pc_, uint16_t header_checksum)
    {
       rand_state = 1;
-      pc = pc_;
+
+      jump(pc_);
 
       stack.reset();
 
@@ -96,6 +100,7 @@ public:
       return true;
    }
 
+   //! Save the dynamic state to a file
    bool save()
    {
       FILE* fp = fopen("zif.save", "w");
@@ -112,6 +117,7 @@ public:
       return true;
    }
 
+   //! Restore the dynamic state from a save file
    bool restore()
    {
       FILE* fp = fopen("zif.save", "r");
@@ -119,20 +125,35 @@ public:
 
       memory.load(fp, game_start, memory_limit);
       stack.load(fp);
+      fclose(fp);
 
       popContext();
 
       return true;
    }
 
+   //! Fetch an instruction byte
    uint8_t fetchByte()
    {
       return memory.fetchByte(pc);
    }
 
+   //! Fetch an instruction word
    uint16_t fetchWord()
    {
       return memory.fetchWord(pc);
+   }
+
+   //! Absolute jump to given target address
+   void jump(uint32_t target_)
+   {
+      pc = target_;
+   }
+
+   //! Jump relative to the current PC
+   void branch(int16_t offset_)
+   {
+      pc += offset_;
    }
 
    uint16_t random(int16_t arg)

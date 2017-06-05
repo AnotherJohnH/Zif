@@ -60,7 +60,7 @@ public:
 
 
    //! Start a new call-frame
-   void pushFrame(uint16_t call_type, uint32_t pc, uint16_t num_arg)
+   void pushFrame(uint32_t pc, uint16_t call_type, uint16_t num_arg)
    {
       push(call_type);
       push32(pc);
@@ -70,13 +70,14 @@ public:
    }
 
    //! End the current call-frame
-   void popFrame(uint16_t& call_type, uint32_t& pc)
+   uint32_t popFrame(uint16_t& call_type)
    {
       assert(frame_ptr != 0);
       impl.resize(frame_ptr);
       frame_ptr = pop();
-      pc = pop32();
+      uint32_t pc = pop32();
       call_type = pop();
+      return pc;
    }
 
 
