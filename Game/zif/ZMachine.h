@@ -110,47 +110,6 @@ private:
    unsigned version() const { return header->version; }
 
 
-   //! Read a variable
-   uint16_t varRead(uint8_t index, bool peek = false)
-   {
-      if (index == 0)
-      {
-         return peek ? stack.peek() : stack.pop();
-      }
-      else if (index < 16)
-      {
-         return stack.peekFrame(index - 1);
-      }
-      else
-      {
-         uint32_t addr = header->glob + (index - 16) * 2;
-         return memory.readWord(addr);
-      }
-   }
-
-   //! Write a variable
-   void varWrite(uint8_t index, uint16_t value, bool peek = false)
-   {
-      if (index == 0)
-      {
-         if (peek)
-            stack.peek() = value;
-         else
-            stack.push(value);
-      }
-      else if (index < 16)
-      {
-         stack.peekFrame(index - 1) = value;
-      }
-      else
-      {
-         uint32_t addr = header->glob + (index - 16) * 2;
-         memory.writeWord(addr, value);
-      }
-
-      TRACE(" [W%02X=%04X]", index, value);
-   }
-
    //! Conditional branch (4.7)
    void branch(bool cond)
    {
@@ -189,11 +148,12 @@ private:
                 uint16_t         argc,
                 const uint16_t*  argv)
    {
-      stack.pushFrame(ZState::getPC(), call_type, argc);
-
-      ZState::jump(header->unpackAddr(packed_addr, /* routine */ true));
+      ZState::call(call_type,
+                   header->unpackAddr(packed_addr, /* routine */ true));
 
       uint8_t num_locals = fetchByte();
+
+      ZState::push(argc);
 
       for(unsigned i=0; i<num_locals; ++i)
       {
@@ -209,7 +169,7 @@ private:
             value = argv[i];
          }
 
-         stack.push(value);
+         ZState::push(value);
       }
 
       TRACE("   // call %06x args=%d locals=%d",
@@ -219,15 +179,13 @@ private:
    //! Return from a sub-routine
    void subRet(uint16_t value)
    {
-      uint16_t call_type;
-
-      ZState::jump(stack.popFrame(call_type));
+      uint16_t call_type = ZState::callret();
 
       switch(call_type)
       {
       case 0: varWrite(fetchByte(), value); break;
       case 1: /* throw return value away */ break;
-      case 2: stack.push(value);            break;
+      case 2: ZState::push(value);          break;
 
       default: error("Subroutine return, bad call type %u", call_type);
       }
@@ -313,13 +271,13 @@ private:
    void op0_restart()      { start(); }
 
    //! ret_popped
-   void op0_ret_popped()   { subRet(stack.pop()); }
+   void op0_ret_popped()   { subRet(ZState::pop()); }
 
    //! pop
-   void op0_pop()          { stack.pop(); }
+   void op0_pop()          { ZState::pop(); }
 
    //! catch -> (result)
-   void op0_catch()        { varWrite(fetchByte(), stack.getFramePtr()); }
+   void op0_catch()        { varWrite(fetchByte(), ZState::getFramePtr()); }
 
    //! quit
    void op0_quit()         { quit = true; }
@@ -599,11 +557,11 @@ private:
    void opV_print_char()     { stream.writeChar(uarg[0]); }
    void opV_print_num()      { stream.writeNumber(sarg[0]); }
    void opV_random()         { varWrite(fetchByte(), random(sarg[0])); }
-   void opV_push()           { stack.push(uarg[0]); }
+   void opV_push()           { ZState::push(uarg[0]); }
 
    void opV_pull_v1()
    {
-      varWrite(uarg[0], stack.pop(), true);
+      varWrite(uarg[0], ZState::pop(), true);
    }
 
    void opV_pull_v6()
@@ -619,7 +577,7 @@ private:
       }
       else
       {
-         value = stack.pop();
+         value = ZState::pop();
       }
 
       varWrite(fetchByte(), value, true);
@@ -771,7 +729,7 @@ private:
 
    void opV_check_arg_count()
    {
-      branch(uarg[0] <= stack.getNumFrameArgs());
+      branch(uarg[0] <= ZState::getNumFrameArgs());
    }
 
    //============================================================================
@@ -1272,6 +1230,7 @@ public:
       ZState::init(options.seed,
                    sizeof(ZHeader),
                    header->getStorySize(),
+                   header->glob,
                    header->getMemoryLimit());
 
       initDecoder();

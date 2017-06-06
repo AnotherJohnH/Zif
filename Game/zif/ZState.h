@@ -25,8 +25,9 @@
 
 #include <cstdio>
 
+#include "STB/Stack.h"
+
 #include "ZMemory.h"
-#include "ZStack.h"
 
 //! The game state
 class ZState
@@ -34,36 +35,45 @@ class ZState
 private:
    static const unsigned STACK_SIZE = 1024;
 
+   using Stack = STB::Stack<uint16_t,STACK_SIZE,uint16_t>;
+
    // Static configuration
-   uint32_t              memory_limit{0};
+   uint16_t              initial_rand_seed{0};
    uint32_t              game_start{0};
    uint32_t              game_end{0};
-   uint16_t              initial_rand_seed{0};
+   uint32_t              global_base{0};
+   uint32_t              memory_limit{0};
 
    // Dynamic state
    bool                  checksum_ok{false};
    uint32_t              rand_state{1};
    uint32_t              pc{0};
+   uint16_t              frame_ptr{0};
+   Stack                 stack;
 public:
-   ZStack<STACK_SIZE>    stack;
    ZMemory               memory;
 
    //! Return whether the loaded checksum was valid
    bool isChecksumOk() const { return checksum_ok; }
 
-   //! Current value of program counter
+   //! Current value of the program counter
    uint32_t getPC() const { return pc; }
+
+   //! Current value of the frame pointer 
+   uint16_t getFramePtr() const { return frame_ptr; }
 
    //! Initialise with the game configuration
    void init(uint16_t initial_rand_seed_,
              uint32_t game_start_,
              uint32_t game_end_,
+             uint32_t global_base_,
              uint32_t memory_limit_)
    {
       initial_rand_seed = initial_rand_seed_;
 
       game_start   = game_start_;
       game_end     = game_end_;
+      global_base  = global_base_;
       memory_limit = memory_limit_;
 
       memory.setLimit(memory_limit_);
@@ -77,7 +87,9 @@ public:
 
       jump(pc_);
 
-      stack.reset();
+      frame_ptr = 0;
+
+      stack.clear();
 
       memory.clear(game_end, memory_limit);
 
@@ -113,7 +125,7 @@ public:
       pushContext();
 
       memory.save(fp, game_start, memory_limit);
-      stack.save(fp);
+      fwrite(&stack, sizeof(stack), 1, fp);
       fclose(fp);
 
       popContext();
@@ -128,7 +140,7 @@ public:
       if (fp == nullptr) return false;
 
       memory.load(fp, game_start, memory_limit);
-      stack.load(fp);
+      fread(&stack, sizeof(stack), 1, fp);
       fclose(fp);
 
       popContext();
@@ -148,6 +160,28 @@ public:
       return memory.fetchWord(pc);
    }
 
+
+   //! Push a word onto the stack
+   void push(uint16_t value)
+   {
+      stack.push_back(value);
+   }
+
+   //! Pop a word from the stack
+   uint16_t pop()
+   {
+      uint16_t value = stack.back();
+      stack.pop_back();
+      return value;
+   }
+
+   uint16_t getNumFrameArgs() const
+   {
+      assert(frame_ptr != 0);
+      return stack[frame_ptr];
+   }
+
+
    //! Absolute jump to given target address
    void jump(uint32_t target_)
    {
@@ -160,6 +194,29 @@ public:
       pc += offset_;
    }
 
+   //! Call a routine
+   void call(uint16_t call_type, uint32_t target)
+   {
+      push(call_type);
+      push32(pc);
+      push(frame_ptr);
+
+      frame_ptr = stack.size();
+
+      jump(target);
+   }
+
+   //! Return from a routine
+   uint16_t callret()
+   {
+      stack.resize(frame_ptr);
+
+      frame_ptr = pop();
+      jump(pop32());
+      return pop();
+   }
+
+   //! Get a random value
    uint16_t random(int16_t arg)
    {
       if (arg <= 0)
@@ -176,21 +233,74 @@ public:
       }
    }
 
+   //! Read a variable
+   uint16_t varRead(uint8_t index, bool peek = false)
+   {
+      if (index == 0)
+      {
+         return peek ? stack.back() : pop();
+      }
+      else if (index < 16)
+      {
+         return stack[frame_ptr + index];
+      }
+      else
+      {
+         uint32_t addr = global_base + (index - 16) * 2;
+         return memory.readWord(addr);
+      }
+   }
+
+   //! Write a variable
+   void varWrite(uint8_t index, uint16_t value, bool peek = false)
+   {
+      if (index == 0)
+      {
+         if (peek)
+            stack.back() = value;
+         else
+            push(value);
+      }
+      else if (index < 16)
+      {
+         stack[frame_ptr + index] = value;
+      }
+      else
+      {
+         uint32_t addr = global_base + (index - 16) * 2;
+         memory.writeWord(addr, value);
+      }
+   }
+
 private:
    //! Save all registers on the stack
    void pushContext()
    {
-      stack.push(checksum_ok);
-      stack.push32(rand_state);
-      stack.push32(pc);
+      push(checksum_ok);
+      push32(rand_state);
+      push32(pc);
+      push(frame_ptr);
    }
 
    //! Restore all registers from the stack
    void popContext()
    {
-      pc          = stack.pop32();
-      rand_state  = stack.pop32();
-      checksum_ok = stack.pop();
+      frame_ptr   = pop();
+      pc          = pop32();
+      rand_state  = pop32();
+      checksum_ok = pop();
+   }
+
+   void push32(uint32_t value)
+   {
+      push(uint16_t(value));
+      push(uint16_t(value >> 16));
+   }
+
+   uint32_t pop32()
+   {
+      uint32_t value = pop()<<16;
+      return value | pop();
    }
 
    uint32_t randomSeed()
