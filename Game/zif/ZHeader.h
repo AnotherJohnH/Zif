@@ -156,6 +156,40 @@ struct ZHeader
       }
    }
 
+   //! Convert a 16-but oacked address to a 32-bit address
+   uint32_t unpackAddr(uint16_t packed_address, bool routine) const
+   {
+      switch(version)
+      {
+      case 1:
+      case 2:
+      case 3:
+         return packed_address<<1;
+
+      case 4:
+      case 5:
+         return packed_address<<2;
+
+      case 6:
+      case 7:
+         return (packed_address<<2) + (routine ? routines<<3
+                                               : static_strings<<3);
+
+      case 8:
+         return packed_address<<3;
+
+      default:
+         assert(!"unexpected version");
+         return 0;
+      }
+   }
+
+   uint32_t getEntryPoint() const
+   {
+      return version == 6 ? unpackAddr(init_pc, /* routine */ true) + 1
+                          : uint32_t(init_pc);
+   }
+
    //! 
    void print() const
    {

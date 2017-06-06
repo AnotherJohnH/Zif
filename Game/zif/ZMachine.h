@@ -109,33 +109,6 @@ private:
 
    unsigned version() const { return header->version; }
 
-   //! Convert a 16-but oacked address to a 32-bit address
-   uint32_t unpackAddr(uint16_t packed_address, bool routine) const
-   {
-      switch(header->version)
-      {
-      case 1:
-      case 2:
-      case 3:
-         return packed_address<<1;
-
-      case 4:
-      case 5:
-         return packed_address<<2;
-
-      case 6:
-      case 7:
-         return (packed_address<<2) + (routine ? header->routines<<3
-                                               : header->static_strings<<3);
-
-      case 8:
-         return packed_address<<3;
-
-      default:
-         assert(!"unexpected version");
-         return 0;
-      }
-   }
 
    //! Read a variable
    uint16_t varRead(uint8_t index, bool peek = false)
@@ -218,7 +191,7 @@ private:
    {
       stack.pushFrame(ZState::getPC(), call_type, argc);
 
-      ZState::jump(unpackAddr(packed_addr, /* routine */ true));
+      ZState::jump(header->unpackAddr(packed_addr, /* routine */ true));
 
       uint8_t num_locals = fetchByte();
 
@@ -314,7 +287,7 @@ private:
    void op0_print()        { ZState::jump(text.print(ZState::getPC())); }
 
    //! print_ret - Print the literal Z-encoded string, a new-line then return true
-   void op0_print_ret()    { op0_print(); op0_new_line(); op0_rtrue(); }
+   void op0_print_ret()    { op0_print(); op0_new_line(); subRet(1); }
 
    //! nop - Probably the offiical "nop"
    void op0_nop()          {}
@@ -349,11 +322,7 @@ private:
    void op0_catch()        { varWrite(fetchByte(), stack.getFramePtr()); }
 
    //! quit
-   void op0_quit()
-   {
-      info("quit");
-      quit = true;
-   }
+   void op0_quit()         { quit = true; }
 
    //! new_line
    void op0_new_line()     { stream.writeChar('\n'); }
@@ -368,7 +337,6 @@ private:
    void op0_extend()
    {
        uint8_t ext_opcode = fetchByte();
-       TRACE(" %02x", ext_opcode);
 
        fetchOperands(4);
 
@@ -421,7 +389,7 @@ private:
 
    void op1_jump()          { ZState::branch(sarg[0] - 2); }
 
-   void op1_print_paddr()   { text.print(unpackAddr(uarg[0], /* routine */false)); }
+   void op1_print_paddr()   { text.print(header->unpackAddr(uarg[0], /* routine */false)); }
 
    void op1_load()          { varWrite(fetchByte(), varRead(uarg[0], true)); }
 
@@ -1188,13 +1156,7 @@ private:
       // TODO the header should be reset (only bits 0 and 1 from Flags 2
       //      shoud be preserved)
 
-      uint32_t entry_point;
-      if (header->version != 6)
-         entry_point = header->init_pc;
-      else
-         entry_point = unpackAddr(header->init_pc, /* routine */ true) + 1;
-
-      if (!ZState::reset(filename, entry_point, header->checksum))
+      if (!ZState::reset(filename, header->getEntryPoint(), header->checksum))
       {
          error("Failed to read story z-file \"%s\"", filename);
       }
@@ -1337,6 +1299,8 @@ public:
       }
 
       console.waitForKey();
+
+      info("quit");
    }
 };
 
