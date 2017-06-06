@@ -206,10 +206,12 @@ public:
       jump(target);
    }
 
-   //! Return from a routine
-   uint16_t callret()
+   //! Return from the given frame (usually the current frame)
+   uint16_t returnFromFrame(uint32_t frame_ptr_)
    {
-      stack.resize(frame_ptr);
+      assert(frame_ptr_ <= frame_ptr);
+
+      stack.resize(frame_ptr_);
 
       frame_ptr = pop();
       jump(pop32());

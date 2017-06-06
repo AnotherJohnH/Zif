@@ -177,9 +177,14 @@ private:
    }
 
    //! Return from a sub-routine
-   void subRet(uint16_t value)
+   void subRet(uint16_t value, uint16_t frame_ptr=0xFFFF)
    {
-      uint16_t call_type = ZState::callret();
+      if (frame_ptr == 0xFFFF)
+      {
+         frame_ptr = ZState::getFramePtr();
+      }
+
+      uint16_t call_type = ZState::returnFromFrame(frame_ptr);
 
       switch(call_type)
       {
@@ -189,8 +194,6 @@ private:
 
       default: error("Subroutine return, bad call type %u", call_type);
       }
-
-      TRACE("   // ret %06X", ZState::getPC());
    }
 
    void showStatus()
@@ -427,7 +430,7 @@ private:
    void op2_call_2s()           { subCall(0, uarg[0], 1, &uarg[1]); }
    void op2_call_2n()           { subCall(1, uarg[0], 1, &uarg[1]); }
    void op2_set_colour()        { stream.setColours(uarg[0], uarg[1]); /* TODO v6 window */ }
-   void op2_throw()             { TODO_ERROR(); }
+   void op2_throw()             { subRet(uarg[0], uarg[1]); }
 
    //============================================================================
    // Variable operand instructions
