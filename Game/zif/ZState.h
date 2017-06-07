@@ -58,7 +58,7 @@ private:
 
    // Terminal state
    mutable bool          do_quit{false};
-   mutable ZError        err{NO_ERROR};
+   mutable ZError        exit_code{NO_ERROR};
 
 public:
    //! Return whether the machine should stop
@@ -190,9 +190,9 @@ public:
    bool error(ZError err_) const
    {
       // Only the first error is recorded
-      if (err == NO_ERROR)
+      if (exit_code == NO_ERROR)
       {
-         err = err_;
+         exit_code = err_;
          quit();
       }
 
@@ -200,7 +200,7 @@ public:
    }
 
    //! Get the first error code reported
-   ZError getError() const { return err; }
+   ZError getExitCode() const { return exit_code; }
 
    //! Fetch an instruction byte
    uint8_t fetchByte()

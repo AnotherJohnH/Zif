@@ -67,6 +67,7 @@ private:
 
    const char*           filename{};
 
+   uint32_t              inst_addr;
    unsigned              num_arg;
    union
    {
@@ -1080,9 +1081,11 @@ private:
 
    void fetchDecodeExecute()
    {
-      clearOperands();
+      inst_addr = ZState::getPC();
 
       uint8_t opcode = fetchByte();
+
+      clearOperands();
 
       if (opcode < 0x80)
       {
@@ -1170,9 +1173,10 @@ private:
    {
       static unsigned tick = 0;
 
-      uint8_t opcode = memory.readByte(ZState::getPC());
+      inst_addr = ZState::getPC();
+      uint8_t opcode = memory.readByte(inst_addr);
 
-      trace.printf("%4d %06X: %02X ", tick++, ZState::getPC(), opcode);
+      trace.printf("%4d %06X: %02X ", tick++, inst_addr, opcode);
 
       if (opcode < 0x80)
       {
@@ -1186,7 +1190,7 @@ private:
       {
          if ((opcode & 0xF) == 0xE)
          {
-            uint8_t ext_opcode = memory.readByte(ZState::getPC() + 1);
+            uint8_t ext_opcode = memory.readByte(inst_addr + 1);
             trace.printf("EXT:%02X", ext_opcode & 0x1F);
          }
          else
@@ -1269,9 +1273,13 @@ public:
 
       info("quit");
 
-      if (ZState::getError() != NO_ERROR)
+      ZError exit_code = ZState::getExitCode();
+      if (exit_code != NO_ERROR)
       {
-         error("%s", ZErrorString(ZState::getError()));
+         error("PC=%06x OP=%02X : %s",
+               inst_addr,
+               memory.readByte(inst_addr),
+               ZErrorString(exit_code));
       }
    }
 };
