@@ -64,7 +64,6 @@ private:
    ZText                 text;
    ZParser               parser;
    ZHeader*              header;
-   bool                  quit;
 
    const char*           filename{};
 
@@ -104,7 +103,8 @@ private:
       va_start(ap, format);
       stream.vmessage(ZStream::ERROR, format, ap);
       va_end(ap);
-      quit = true;
+
+      ZState::quit();
    }
 
    unsigned version() const { return header->version; }
@@ -192,7 +192,7 @@ private:
       case 1: /* throw return value away */ break;
       case 2: ZState::push(value);          break;
 
-      default: error("Subroutine return, bad call type %u", call_type);
+      default: ZState::error(ERR_BAD_CALL_TYPE);
       }
    }
 
@@ -201,9 +201,9 @@ private:
       TODO_WARN("show_status");
    }
 
-   void ILLEGAL()     { error("Illegal operation"); }
+   void ILLEGAL()     { ZState::error(ERR_ILLEGAL_OP); }
 
-   void TODO_ERROR()  { error("Unimplemented operation"); }
+   void TODO_ERROR()  { ZState::error(ERR_UNIMPLEMENTED_OP); }
 
    void TODO_WARN(const char* op)
    {
@@ -283,7 +283,7 @@ private:
    void op0_catch()        { varWrite(fetchByte(), ZState::getFramePtr()); }
 
    //! quit
-   void op0_quit()         { quit = true; }
+   void op0_quit()         { ZState::quit(); }
 
    //! new_line
    void op0_new_line()     { stream.writeChar('\n'); }
@@ -417,13 +417,21 @@ private:
 
    void op2_div()
    {
-      if (sarg[1] == 0) error("Division by zero");
+      if (sarg[1] == 0)
+      {
+         ZState::error(ERR_DIV_BY_ZERO);
+         return;
+      }
       varWrite(fetchByte(), sarg[0] / sarg[1]);
    }
 
    void op2_mod()
    {
-      if (sarg[1] == 0) error("Division by zero");
+      if (sarg[1] == 0)
+      {
+         ZState::error(ERR_DIV_BY_ZERO);
+         return;
+      }
       varWrite(fetchByte(), sarg[0] % sarg[1]);
    }
 
@@ -624,13 +632,14 @@ private:
 
          stream.enableMemoryStream(table, width);
       }
-      else if (number > 0)
+      else
       {
-         stream.enableStream(number, true);
-      }
-      else if (number < 0)
-      {
-         stream.enableStream(-number, false);
+         bool set = number > 0;
+         number = abs(number);
+         if (number > 4)
+            ZState::error(ERR_BAD_STREAM);
+         else
+            stream.enableStream(abs(number), set);
       }
    }
 
@@ -1205,20 +1214,18 @@ public:
       , window_mgr(console, stream)
       , object(&memory)
       , text(stream, memory)
-      , quit(false)
    {}
 
    //! Play a Z file
    void open(const char* filename_)
    {
+      console.init(options);
+
       filename = filename_;
 
       if (!loadHeader()) return;
 
-      console.init(options);
-
       ZConfig  config;
-
       config.interp_major_version = 1;
       config.interp_minor_version = 0;
 
@@ -1242,11 +1249,9 @@ public:
 
       start();
 
-      quit = false;
-
       if (options.trace)
       {
-         while(!quit)
+         while(!isQuitRequested())
          {
             printTrace();
             fetchDecodeExecute();
@@ -1254,7 +1259,7 @@ public:
       }
       else
       {
-         while(!quit)
+         while(!isQuitRequested())
          {
             fetchDecodeExecute();
          }
@@ -1263,6 +1268,11 @@ public:
       console.waitForKey();
 
       info("quit");
+
+      if (ZState::getError() != NO_ERROR)
+      {
+         error("%s", ZErrorString(ZState::getError()));
+      }
    }
 };
 

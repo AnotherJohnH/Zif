@@ -130,7 +130,7 @@ public:
       case 3: state = &memory_enable;  break;
       case 4: state = &snooper_enable; break;
 
-      default: assert(!"unexpected index"); break;
+      default: assert(!"unexpected index"); return false;
       }
 
       bool prev = *state;

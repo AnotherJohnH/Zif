@@ -151,7 +151,6 @@ struct ZHeader
          return 512*1024;
 
       default:
-         assert(!"unexpected version");
          return 0;
       }
    }
@@ -179,7 +178,6 @@ struct ZHeader
          return packed_address<<3;
 
       default:
-         assert(!"unexpected version");
          return 0;
       }
    }
