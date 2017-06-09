@@ -314,7 +314,11 @@ public:
       }
       else
       {
-         rand_state = 0x015A4E35 * rand_state + 1;
+         // use xorshift, it's fast and simple
+         rand_state ^= rand_state << 13;
+         rand_state ^= rand_state >> 17;
+         rand_state ^= rand_state <<  5;
+
          uint16_t value = (rand_state >> 16) & 0x7FFF;
          return (value % arg) + 1;
       }
