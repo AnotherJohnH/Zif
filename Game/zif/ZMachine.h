@@ -47,7 +47,7 @@ private:
 
    static const unsigned MAX_OPERANDS = 8;
 
-   enum OperandType
+   enum OperandType : uint8_t
    {
       OP_LARGE_CONST = 0,
       OP_SMALL_CONST = 1,
@@ -211,31 +211,6 @@ private:
       warning(op);
    }
 
-   void doOp0(uint8_t op_code)
-   {
-      (this->*op0[op_code & 0xF])();
-   }
-
-   void doOp1(uint8_t op_code)
-   {
-      (this->*op1[op_code & 0xF])();
-   }
-
-   void doOp2(uint8_t op_code)
-   {
-      (this->*op2[op_code & 0x1F])();
-   }
-
-   void doOpV(uint8_t op_code)
-   {
-      (this->*opV[op_code & 0x1F])();
-   }
-
-   void doOpE(uint8_t op_code)
-   {
-      (this->*opE[op_code & 0x1F])();
-   }
-
    //============================================================================
    // Zero operand instructions
 
@@ -295,16 +270,6 @@ private:
    //! verify ?(label)
    void op0_verify()       { branch(isChecksumOk()); }
 
-   //! "extended opcodes"
-   void op0_extend()
-   {
-       uint8_t ext_opcode = fetchByte();
-
-       fetchOperands(4);
-
-       doOpE(ext_opcode);
-   }
-
    //! piracy ?(label)
    void op0_piracy()       { branch(true); }
 
@@ -361,6 +326,7 @@ private:
 
    //============================================================================
    // Two operand instructions
+
    void op2_je()
    {
       branch(((num_arg > 1) && (uarg[0] == uarg[1])) ||
@@ -884,8 +850,7 @@ private:
                                 : &ZMachine::op0_nop;
       op0[0xD] = version() >= 3 ? &ZMachine::op0_verify
                                 : &ZMachine::ILLEGAL;
-      op0[0xE] = version() >= 5 ? &ZMachine::op0_extend
-                                : &ZMachine::ILLEGAL;
+      op0[0xE] =                  &ZMachine::ILLEGAL;   // "extend" decoded elsewhere
       op0[0xF] = version() >= 5 ? &ZMachine::op0_piracy
                                 : &ZMachine::ILLEGAL;
 
@@ -1040,44 +1005,100 @@ private:
       num_arg = 0;
    }
 
-   void fetchOperand(uint8_t type)
+   void fetchOperand(OperandType type)
    {
-      uint16_t operand{};
+      uint16_t operand;
 
       switch(type)
       {
       case OP_LARGE_CONST: operand = fetchWord();          break;
       case OP_SMALL_CONST: operand = fetchByte();          break;
       case OP_VARIABLE:    operand = varRead(fetchByte()); break;
-
-      case OP_NONE: return;
+      default: assert(!"bad operand type"); return;
       }
 
       TRACE(" (%X)", operand);
       uarg[num_arg++] = operand;
+
+      assert(num_arg <= 8);
    }
 
    void fetchOperands(unsigned n)
    {
-      uint16_t type = 0;
+      uint16_t op_types;
 
       if (n == 4)
       {
-         type = fetchByte() << 8;
-         TRACE(" t%02X", type >> 8);
+         op_types = fetchByte() << 8;
+         TRACE(" t%02X", op_types >> 8);
       }
-      else if (n == 8)
+      else
       {
-         type = fetchWord();
-         TRACE(" t%04X", type);
+         assert(n == 8);
+
+         op_types = fetchWord();
+         TRACE(" t%04X", op_types);
       }
 
+      // Unpack the type of the operands
       for(unsigned i=0; i<n; ++i)
       {
-         fetchOperand(type >> 14);
-         type <<= 2;
+         OperandType type = OperandType(op_types >> 14);
+
+         if (type == OP_NONE) return;
+
+         fetchOperand(type);
+
+         op_types <<= 2;
       }
    }
+
+
+   void doOp0(uint8_t op_code)
+   {
+      (this->*op0[op_code & 0xF])();
+   }
+
+   void doOp1(uint8_t op_code)
+   {
+      fetchOperand(OperandType((op_code >> 4) & 3));
+
+      (this->*op1[op_code & 0xF])();
+   }
+
+   void doOp2(uint8_t op_code)
+   {
+      fetchOperand(op_code & (1<<6) ? OP_VARIABLE : OP_SMALL_CONST);
+      fetchOperand(op_code & (1<<5) ? OP_VARIABLE : OP_SMALL_CONST);
+
+      (this->*op2[op_code & 0x1F])();
+   }
+
+   void doOp2_var(uint8_t op_code)
+   {
+      // TODO what if there are more than two arguments?
+      fetchOperands(4);
+
+      (this->*op2[op_code & 0x1F])();
+   }
+
+   void doOpV(uint8_t op_code)
+   {
+      if ((op_code == 0xEC) || (op_code == 0xFA))
+         fetchOperands(8);
+      else
+         fetchOperands(4);
+
+      (this->*opV[op_code & 0x1F])();
+   }
+
+   void doOpE(uint8_t op_code)
+   {
+      fetchOperands(4);
+
+      (this->*opE[op_code & 0x1F])();
+   }
+
 
    void fetchDecodeExecute()
    {
@@ -1089,37 +1110,41 @@ private:
 
       if (opcode < 0x80)
       {
-         fetchOperand(opcode & (1<<6) ? OP_VARIABLE : OP_SMALL_CONST);
-         fetchOperand(opcode & (1<<5) ? OP_VARIABLE : OP_SMALL_CONST);
-
+         // 0xxxxxx
          doOp2(opcode);
       }
       else if (opcode < 0xB0)
       {
-         fetchOperand((opcode >> 4) & 3);
-
+         // 1000xxxx
+         // 1001xxxx
+         // 1010xxxx
          doOp1(opcode);
       }
       else if (opcode < 0xC0)
       {
-         doOp0(opcode);
+         if (opcode == 0xBE)
+         {
+            // 10111110
+            doOpE(fetchByte());
+         }
+         else
+         {
+            // 1011xxxx
+            doOp0(opcode);
+         }
       }
       else if (opcode < 0xE0)
       {
-         fetchOperands(4);
-
-         doOp2(opcode);
+         // 110xxxxx
+         doOp2_var(opcode);
       }
       else
       {
-         if ((opcode == 0xEC) || (opcode == 0xFA))
-            fetchOperands(8);
-         else
-            fetchOperands(4);
-
+         // 111xxxxx
          doOpV(opcode);
       }
    }
+
 
    //! Reset machine state to intial conditions
    void start()
