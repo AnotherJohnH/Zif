@@ -33,7 +33,6 @@ struct ZConfig
    bool      var_pitch_font{false};       //!< variable pitch font the default
    bool      pictures{false};             //!< picture display available
    bool      sounds{false};               //!< sounds available
-   bool      timed_keyboard{false};       //!< timed keyboard input available
    bool      transcripting{false};        //!< transcripting starts on
 };
 

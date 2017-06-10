@@ -110,7 +110,7 @@ public:
       case GRAPHIC_FONT: return false;
       case FIXED_FONT:   return true;
 
-      case READ_TIMEOUT: return false;  // TODO
+      case READ_TIMEOUT: return true;
 
       default: return 0;
       }
@@ -170,14 +170,14 @@ public:
    }
 
    //! Read ZSCII character
-   bool read(uint16_t& zscii, unsigned timeout)
+   //  Returns false on timeout
+   bool read(uint16_t& zscii, unsigned timeout_100ms)
    {
       int ch;
 
       while(true)
       {
-         // TODO timeout
-         ch = getInput();
+         ch = getInput(timeout_100ms);
          if (ch < 0)
          {
             exit(0); // TODO this seems a bit severe!
@@ -197,7 +197,7 @@ public:
       scroll = 0;
       only_white_space = true;
 
-      return true;
+      return ch != 0;
    }
 
    //! Write ZSCII character
@@ -249,7 +249,7 @@ private:
    void closeInputFile();
    bool isInputFileOpen();
 
-   int  getInput();
+   int  getInput(unsigned timeout_ms);
 
    // Convert Z colour codes to a curses colour index
    void convertCodeToColour(unsigned& current, signed code, const unsigned DEFAULT)

@@ -45,7 +45,7 @@ void ZConsole::closeInputFile()
 }
 
 
-int ZConsole::getInput()
+int ZConsole::getInput(unsigned timeout_100ms)
 {
    if (input_fp != nullptr)
    {
@@ -58,6 +58,8 @@ int ZConsole::getInput()
          return fgetc(input_fp);
       }
    }
+
+   curses.timeout(timeout_100ms*100);
 
    return curses.getch();
 }

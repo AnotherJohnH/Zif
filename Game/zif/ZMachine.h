@@ -197,6 +197,20 @@ private:
       }
    }
 
+   bool readChar(uint16_t timeout, uint16_t routine, uint16_t& ch)
+   {
+      if (!stream.readChar(ch, timeout))
+      {
+         if (routine == 0) return false;
+
+         subCall(0, routine, 0, 0);
+
+         return false;
+      }
+
+      return true;
+   }
+
    void showStatus()
    {
       TODO_WARN("show_status");
@@ -436,8 +450,8 @@ private:
    {
       uint16_t buffer  = uarg[0];
       uint16_t parse   = uarg[1];
-      uint16_t timeout = TIMER ? uarg[2] : 0;
-      uint16_t routine = TIMER ? uarg[3] : 0;
+      uint16_t timeout = TIMER && (num_arg >= 3) ? uarg[2] : 0;
+      uint16_t routine = TIMER && (num_arg >= 4) ? uarg[3] : 0;
 
       if (SHOW_STATUS) showStatus();
 
@@ -448,11 +462,9 @@ private:
       {
           uint16_t ch;
 
-          if (!stream.readChar(ch, timeout))
+          if (!readChar(timeout, routine, ch))
           {
-             // TODO branch to routine
-             (void) routine;
-             break;
+             return;
           }
 
           if (ch == '\b')
@@ -484,8 +496,8 @@ private:
    {
       uint16_t buffer  = uarg[0];
       uint16_t parse   = uarg[1];
-      uint16_t timeout = uarg[2];
-      uint16_t routine = uarg[3];
+      uint16_t timeout = num_arg >= 3 ? uarg[2] : 0;
+      uint16_t routine = num_arg >= 4 ? uarg[3] : 0;
 
       uint8_t  max = memory.readByte(buffer++);
       uint8_t  len = memory.readByte(buffer++);
@@ -496,11 +508,9 @@ private:
       {
           uint16_t ch;
 
-          if (!stream.readChar(ch, timeout))
+          if (!readChar(timeout, routine, ch))
           {
-             // TODO branch to routine
-             (void) routine;
-             break;
+             return;
           }
 
           if (ch == '\b')
@@ -622,16 +632,15 @@ private:
 
    void opV_read_char()
    {
-      uint16_t timeout = uarg[0];
-      uint16_t routine = uarg[1];
-
+      // assert(uarg[0] == 1);
+      uint16_t timeout = num_arg >= 2 ? uarg[1] : 0;
+      uint16_t routine = num_arg >= 3 ? uarg[2] : 0;
       uint16_t ch;
-      if (!stream.readChar(ch, timeout))
-      {
-         ZState::jump(routine);
-      }
 
-      varWrite(fetchByte(), ch);
+      if (readChar(timeout, routine, ch))
+      {
+         varWrite(fetchByte(), ch);
+      }
    }
 
    void opV_scan_table()
