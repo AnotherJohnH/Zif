@@ -233,16 +233,36 @@ public:
       x = atoi(t + 1);
    }
 
+   //! set input timeout (mS)
+   void timeout(int timeout_ms_)
+   {
+      timeout_ms = timeout_ms_;
+   }
+
    //! Get next character input
    int getch()
    {
       uint8_t ch;
-      return dev->read(&ch, 1) == -1 ? -1 : ch;
+      int     status;
+
+      if (timeout_ms != 0)
+      {
+         dev->ioctl(Device::IOCTL_TERM_TIMEOUT_MS, timeout_ms);
+         status = dev->read(&ch, 1);
+         dev->ioctl(Device::IOCTL_TERM_TIMEOUT_MS, 0);
+      }
+      else
+      {
+         status = dev->read(&ch, 1);
+      }
+
+      return status > 0 ? ch : 0;
    }
 
 private:
    Device*   dev{nullptr};
    unsigned  attr{0};
+   unsigned  timeout_ms{0};
 
    void adduint(unsigned value)
    {

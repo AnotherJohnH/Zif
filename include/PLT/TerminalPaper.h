@@ -647,6 +647,10 @@ public:
          }
          break;
 
+      case IOCTL_TERM_TIMEOUT_MS:
+         status = -1;
+         break;
+
       default:
          break;
       }

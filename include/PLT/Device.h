@@ -37,6 +37,7 @@ public:
    static const unsigned long IOCTL_TERM_BORDER     = IOCTL_TERM(4);
    static const unsigned long IOCTL_TERM_LINE_SPACE = IOCTL_TERM(5);
    static const unsigned long IOCTL_TERM_FONT_SIZE  = IOCTL_TERM(6);
+   static const unsigned long IOCTL_TERM_TIMEOUT_MS = IOCTL_TERM(7);
 
    virtual int     open(unsigned oflag) { return 0; }
 

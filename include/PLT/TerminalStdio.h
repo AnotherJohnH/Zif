@@ -28,6 +28,8 @@
 #include <cstdarg>
 #include <cstdio>
 
+#include <sys/select.h>
+
 #include "PLT/Device.h"
 #include "PLT/KeyCode.h"
 
@@ -39,7 +41,8 @@ namespace PLT {
 class TerminalStdio : public PLT::Device
 {
 private:
-   STB::Fifo<uint8_t,2>  input;
+   STB::Fifo<int,2>  input;
+   unsigned          timeout_ms{0};
 
    static termios* getTio()
    {
@@ -73,14 +76,33 @@ private:
       tcsetattr(0, TCSANOW, &tio);
    }
 
-   uint8_t inputPush()
+   int readStdin()
    {
-      uint8_t ch = ::fgetc(stdin);
+      if (timeout_ms != 0)
+      {
+         fd_set  fds;
+         FD_ZERO(&fds);
+         FD_SET(0, &fds); // fd 0 is assumed to be stdin
+
+         struct timeval timeout;
+         timeout.tv_sec  = timeout_ms / 1000;
+         timeout.tv_usec = (timeout_ms % 1000) * 1000;
+
+         int status = select(1, &fds, nullptr, nullptr, &timeout);
+         if (status <= 0) return status;
+      }
+
+      return ::fgetc(stdin);
+   }
+
+   int inputPush()
+   {
+      int ch = readStdin();
       input.push(ch);
       return ch;
    }
 
-   uint8_t getNextChar()
+   int getNextChar()
    {
       if (input.empty())
       {
@@ -99,7 +121,7 @@ private:
          }
       }
 
-      uint8_t ch = input.back();
+      int ch = input.back();
       input.pop();
       return ch;
    }
@@ -136,6 +158,11 @@ public:
          status = 0;
          break;
 
+      case IOCTL_TERM_TIMEOUT_MS:
+         timeout_ms = va_arg(ap, unsigned);
+         status = 0;
+         break;
+
       default:
          break;
       }
@@ -167,7 +194,10 @@ public:
 
       for(i = 0; i < n; i++)
       {
-         *ptr++ = getNextChar();
+         int ch = getNextChar();
+         if (ch <= 0) return ch;
+
+         *ptr++ = ch;
       }
 
       return i;
