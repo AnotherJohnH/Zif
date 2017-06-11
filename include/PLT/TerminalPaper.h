@@ -134,6 +134,7 @@ private:
    uint8_t               cell_char[MAX_COLS][MAX_ROWS];
    STB::Fifo<uint8_t,6>  response;
    bool                  implicit_cr{};
+   unsigned              timeout_ms{0};
 
    //! CSI cursor movement
    void csiCursor(uint8_t cmd, unsigned n=0, unsigned m=0)
@@ -519,36 +520,55 @@ private:
       sendString(temp);
    }
 
-   bool getInput(uint8_t& ch)
+   int getInput(uint8_t& ch)
    {
       if (!response.empty())
       {
          ch = response.back();
          response.pop();
-         return true;
+         return 1;
+      }
+
+      int status;
+
+      if (timeout_ms != 0)
+      {
+         PLT::setTimer(timeout_ms);
       }
 
       while(true)
       {
-         PLT::Event  event;
+         PLT::Event      event;
+         PLT::EventType  type = PLT::waitEvent(event);
 
-         switch(PLT::waitEvent(event))
+         if (type == PLT::QUIT)
          {
-         case PLT::QUIT:
-            return false;
-
-         case PLT::KEY_DOWN:
+            status = -1;
+            break;
+         }
+         else if (type == PLT::TIMER)
+         {
+            status = 0;
+            break;
+         }
+         else if (type == PLT::KEY_DOWN)
+         {
             if (echo && (event.code < 0x80))
             {
                ansiWrite(event.code);
             }
             ch = event.code;
-            return true;
-
-         default:
+            status = 1;
             break;
          }
       }
+
+      if (timeout_ms != 0)
+      {
+         PLT::setTimer(0);
+      }
+
+      return status;
    }
 
    void init()
@@ -648,7 +668,8 @@ public:
          break;
 
       case IOCTL_TERM_TIMEOUT_MS:
-         status = -1;
+         timeout_ms = va_arg(ap, unsigned);
+         status = 0;
          break;
 
       default:
@@ -684,7 +705,8 @@ public:
 
          uint8_t ch;
 
-         if (!getInput(ch)) return -1;
+         int status = getInput(ch);
+         if (status <= 0) return status;
 
          buffer[i] = ch;
       }
