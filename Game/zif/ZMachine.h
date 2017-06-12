@@ -771,12 +771,17 @@ private:
 
    void opE_print_unicode()
    {
-      TODO_ERROR();
+      TODO_WARN("print_unicode");
    }
 
    void opE_check_unicode()
    {
       TODO_ERROR();
+   }
+
+   void opE_draw_picture()
+   {
+      TODO_WARN("draw_picture");
    }
 
    //! EXT:4
@@ -832,6 +837,11 @@ private:
       uint16_t prop = uarg[1];
 
       varWrite(fetchByte(), window_mgr.getWindowProp(wind, prop));
+   }
+
+   void opE_mouse_window()
+   {
+      TODO_WARN("mouse_window");
    }
 
    void initDecoder()
@@ -987,7 +997,7 @@ private:
 
       if (version() < 6) return;
 
-      opE[0x05] = &ZMachine::TODO_ERROR;
+      opE[0x05] = &ZMachine::opE_draw_picture;
       opE[0x06] = &ZMachine::TODO_ERROR;
       opE[0x07] = &ZMachine::TODO_ERROR;
       opE[0x08] = &ZMachine::TODO_ERROR;
@@ -999,7 +1009,7 @@ private:
       opE[0x14] = &ZMachine::TODO_ERROR;
       opE[0x15] = &ZMachine::TODO_ERROR;
       opE[0x16] = &ZMachine::TODO_ERROR;
-      opE[0x17] = &ZMachine::TODO_ERROR;
+      opE[0x17] = &ZMachine::opE_mouse_window;
       opE[0x18] = &ZMachine::TODO_ERROR;
       opE[0x19] = &ZMachine::TODO_ERROR;
       opE[0x1A] = &ZMachine::TODO_ERROR;
@@ -1310,9 +1320,10 @@ public:
       ZError exit_code = ZState::getExitCode();
       if (exit_code != NO_ERROR)
       {
-         error("PC=%06x OP=%02X : %s",
+         error("PC=%06x OP=%02X %02X : %s",
                inst_addr,
                memory.readByte(inst_addr),
+               memory.readByte(inst_addr+1),
                ZErrorString(exit_code));
       }
    }
