@@ -33,6 +33,11 @@
 class Zif : public STB::ConsoleApp
 {
 private:
+   STB::Option<const char*>  opt_config{ 'c', "config",
+                                         "Use alternate config file (default is \"zif.cfg\")",
+                                         "zif.cfg"};
+
+#ifdef TERMINAL_EMULATOR
    enum Display
    {
       DISP_KINDLE3,
@@ -47,10 +52,6 @@ private:
    Display display = DISP_SVGA;
 #endif
 
-   STB::Option<const char*>  opt_config{ 'c', "config",
-                                         "Use alternate config file (default is \"zif.cfg\")",
-                                         "zif.cfg"};
-
    STB::Option<bool>         opt_term{   't', "term",
                                          "Use the parent terminal (not the built in terminal)"};
 
@@ -58,6 +59,7 @@ private:
    STB::Option<bool>         opt_vga{    'V', "vga",    "VGA display    640x480"};
    STB::Option<bool>         opt_svga{   'S', "svga",   "SVGA display   800x600"};
    STB::Option<bool>         opt_xga{    'X', "xga",    "XGA display   1024x768"};
+#endif
 
    ZOptions                  zoptions;
 
@@ -85,12 +87,15 @@ private:
           filename = argv[1];
       }
 
+#ifdef TERMINAL_EMULATOR
       if (opt_term)
+#endif
       {
          // Use the parent terminal
          PLT::TerminalStdio  term(PROGRAM);
          return launch(term);
       }
+#ifdef TERMINAL_EMULATOR
       else
       {
          // Use the built in terminal
@@ -111,6 +116,7 @@ private:
          assert(!"Display selection bug");
          return 1;
       }
+#endif
    }
 
 public:

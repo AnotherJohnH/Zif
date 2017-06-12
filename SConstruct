@@ -34,7 +34,7 @@ app = 'Zif'
 env = SConscript('Platform/build.scons', ['source', 'app'])
 
 # Project specific build config
-env.Append(CCFLAGS = '-O3')
+env.Append(CCFLAGS = ['-O3', '-DTERMINAL_EMULATOR'])
 env.Append(CPPPATH = 'include')
 
 # Builders
