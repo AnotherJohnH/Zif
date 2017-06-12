@@ -6,7 +6,7 @@ Portability of the application between different platforms is a particular goal,
 portability to the third generation Kindle (aka Kindle Keyboard) which appears as an ideal
 platform for playing interactive fiction.
 
-The application includes a terminal emulator and a basic curses style front-end menu, so when
+The application includes a terminal emulator and a basic curses style front-end menu. So when
 running on the Kindle a third-party terminal emulator and launcher is not necessary.
 
 Perfectly good Z-code engines already exist and some have already been ported to the Kindle.
@@ -87,14 +87,18 @@ Requires gcc built for arm-linux-gnueabihf and a set of headers and static runti
 that are compatible with the Linux installed on the Kindle3. The original ARMv6 Raspberry Pi
 running a Debian based Linux has been found to be suitable platform to build the Kindle3 version.
 
-### Emscripten
+### Browser (via Emscripten)
 
-Uses the SDL2 library supplied with Emscripten.
+Uses the SDL2 library supplied with Emscripten. Some re-work/conditonal compilation will
+be required to make it work.
 
 ### iOS
 
 Requires access to a source installation of SDL2 which is built into a linSDL2.a as part of
-the appliacation build process.
+the application build process.
+
+Build of an actual app has not been achieved yet, and may not be easily achievable without
+an Xcode project file.
 
 ### Android
 
@@ -104,7 +108,7 @@ an Android build of SDL2 has not been achieved yet.
 ## Coding style
 
 The source is C++ but has the following non-typical for modern C++ features ...
-* Memory is statically or stack allocated i.e. no new/delete
+* Memory is statically or stack allocated i.e. (almost) no new/delete
 * Use of C style stdio API
-* In some places have re-invented the wheel avoiding functionality that is in standard librarys
+* In some places have re-invented the wheel avoiding functionality that is in standard libraries
 * 3 space indent
