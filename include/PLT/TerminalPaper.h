@@ -675,6 +675,14 @@ public:
          status = 0;
          break;
 
+      case IOCTL_TERM_COLOURS:
+         status = 1;
+         break;
+
+      case IOCTL_TERM_FONTS:
+         status = 1;
+         break;
+
       default:
          break;
       }

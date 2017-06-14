@@ -38,6 +38,8 @@ public:
    static const unsigned long IOCTL_TERM_LINE_SPACE = IOCTL_TERM(5);
    static const unsigned long IOCTL_TERM_FONT_SIZE  = IOCTL_TERM(6);
    static const unsigned long IOCTL_TERM_TIMEOUT_MS = IOCTL_TERM(7);
+   static const unsigned long IOCTL_TERM_COLOURS    = IOCTL_TERM(8);
+   static const unsigned long IOCTL_TERM_FONTS      = IOCTL_TERM(9);
 
    virtual int     open(unsigned oflag) { return 0; }
 

@@ -1,5 +1,5 @@
 //------------------------------------------------------------------------------
-// Copyright (c) 2016 John D. Haughton
+// Copyright (c) 2016-2017 John D. Haughton
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -56,7 +56,16 @@ public:
 
    ZConsole(PLT::Device* device_)
       : curses(device_)
-   {}
+   {
+      int status = device_->ioctl(PLT::Device::IOCTL_TERM_FONTS);
+      if (status > 0)
+      {
+         num_fonts_avail = status;
+      }
+
+      status = device_->ioctl(PLT::Device::IOCTL_TERM_COLOURS);
+      colours_avail = status == 1;
+   }
 
    ~ZConsole()
    {
@@ -99,12 +108,12 @@ public:
       case LINES:        return curses.lines;
       case COLS:         return curses.cols;
 
-      case COLOURS:      return true;   // TODO platform specific
+      case COLOURS:      return colours_avail;
       case BOLD:         return true;
       case ITALIC:       return true;
 
-      case FONT_HEIGHT:  return 10;     // TODO this value is fake
-      case FONT_WIDTH:   return 6;      // TODO this value is fake
+      case FONT_HEIGHT:  return 1;
+      case FONT_WIDTH:   return 1;
 
       case PICTURE_FONT: return false;
       case GRAPHIC_FONT: return false;
@@ -129,9 +138,10 @@ public:
    //! Select the current font
    bool setFont(unsigned font_idx)
    {
-      if (screen_enable)
+      if (screen_enable && (font_idx <= num_fonts_avail))
       {
-         // TODO
+         curses.fontset(font_idx - 1);
+         return true;
       }
 
       return font_idx == 1;
@@ -283,6 +293,8 @@ private:
    static const unsigned DEFAULT_FG_COL = 9;
    static const unsigned DEFAULT_BG_COL = 9;
 
+   unsigned  num_fonts_avail{1};
+   bool      colours_avail{true};
    unsigned  scroll{0};
    bool      only_white_space{true};
    bool      screen_enable{true};

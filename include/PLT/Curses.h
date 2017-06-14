@@ -200,6 +200,14 @@ public:
       addch('m');
    }
 
+   //! Select a font
+   void fontset(unsigned font)
+   {
+      addstr("\033[");
+      adduint(10+font);
+      addch('m');
+   }
+
    //! Get the current cursor position
    void getyx(unsigned& y, unsigned& x)
    {
