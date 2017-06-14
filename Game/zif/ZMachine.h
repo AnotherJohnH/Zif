@@ -78,6 +78,8 @@ private:
        int16_t  sarg[MAX_OPERANDS];
    };
 
+   unsigned              undo_index{0};
+
    // Op-code decoders
    OpPtr  op0[0x10];
    OpPtr  op1[0x10];
@@ -760,14 +762,25 @@ private:
 
    void opE_save_undo()
    {
+      char filename[12];
+      sprintf(filename, "undo_%x.sav", undo_index);
+
+      undo_index = (undo_index + 1) % options.undo;
+
       uint8_t  ret   = fetchByte();
       varWrite(ret, 2);
-      varWrite(ret, ZState::save("undo.sav") ? 1 : 0);
+      varWrite(ret, ZState::save(filename) ? 1 : 0);
    }
 
    void opE_restore_undo()
    {
-      if (!ZState::restore("undo.sav")) varWrite(fetchByte(), 0);
+      undo_index = undo_index == 0 ? options.undo - 1
+                                   : undo_index - 1;
+
+      char filename[12];
+      sprintf(filename, "undo_%x.sav", undo_index);
+
+      if (!ZState::restore(filename)) varWrite(fetchByte(), 0);
    }
 
    void opE_print_unicode()

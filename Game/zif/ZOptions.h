@@ -37,6 +37,7 @@ struct ZOptions
    STB::Option<const char*>  input{ 'i', "input",  "Read keyboard input from a file"};
    STB::Option<bool>         trace{ 'T', "trace",  "Trace execution"};
    STB::Option<unsigned>     seed{  's', "seed",   "Initial random seed", 0};
+   STB::Option<unsigned>     undo{  'u', "undo",   "Number of undo buffers", 2};
 };
 
 #endif
