@@ -51,6 +51,9 @@ private:
    static const unsigned MAX_ROWS = HEIGHT / MIN_FONT_HEIGHT;
    static const unsigned PALETTE_SIZE = 10;
 
+   static const unsigned DEFAULT_FG_COL = 8;
+   static const unsigned DEFAULT_BG_COL = 9;
+
    enum Flash     { OFF, SLOW, FAST };
    enum Intensity { NORMAL, BOLD, FAINT };
 
@@ -381,8 +384,8 @@ private:
       palette[6] = GUI::CYAN;
       palette[7] = GUI::WHITE;
 
-      palette[8] = GUI::WHITE; // Default foreground
-      palette[9] = GUI::BLACK; // Default background
+      palette[DEFAULT_FG_COL] = GUI::WHITE; // Default foreground
+      palette[DEFAULT_BG_COL] = GUI::BLACK; // Default background
    }
 
    virtual void ansiGraphic(uint8_t ch) override
@@ -582,7 +585,7 @@ private:
       org.x = (WIDTH  - (num_cols * font->getWidth()))/2;
       org.y = border;
 
-      paper.clear(palette[0]);
+      paper.clear(palette[DEFAULT_BG_COL]);
    }
 
 public:
