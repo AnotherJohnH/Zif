@@ -256,7 +256,7 @@ public:
          status = dev->read(&ch, 1);
       }
 
-      return status > 0 ? ch : 0;
+      return status > 0 ? ch : status;
    }
 
 private:
