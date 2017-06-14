@@ -146,11 +146,11 @@ public:
       FILE* fp = fopen("zif.save", "w");
       if (fp != nullptr)
       {
-         memory.save(fp, game_start, memory_limit);
-         fwrite(&stack, sizeof(stack), 1, fp);
+         if (memory.save(fp, game_start, memory_limit))
+         {
+            ok = fwrite(&stack, sizeof(stack), 1, fp) == 1;
+         }
          fclose(fp);
-
-         ok = true;
       }
 
       popContext();
@@ -166,11 +166,11 @@ public:
       FILE* fp = fopen("zif.save", "r");
       if (fp != nullptr)
       {
-         memory.load(fp, game_start, memory_limit);
-         fread(&stack, sizeof(stack), 1, fp);
+         if (memory.load(fp, game_start, memory_limit))
+         {
+            ok = fread(&stack, sizeof(stack), 1, fp) == 1;
+         }
          fclose(fp);
-
-         ok = true;
       }
 
       if (ok)
