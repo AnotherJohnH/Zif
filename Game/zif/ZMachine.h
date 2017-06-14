@@ -40,6 +40,9 @@
 #define TRACE if (1) ; else trace.printf
 
 
+static const char* DEFAULT_SAVE_FILE = "zif.sav";
+
+
 class ZMachine : public ZState
 {
 private:
@@ -244,21 +247,21 @@ private:
    void op0_nop()          {}
 
    //! v1 save ?(label)
-   void op0_save_v1()      { branch(ZState::save()); }
+   void op0_save_v1()      { branch(ZState::save(DEFAULT_SAVE_FILE)); }
 
    //! v4 save -> (result)
    void op0_save_v4()
    {
       uint8_t ret = fetchByte();
       varWrite(ret, 2);
-      varWrite(ret, ZState::save() ? 1 : 0);
+      varWrite(ret, ZState::save(DEFAULT_SAVE_FILE) ? 1 : 0);
    }
 
    //! v1 restore ?(label)
-   void op0_restore_v1()   { branch(ZState::restore()); }
+   void op0_restore_v1()   { branch(ZState::restore(DEFAULT_SAVE_FILE)); }
 
    //! v4 restore -> (result)
-   void op0_restore_v4()   { if (!ZState::restore()) varWrite(fetchByte(), 0); }
+   void op0_restore_v4()   { if (!ZState::restore(DEFAULT_SAVE_FILE)) varWrite(fetchByte(), 0); }
 
    //! restart
    void op0_restart()      { start(); }
@@ -731,7 +734,7 @@ private:
       (void) table; (void) bytes; (void) name; // TODO use supplied parameters
       uint8_t  ret   = fetchByte();
       varWrite(ret, 2);
-      varWrite(ret, ZState::save() ? 1 : 0);
+      varWrite(ret, ZState::save(DEFAULT_SAVE_FILE) ? 1 : 0);
    }
 
    void opE_restore_table()
@@ -740,7 +743,7 @@ private:
       uint16_t bytes = uarg[1];
       uint16_t name  = uarg[2];
       (void) table; (void) bytes; (void) name; // TODO use supplied parameters
-      if (!ZState::restore()) varWrite(fetchByte(), 0);
+      if (!ZState::restore(DEFAULT_SAVE_FILE)) varWrite(fetchByte(), 0);
    }
 
    void opE_log_shift()
@@ -761,12 +764,14 @@ private:
 
    void opE_save_undo()
    {
-      varWrite(fetchByte(), 1);
+      uint8_t  ret   = fetchByte();
+      varWrite(ret, 2);
+      varWrite(ret, ZState::save("undo.sav") ? 1 : 0);
    }
 
    void opE_restore_undo()
    {
-      TODO_ERROR();
+      if (!ZState::restore("undo.sav")) varWrite(fetchByte(), 0);
    }
 
    void opE_print_unicode()

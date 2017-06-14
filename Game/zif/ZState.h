@@ -137,13 +137,13 @@ public:
    }
 
    //! Save the dynamic state to a file
-   bool save()
+   bool save(const char* filename)
    {
       bool ok = false;
 
       pushContext();
 
-      FILE* fp = fopen("zif.save", "w");
+      FILE* fp = fopen(filename, "w");
       if (fp != nullptr)
       {
          if (memory.save(fp, game_start, memory_limit))
@@ -159,11 +159,11 @@ public:
    }
 
    //! Restore the dynamic state from a save file
-   bool restore()
+   bool restore(const char* filename)
    {
       bool ok = false;
 
-      FILE* fp = fopen("zif.save", "r");
+      FILE* fp = fopen(filename, "r");
       if (fp != nullptr)
       {
          if (memory.load(fp, game_start, memory_limit))
