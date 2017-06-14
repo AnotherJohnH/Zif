@@ -434,14 +434,10 @@ private:
          subCall(0, uarg[0], num_arg-1, &uarg[1]);
    }
 
-   void opV_call_vs()
-   {
-      opV_call(); // TODO decode call_vs() here
-   }
-
+   void opV_call_vs()        { opV_call(); }
    void opV_not()            { varWrite(fetchByte(), ~uarg[0]); }
    void opV_call_vn()        { subCall(1, uarg[0], num_arg-1, &uarg[1]); }
-   void opV_call_vn2()       { opV_call_vn(); /* TODO decode call_vn2() here */ }
+   void opV_call_vn2()       { opV_call_vn(); }
    void opV_storew()         { memory.writeWord(uarg[0] + 2*uarg[1], uarg[2]); }
    void opV_storeb()         { memory.writeByte(uarg[0] + uarg[1], uarg[2]); }
    void opV_put_prop()       { object.setProp(uarg[0], uarg[1], uarg[2]); }
