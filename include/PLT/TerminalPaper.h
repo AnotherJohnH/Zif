@@ -24,6 +24,8 @@
 #define PLT_TERMINAL_PAPER_H
 
 #include <cassert>
+#include <cstdio>
+#include <cstdarg>
 
 #include "PLT/Paper.h"
 #include "PLT/Event.h"
@@ -120,6 +122,24 @@ private:
       void  setFlash(Flash flash)             { pack( 7,  7, flash != OFF ? 1 : 0); }
       void  setFgCol(unsigned col)            { fg = col; }
       void  setBgCol(unsigned col)            { bg = col; }
+
+      static uint8_t rgbToCol256(uint8_t red, uint8_t grn, uint8_t blu)
+      {
+         red /= 51;
+         grn /= 51;
+         blu /= 51;
+         return 16 + red*36 + grn*6 + blu;
+      }
+
+      void  setRgbFgCol(uint8_t red, uint8_t grn, uint8_t blu)
+      {
+         fg = rgbToCol256(red, grn, blu);
+      }
+
+      void  setRgbBgCol(uint8_t red, uint8_t grn, uint8_t blu)
+      {
+         bg = rgbToCol256(red, grn, blu);
+      }
    };
 
    // Resources
@@ -144,6 +164,8 @@ private:
    bool                  implicit_cr{};
    unsigned              timeout_ms{0};
    unsigned              sgr_state{0};
+   uint8_t               sgr_state_red{0};
+   uint8_t               sgr_state_grn{0};
 
    GUI::Colour convertCol256ToRGB(uint8_t col, bool bg)
    {
@@ -288,23 +310,23 @@ private:
 
       case 12:
       case 22:
-         //red = n;
+         sgr_state_red = n;
          sgr_state++;
          return;
 
       case 13:
       case 23:
-         //grn = n;
+         sgr_state_grn = n;
          sgr_state++;
          return;
 
       case 14:
-         //attr.setRgbFgCol(red, grn, n); TODO
+         attr.setRgbFgCol(sgr_state_red, sgr_state_grn, n);
          sgr_state = 0;
          return;
 
       case 24:
-         //attr.setRgbBgCol(red, grn, n); TODO
+         attr.setRgbBgCol(sgr_state_red, sgr_state_grn, n);
          sgr_state = 0;
          return;
 
