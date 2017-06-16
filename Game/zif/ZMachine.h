@@ -1281,7 +1281,7 @@ public:
    //! Play a Z file
    void open(const char* filename_)
    {
-      console.init(options);
+      console.init(options, header->version);
 
       filename = filename_;
 

@@ -64,7 +64,7 @@ public:
       }
 
       status = device_->ioctl(PLT::Device::IOCTL_TERM_COLOURS);
-      colours_avail = status == 1;
+      colours_avail = status > 1;
    }
 
    ~ZConsole()
@@ -75,7 +75,7 @@ public:
       }
    }
 
-   void init(ZOptions& options)
+   void init(ZOptions& options, uint8_t version)
    {
       if (options.input != nullptr)
       {
@@ -98,6 +98,8 @@ public:
       curses.raw();
       curses.noecho();
       curses.clear();
+
+      extended_colours = version == 6;
    }
 
    //! Return console attribute
@@ -165,10 +167,19 @@ public:
    {
       if (!screen_enable) return;
 
-      convertCodeToColour(fg_col, fg, DEFAULT_FG_COL);
-      convertCodeToColour(bg_col, bg, DEFAULT_BG_COL);
+      convertCodeToColour(fg_col, fg);
 
-      curses.colourset(fg_col, bg_col);
+      if (fg_col >= COL_EXT_BASE)
+         curses.extfgcolour(fg_col & 0xFF);
+      else
+         curses.fgcolour(fg_col);
+
+      convertCodeToColour(bg_col, bg);
+
+      if (bg_col >= COL_EXT_BASE)
+         curses.extbgcolour(bg_col & 0xFF);
+      else
+         curses.bgcolour(bg_col);
    }
 
    //! Move cursor
@@ -262,7 +273,7 @@ private:
    int  getInput(unsigned timeout_ms);
 
    // Convert Z colour codes to a curses colour index
-   void convertCodeToColour(unsigned& current, signed code, const unsigned DEFAULT)
+   void convertCodeToColour(unsigned& current, signed code)
    {
       if (code == 0)
       {
@@ -270,7 +281,7 @@ private:
       }
       else if (code == 1)
       {
-         current = DEFAULT;
+         current = COL_DEFAULT;
       }
       else if ((code >= 2) && (code <= 9))
       {
@@ -281,26 +292,27 @@ private:
       {
          switch(code)
          {
-         case -1:              break; // TODO colour of pixel under cursor
-         case 10: current = 7; break; // TODO light grey
-         case 11: current = 7; break; // TODO medium grey
-         case 12: current = 7; break; // TODO dark grey
+         case -1: break; // TODO colour of pixel under cursor
+         case 10: current = COL_EXT_BASE + 250; break; // ANSI 256-colour mode light grey
+         case 11: current = COL_EXT_BASE + 244; break; // ANSI 256-colour mode medium grey
+         case 12: current = COL_EXT_BASE + 237; break; // ANSI 256-colour mode dark grey
          default: break;
          }
       }
    }
 
-   static const unsigned DEFAULT_FG_COL = 9;
-   static const unsigned DEFAULT_BG_COL = 9;
+   static const unsigned COL_NRM_BASE = 0;
+   static const unsigned COL_DEFAULT  = 9;
+   static const unsigned COL_EXT_BASE = 0x100;
 
    unsigned  num_fonts_avail{1};
    bool      colours_avail{true};
    unsigned  scroll{0};
    bool      only_white_space{true};
    bool      screen_enable{true};
-   bool      extended_colours{false};  // TODO v6 only
-   unsigned  fg_col{DEFAULT_FG_COL};
-   unsigned  bg_col{DEFAULT_BG_COL};
+   bool      extended_colours{false};
+   unsigned  fg_col{COL_DEFAULT};
+   unsigned  bg_col{COL_DEFAULT};
 };
 
 #endif

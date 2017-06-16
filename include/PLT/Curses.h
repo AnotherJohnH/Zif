@@ -42,7 +42,7 @@ enum : unsigned
    A_FIXED     = 1<<6
 };
 
-//! Very small curses like wrapper for PLT devices
+//! Very small curses 'like' wrapper for PLT devices
 class Curses
 {
 public:
@@ -190,19 +190,47 @@ public:
       addstr("m");
    }
 
-   //! Set the foreground and background colours
-   void colourset(unsigned fg_col, unsigned bg_col)
+   //! Set the foreground colour (0-7 or 9)
+   void fgcolour(unsigned col)
    {
+      if ((col == 8) || (col > 9)) return;
+
       addstr("\033[");
-      adduint(30+fg_col);
-      addch(';');
-      adduint(40+bg_col);
+      adduint(30+col);
+      addch('m');
+   }
+
+   //! Set the extended foreground colour (0-255)
+   void extfgcolour(unsigned col)
+   {
+      addstr("\033[38;5;");
+      adduint(col & 0xFF);
+      addch('m');
+   }
+
+   //! Set the background colour (0-7 or 9)
+   void bgcolour(unsigned col)
+   {
+      if ((col == 8) || (col > 9)) return;
+
+      addstr("\033[");
+      adduint(40+col);
+      addch('m');
+   }
+
+   //! Set the extended foreground colour (0-255)
+   void extbgcolour(unsigned col)
+   {
+      addstr("\033[48;5;");
+      adduint(col & 0xFF);
       addch('m');
    }
 
    //! Select a font
    void fontset(unsigned font)
    {
+      if (font > 10) return;
+
       addstr("\033[");
       adduint(10+font);
       addch('m');

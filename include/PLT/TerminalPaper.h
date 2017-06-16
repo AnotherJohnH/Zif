@@ -51,8 +51,10 @@ private:
    static const unsigned MAX_ROWS = HEIGHT / MIN_FONT_HEIGHT;
    static const unsigned PALETTE_SIZE = 10;
 
-   static const unsigned DEFAULT_FG_COL = 8;
-   static const unsigned DEFAULT_BG_COL = 9;
+   static const unsigned DEFAULT_BG_COL = 0;
+   static const unsigned DEFAULT_FG_COL = 1;
+
+   static const uint8_t  RGB_NRM = 0xC0;
 
    enum Flash     { OFF, SLOW, FAST };
    enum Intensity { NORMAL, BOLD, FAINT };
@@ -60,7 +62,9 @@ private:
    class Attr
    {
    private:
-      uint16_t attr{};
+      uint8_t  attr{};
+      uint8_t  bg{};
+      uint8_t  fg{};
 
       void pack(unsigned msb, unsigned lsb, unsigned value)
       {
@@ -91,7 +95,7 @@ private:
          setInvert(false);
          setFont(0);
          setFgCol(8);
-         setBgCol(9);
+         setBgCol(8);
          setFlash(OFF);
       }
 
@@ -100,8 +104,8 @@ private:
       bool       isUnderline()  const { return      bool(unpack( 3,  3)); }
       bool       isInvert()     const { return      bool(unpack( 4,  4)); }
       unsigned   getFont()      const { return           unpack( 6,  5);  }
-      unsigned   getFgCol()     const { return           unpack(10,  7);  }
-      unsigned   getBgCol()     const { return           unpack(14, 11);  }
+      unsigned   getFgCol()     const { return           fg;              }
+      unsigned   getBgCol()     const { return           bg;              }
       Flash      getFlash()     const { return           unpack(15, 15) ? SLOW : OFF; }
 
       bool       isBold()       const { return getIntensity() == BOLD;   }
@@ -113,9 +117,9 @@ private:
       void  setUnderline(bool on)             { pack( 3,  3, on ? 1 : 0); }
       void  setInvert(bool on)                { pack( 4,  4, on ? 1 : 0); }
       void  setFont(unsigned font)            { pack( 6,  5, font); }
-      void  setFgCol(unsigned col)            { pack(10,  7, col); }
-      void  setBgCol(unsigned col)            { pack(14, 11, col); }
-      void  setFlash(Flash flash)             { pack(15, 15, flash != OFF ? 1 : 0); }
+      void  setFlash(Flash flash)             { pack( 7,  7, flash != OFF ? 1 : 0); }
+      void  setFgCol(unsigned col)            { fg = col; }
+      void  setBgCol(unsigned col)            { bg = col; }
    };
 
    // Resources
@@ -128,7 +132,8 @@ private:
    GUI::Vector       org;
 
    // State
-   GUI::Colour           palette[PALETTE_SIZE];
+   GUI::Colour           default_bg_col;
+   GUI::Colour           default_fg_col;
    signed                col{}, row{};
    signed                save_col{}, save_row{};
    Attr                  attr;
@@ -138,6 +143,48 @@ private:
    STB::Fifo<uint8_t,6>  response;
    bool                  implicit_cr{};
    unsigned              timeout_ms{0};
+   unsigned              sgr_state{0};
+
+   GUI::Colour convertCol256ToRGB(uint8_t col, bool bg)
+   {
+      switch(col)
+      {
+      case  0: return GUI::BLACK;
+      case  1: return GUI::ColourEncDec(RGB_NRM,       0,       0).colour;
+      case  2: return GUI::ColourEncDec(      0, RGB_NRM,       0).colour;
+      case  3: return GUI::ColourEncDec(RGB_NRM, RGB_NRM,       0).colour;
+      case  4: return GUI::ColourEncDec(      0,       0, RGB_NRM).colour;
+      case  5: return GUI::ColourEncDec(RGB_NRM,       0, RGB_NRM).colour;
+      case  6: return GUI::ColourEncDec(      0, RGB_NRM, RGB_NRM).colour;
+      case  7: return GUI::ColourEncDec(RGB_NRM, RGB_NRM, RGB_NRM).colour;
+      case  8: return bg ? default_bg_col : default_fg_col;
+      case  9: return GUI::RED;
+      case 10: return GUI::GREEN;
+      case 11: return GUI::YELLOW;
+      case 12: return GUI::BLUE;
+      case 13: return GUI::MAGENTA;
+      case 14: return GUI::CYAN;
+      case 15: return GUI::WHITE;
+
+      default:
+         if (col < 232)
+         {
+             col -= 16;
+             uint8_t blu = (col % 6) * 51;
+             col /= 6;
+             uint8_t grn = (col % 6) * 51;
+             col /= 6;
+             uint8_t red = (col % 6) * 51;
+             return GUI::ColourEncDec(red, blu, grn).colour;
+         }
+         else
+         {
+             col -= 232;
+             uint8_t lvl = col * 11;
+             return GUI::ColourEncDec(lvl, lvl, lvl).colour;
+         }
+      }
+   }
 
    //! CSI cursor movement
    void csiCursor(uint8_t cmd, unsigned n=0, unsigned m=0)
@@ -211,6 +258,63 @@ private:
    //! Select Graphic Rendition
    void csiSGR(unsigned n)
    {
+      switch(sgr_state)
+      {
+      case 10:
+      case 20:
+         if (n == 5)
+         {
+            sgr_state += 1;
+         }
+         else if (n == 2)
+         {
+            sgr_state += 2;
+         }
+         else
+         {
+            break;
+         }
+         return;
+
+      case 11:
+         attr.setFgCol(n);
+         sgr_state = 0;
+         return;
+
+      case 21:
+         attr.setBgCol(n);
+         sgr_state = 0;
+         return;
+
+      case 12:
+      case 22:
+         //red = n;
+         sgr_state++;
+         return;
+
+      case 13:
+      case 23:
+         //grn = n;
+         sgr_state++;
+         return;
+
+      case 14:
+         //attr.setRgbFgCol(red, grn, n); TODO
+         sgr_state = 0;
+         return;
+
+      case 24:
+         //attr.setRgbBgCol(red, grn, n); TODO
+         sgr_state = 0;
+         return;
+
+      case 0:
+      default:
+         break;
+      }
+
+      sgr_state = 0;
+
       switch(n)
       {
       case  0: attr.reset();              break;
@@ -233,7 +337,10 @@ private:
       case  7: attr.setInvert(true);      break;
 
       case 39: attr.setFgCol(8);          break;
-      case 49: attr.setBgCol(9);          break;
+      case 49: attr.setBgCol(8);          break;
+
+      case 38: sgr_state = 10;            break;
+      case 48: sgr_state = 20;            break;
 
       default:
          if ((n >= 10) && (n <= 19))
@@ -326,40 +433,38 @@ private:
       uint8_t ch = cell_char[c-1][r-1];
       Attr    at = cell_attr[c-1][r-1];
 
-      unsigned fg, bg;
+      GUI::Colour fg, bg;
 
       if (at.isInvert())
       {
-         fg = at.getBgCol();
-         bg = at.getFgCol();
+         fg = convertCol256ToRGB(at.getBgCol(), /* bg */ true );
+         bg = convertCol256ToRGB(at.getFgCol(), /* bg */ false);
       }
       else
       {
-         fg = at.getFgCol();
-         bg = at.getBgCol();
+         fg = convertCol256ToRGB(at.getFgCol(), /* bg */ false);
+         bg = convertCol256ToRGB(at.getBgCol(), /* bg */ true );
       }
 
       unsigned x = org.x + (c-1) * font->getWidth();
       unsigned y = org.y + (r-1) * (font->getHeight() + line_space);
 
-      paper.fillRect(palette[bg],
+      paper.fillRect(bg,
                      x, y,
                      x + font->getWidth(),
                      y + font->getHeight() + line_space);
 
-      paper.drawChar(palette[fg], palette[bg],
-                     x, y + line_space, font, ch);
+      paper.drawChar(fg, bg, x, y + line_space, font, ch);
 
       if (at.isBold())
       {
-         paper.drawChar(palette[fg], palette[bg],
-                        x + 1, y + line_space, font, ch);
+         paper.drawChar(fg, bg, x + 1, y + line_space, font, ch);
       }
 
       // TODO use an italic font for italics
       if (at.isUnderline() || at.isItalic())
       {
-         paper.drawLine(palette[fg],
+         paper.drawLine(fg,
                         x,                    y + font->getHeight() - 1,
                         x + font->getWidth(), y + font->getHeight() - 1);
       }
@@ -375,17 +480,8 @@ private:
       echo = true;
       implicit_cr = false;
 
-      palette[0] = GUI::BLACK;
-      palette[1] = GUI::RED;
-      palette[2] = GUI::GREEN;
-      palette[3] = GUI::YELLOW;
-      palette[4] = GUI::BLUE;
-      palette[5] = GUI::MAGENTA;
-      palette[6] = GUI::CYAN;
-      palette[7] = GUI::WHITE;
-
-      palette[DEFAULT_FG_COL] = GUI::WHITE; // Default foreground
-      palette[DEFAULT_BG_COL] = GUI::BLACK; // Default background
+      default_bg_col = GUI::BLACK;
+      default_fg_col = GUI::WHITE;
    }
 
    virtual void ansiGraphic(uint8_t ch) override
@@ -585,7 +681,7 @@ private:
       org.x = (WIDTH  - (num_cols * font->getWidth()))/2;
       org.y = border;
 
-      paper.clear(palette[DEFAULT_BG_COL]);
+      paper.clear(default_bg_col);
    }
 
 public:
@@ -634,11 +730,9 @@ public:
       case IOCTL_TERM_PALETTE:
          {
             unsigned col = va_arg(ap, unsigned);
-            uint32_t rgb = va_arg(ap, uint32_t);
-            if (col < PALETTE_SIZE)
-            {
-               palette[col] = rgb;
-            }
+            GUI::Colour rgb = va_arg(ap, unsigned);
+                 if (col == DEFAULT_BG_COL) { default_bg_col = rgb; }
+            else if (col == DEFAULT_FG_COL) { default_fg_col = rgb; }
             init();
             status = 0;
          }
@@ -660,9 +754,9 @@ public:
          {
             unsigned font_size = va_arg(ap, unsigned);
 
-            if      (font_size >= 18)  { setFont(GUI::font_teletext18); }
+                 if (font_size >= 18)  { setFont(GUI::font_teletext18); }
             else if (font_size >= 15)  { setFont(GUI::font_teletext15); }
-            else if (font_size >= 12 ) { setFont(GUI::font_teletext12); }
+            else if (font_size >= 12)  { setFont(GUI::font_teletext12); }
             else                       { setFont(GUI::font_teletext9);  }
 
             init();
@@ -676,7 +770,7 @@ public:
          break;
 
       case IOCTL_TERM_COLOURS:
-         status = 1;
+         status = 256;
          break;
 
       case IOCTL_TERM_FONTS:

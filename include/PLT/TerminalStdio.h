@@ -164,7 +164,8 @@ public:
          break;
 
       case IOCTL_TERM_COLOURS:
-         status = 1;
+         // Assume ANSI 256 colours are available by the host terminal
+         status = 256;
          break;
 
       case IOCTL_TERM_FONTS:
