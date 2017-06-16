@@ -808,7 +808,7 @@ public:
       {
          paper.refresh();
 
-         uint8_t ch;
+         uint8_t ch{};
 
          int status = getInput(ch);
          if (status <= 0) return status;
