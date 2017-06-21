@@ -66,7 +66,7 @@ private:
    ZObject               object;
    ZText                 text;
    ZParser               parser;
-   ZHeader*              header;
+   ZHeader*              header{};
 
    const char*           filename{};
 
@@ -1281,11 +1281,11 @@ public:
    //! Play a Z file
    void open(const char* filename_)
    {
-      console.init(options, header->version);
-
       filename = filename_;
 
       if (!loadHeader()) return;
+
+      console.init(options, header->version);
 
       ZConfig  config;
       config.interp_major_version = 1;
