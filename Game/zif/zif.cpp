@@ -20,110 +20,42 @@
 // SOFTWARE.
 //------------------------------------------------------------------------------
 
-#include  "STB/ConsoleApp.h"
-
-#include  "PLT/TerminalPaper.h"
-#include  "PLT/TerminalStdio.h"
 
 #include  "ZifVersion.h"
 #include  "ZLauncher.h"
 #include  "ZOptions.h"
 
+#include  "ConsoleGame.h"
 
-class Zif : public STB::ConsoleApp
+
+class Zif : public ConsoleGame
 {
 private:
    STB::Option<const char*>  opt_config{ 'c', "config",
                                          "Use alternate config file (default is \"zif.cfg\")",
                                          "zif.cfg"};
 
-#ifdef TERMINAL_EMULATOR
-   enum Display
-   {
-      DISP_KINDLE3,
-      DISP_VGA,
-      DISP_SVGA,
-      DISP_XGA
-   };
+   ZOptions      zoptions;
+   const char*   filename{nullptr};
 
-#ifdef PROJ_TARGET_Kindle3
-   Display display = DISP_KINDLE3;
-#else
-   Display display = DISP_SVGA;
-#endif
-
-   STB::Option<bool>         opt_term{   't', "term",
-                                         "Use the parent terminal (not the built in terminal)"};
-
-   STB::Option<bool>         opt_k3{     'K', "k3",     "Kindle display 600x800"};
-   STB::Option<bool>         opt_vga{    'V', "vga",    "VGA display    640x480"};
-   STB::Option<bool>         opt_svga{   'S', "svga",   "SVGA display   800x600"};
-   STB::Option<bool>         opt_xga{    'X', "xga",    "XGA display   1024x768"};
-#endif
-
-   ZOptions                  zoptions;
-
-   const char*               filename{nullptr};
-
-   int launch(PLT::Device& term)
-   {
-      ZLauncher  launcher(term, opt_config, zoptions);
-
-      return filename ? launcher.run(filename)
-                      : launcher.menu();
-   }
-
-   template <unsigned WIDTH, unsigned HEIGHT>
-   int launchDisplay()
-   {
-      PLT::TerminalPaper<WIDTH,HEIGHT>  term(PROGRAM);
-      return launch(term);
-   }
-
-   virtual int start() override
+   virtual int launch(PLT::Device& term) override
    {
       if (argc == 2)
       {
           filename = argv[1];
       }
 
-#ifdef TERMINAL_EMULATOR
-      if (opt_term)
-#endif
-      {
-         // Use the parent terminal
-         PLT::TerminalStdio  term(PROGRAM);
-         return launch(term);
-      }
-#ifdef TERMINAL_EMULATOR
-      else
-      {
-         // Use the built in terminal
+      ZLauncher  launcher(term, opt_config, zoptions);
 
-              if (opt_k3)   display = DISP_KINDLE3;
-         else if (opt_vga)  display = DISP_VGA;
-         else if (opt_svga) display = DISP_SVGA;
-         else if (opt_xga)  display = DISP_XGA;
-
-         switch(display)
-         {
-         case DISP_KINDLE3: return launchDisplay< 600,800>();
-         case DISP_VGA:     return launchDisplay< 640,480>();
-         case DISP_SVGA:    return launchDisplay< 800,600>();
-         case DISP_XGA:     return launchDisplay<1024,768>();
-         }
-
-         assert(!"Display selection bug");
-         return 1;
-      }
-#endif
+      return filename ? launcher.run(filename)
+                      : launcher.menu();
    }
 
 public:
    Zif(int argc_, const char* argv_[])
-      : ConsoleApp(argc_, argv_,
-                   PROGRAM, AUTHOR, DESCRIPTION, VERSION, COPYRIGHT_YEAR, LICENSE,
-                   "[Z-file]")
+      : ConsoleGame(argc_, argv_,
+                    PROGRAM, AUTHOR, DESCRIPTION, VERSION, COPYRIGHT_YEAR, LICENSE,
+                    "[Z-file]")
    {
       parseArgsAndStart();
    }
@@ -132,12 +64,6 @@ public:
 
 int main(int argc, const char *argv[])
 {
-#if defined(PROJ_TARGET_Emscripten)
-    // TODO this is just a confidence test
-    const char* local_argv[] = {"zif", "-v"};
-    Zif(2, local_argv);
-#else
     Zif(argc, argv);
-#endif
 }
 

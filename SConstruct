@@ -35,7 +35,7 @@ env = SConscript('Platform/build.scons', ['source', 'app'])
 
 # Project specific build config
 env.Append(CCFLAGS = ['-O3', '-DTERMINAL_EMULATOR'])
-env.Append(CPPPATH = 'include')
+env.Append(CPPPATH = ['include', 'Game'])
 
 # Builders
 exe = env.Program(binary, source)
