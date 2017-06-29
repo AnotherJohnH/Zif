@@ -221,7 +221,7 @@ private:
 
       curses.attroff(PLT::A_BOLD);
 
-      layoutText(12, 3, LICENSE);
+      layoutText(12, 3, MIT_LICENSE);
 
       (void) curses.getch();
    }

@@ -60,6 +60,8 @@ private:
    STB::Option<bool>         opt_xga{    'X', "xga",    "XGA display   1024x768"};
 #endif
 
+   const char* program{nullptr};
+
    virtual int start() override
    {  
 #ifdef TERMINAL_EMULATOR
@@ -67,7 +69,7 @@ private:
 #endif
       {  
          // Use the parent terminal
-         PLT::TerminalStdio  term(PROGRAM);
+         PLT::TerminalStdio  term(program);
          return launch(term);
       }
 #ifdef TERMINAL_EMULATOR
@@ -97,7 +99,7 @@ private:
    template <unsigned WIDTH, unsigned HEIGHT>
    int launchDisplay()
    {  
-      PLT::TerminalPaper<WIDTH,HEIGHT>  term(PROGRAM);
+      PLT::TerminalPaper<WIDTH,HEIGHT>  term(program);
       return launch(term);
    }
 
@@ -106,24 +108,25 @@ protected:
    virtual int launch(PLT::Device& term) = 0;
 
 public:
-    ConsoleGame(int          argc,
-                const char*  argv[],
-                const char*  program,
-                const char*  author,
-                const char*  description,
-                const char*  version,
-                const char*  copyright_year,
-                const char*  license,
-                const char*  args_help = nullptr)
+    ConsoleGame(int          argc_,
+                const char*  argv_[],
+                const char*  program_,
+                const char*  author_,
+                const char*  description_,
+                const char*  version_,
+                const char*  copyright_year_,
+                const char*  license_,
+                const char*  args_help_ = nullptr)
       : ConsoleApp(
 #if defined(PROJ_TARGET_Emscripten)
 // TODO this is just a confidence test
                    2, local_argv,
 #else
-                   argc, argv,
+                   argc_, argv_,
 #endif
-                   program, author, description, version, copyright_year, license,
-                   args_help)
+                   program_, author_, description_, version_, copyright_year_, license_,
+                   args_help_)
+      , program(program_)
    {}
 };
 
