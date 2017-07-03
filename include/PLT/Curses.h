@@ -270,9 +270,11 @@ public:
    }
 
    //! set input timeout (mS)
-   void timeout(int timeout_ms_)
+   int timeout(int timeout_ms_)
    {
+      int prev_timeout_ms = timeout_ms;
       timeout_ms = timeout_ms_;
+      return prev_timeout_ms;
    }
 
    //! Get next character input
