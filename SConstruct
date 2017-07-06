@@ -20,10 +20,10 @@
 #  SOFTWARE.
 #-------------------------------------------------------------------------------
 
-source = ['Game/zif/zif.cpp',
-          'Game/zif/ZLog.cpp',
-          'Game/zif/ZConsole.cpp',
-          'Game/zif/ZStream.cpp']
+source = ['Source/zif.cpp',
+          'Source/ZLog.cpp',
+          'Source/ZConsole.cpp',
+          'Source/ZStream.cpp']
 
 binary = 'zif'
 
