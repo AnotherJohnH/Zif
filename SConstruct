@@ -25,12 +25,12 @@ source = ['Source/zif.cpp',
           'Source/ZConsole.cpp',
           'Source/ZStream.cpp']
 
-binary = 'zif'
-
-app = 'Zif'
+binary  = 'zif'
+app     = 'Zif'
+version = '0.4.3'
 
 # Get a build environment
-env = SConscript('Platform/build.scons', ['source', 'app'])
+env = SConscript('Platform/build.scons', ['source', 'app', 'version'])
 
 # Project specific build config
 env.Append(CCFLAGS = ['-O3', '-DTERMINAL_EMULATOR'])
@@ -38,6 +38,6 @@ env.Append(CCFLAGS = ['-O3', '-DTERMINAL_EMULATOR'])
 # Builders
 exe = env.Program(binary, source)
 
-env.Tar(binary+'_'+env['target']+'_'+env['machine']+'_'+env['version']+'.tgz',
+env.Tar(binary+'_'+env['target']+'_'+env['machine']+'_'+version+'.tgz',
         [exe, env['platform_files'], 'LICENSE', 'zif.cfg', 'Games'])
 
