@@ -20,8 +20,8 @@
 // SOFTWARE.
 //------------------------------------------------------------------------------
 
-#ifndef CONSOLE_GAME_H
-#define CONSOLE_GAME_H
+#ifndef TERMINAL_APP_H
+#define TERMINAL_APP_H
 
 #include  "STB/ConsoleApp.h"
 
@@ -33,7 +33,7 @@
 static const char* local_argv[] = {"fred", "-v"};
 #endif
 
-class ConsoleGame : public STB::ConsoleApp
+class TerminalApp : public STB::ConsoleApp
 {
 private:
 #ifdef TERMINAL_EMULATOR
@@ -108,7 +108,7 @@ protected:
    virtual int launch(PLT::Device& term) = 0;
 
 public:
-    ConsoleGame(int          argc_,
+    TerminalApp(int          argc_,
                 const char*  argv_[],
                 const char*  program_,
                 const char*  author_,

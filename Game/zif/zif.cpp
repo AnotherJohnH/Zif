@@ -25,10 +25,10 @@
 #include  "ZLauncher.h"
 #include  "ZOptions.h"
 
-#include  "ConsoleGame.h"
+#include  "TerminalApp.h"
 
 
-class Zif : public ConsoleGame
+class Zif : public TerminalApp
 {
 private:
    STB::Option<const char*>  opt_config{ 'c', "config",
@@ -53,7 +53,7 @@ private:
 
 public:
    Zif(int argc_, const char* argv_[])
-      : ConsoleGame(argc_, argv_,
+      : TerminalApp(argc_, argv_,
                     PROGRAM, AUTHOR, DESCRIPTION, VERSION, COPYRIGHT_YEAR, MIT_LICENSE,
                     "[Z-file]")
    {

@@ -23,8 +23,7 @@
 source = ['Game/zif/zif.cpp',
           'Game/zif/ZLog.cpp',
           'Game/zif/ZConsole.cpp',
-          'Game/zif/ZStream.cpp',
-          'Platform/src/STB/Option.cpp']
+          'Game/zif/ZStream.cpp']
 
 binary = 'zif'
 
@@ -35,7 +34,6 @@ env = SConscript('Platform/build.scons', ['source', 'app'])
 
 # Project specific build config
 env.Append(CCFLAGS = ['-O3', '-DTERMINAL_EMULATOR'])
-env.Append(CPPPATH = ['Platform/include', 'Game'])
 
 # Builders
 exe = env.Program(binary, source)
