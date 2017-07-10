@@ -21,41 +21,34 @@
 //------------------------------------------------------------------------------
 
 
-#include  "ZifVersion.h"
-#include  "ZLauncher.h"
+#include  "ZMachine.h"
 #include  "ZOptions.h"
 
-#include  "TerminalApp.h"
+#include  "TerminalLauncher.h"
+
+#define  PROGRAM         "Zif"
+#define  DESCRIPTION     "Z-code engine for IF"
+#define  COPYRIGHT_YEAR  "2015-2017"
+#define  AUTHOR          "John D. Haughton"
+#define  VERSION         PROJ_VERSION
 
 
-class Zif : public TerminalApp
+class Zif : public TerminalLauncher
 {
 private:
-   STB::Option<const char*>  opt_config{ 'c', "config",
-                                         "Use alternate config file (default is \"zif.cfg\")",
-                                         "zif.cfg"};
+   ZOptions   zoptions;
 
-   ZOptions      zoptions;
-   const char*   filename{nullptr};
-
-   virtual int launch(PLT::Device& term) override
+   virtual int run(const char* story) override
    {
-      if (argc == 2)
-      {
-          filename = argv[1];
-      }
-
-      ZLauncher  launcher(term, opt_config, zoptions);
-
-      return filename ? launcher.run(filename)
-                      : launcher.menu();
+      ZMachine(term, zoptions).open(story);
+      return 0;
    }
 
 public:
    Zif(int argc_, const char* argv_[])
-      : TerminalApp(argc_, argv_,
-                    PROGRAM, AUTHOR, DESCRIPTION, VERSION, COPYRIGHT_YEAR, MIT_LICENSE,
-                    "[Z-file]")
+      : TerminalLauncher(argc_, argv_,
+                         PROGRAM, AUTHOR, DESCRIPTION, VERSION, COPYRIGHT_YEAR,
+                         "[Z-file]", "zif.cfg")
    {
       parseArgsAndStart();
    }
