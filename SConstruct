@@ -30,7 +30,7 @@ app     = 'Zif'
 version = '0.4.3'
 
 # Get a build environment
-env = SConscript('Platform/build.scons', ['source', 'app', 'version'])
+env = SConscript('Platform/Source/build.scons', ['source', 'app', 'version'])
 
 # Project specific build config
 env.Append(CCFLAGS = ['-O3', '-DTERMINAL_EMULATOR'])
