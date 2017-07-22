@@ -46,11 +46,10 @@ private:
 
 public:
    Zif(int argc_, const char* argv_[])
-      : TerminalLauncher(argc_, argv_,
-                         PROGRAM, AUTHOR, DESCRIPTION, VERSION, COPYRIGHT_YEAR,
+      : TerminalLauncher(PROGRAM, AUTHOR, DESCRIPTION, VERSION, COPYRIGHT_YEAR,
                          "[Z-file]", "zif.cfg")
    {
-      parseArgsAndStart();
+      parseArgsAndStart(argc_, argv_);
    }
 };
 
