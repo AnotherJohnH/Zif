@@ -26,72 +26,49 @@
 #include  <stdint.h>
 #include  <cassert>
 
+#include "STB/Endian.h"
+
 #include "ZConfig.h"
 #include "ZConsole.h"
 
 //! Overlay for a Z story header
 struct ZHeader
 {
-   //! A 16-bit unsigned integer that is stored in big-endian format
-   class Big16
-   {
-   public:
-      Big16(const uint16_t value = 0)
-      {
-         operator=(value);
-      }
-
-      operator uint16_t() const
-      {
-         return (byte[0]<<8) | byte[1];
-      }
-
-      const uint16_t operator=(const uint16_t value)
-      {
-         byte[0] = value >> 8;
-         byte[1] = value;
-         return value;
-      }
-
-   private:
-      uint8_t  byte[2];
-   };
-
    uint8_t        version;                  // $00: Version number
    uint8_t        flags1;                   // $01: Flags 1
-   Big16          release;                  // $02
-   Big16          himem;                    // $04: Byte address of high memory
-   Big16          init_pc;                  // $06: Byte address of first instruction
-   Big16          dict;                     // $08: Byte address of dictionary
-   Big16          obj;                      // $0A: Byte address of object table
-   Big16          glob;                     // $0C: Byte address of globals
-   Big16          stat;                     // $0E: Byte address of static memory
+   STB::Big16     release;                  // $02
+   STB::Big16     himem;                    // $04: Byte address of high memory
+   STB::Big16     init_pc;                  // $06: Byte address of first instruction
+   STB::Big16     dict;                     // $08: Byte address of dictionary
+   STB::Big16     obj;                      // $0A: Byte address of object table
+   STB::Big16     glob;                     // $0C: Byte address of globals
+   STB::Big16     stat;                     // $0E: Byte address of static memory
    uint8_t        flags2;                   // $10: Flags 2
    uint8_t        pad1[7];
-   Big16          abbr;                     // $18: Byte address of abbreviations table
-   Big16          length;                   // $1A: Length of file
-   Big16          checksum;                 // $1C: Checksum
+   STB::Big16     abbr;                     // $18: Byte address of abbreviations table
+   STB::Big16     length;                   // $1A: Length of file
+   STB::Big16     checksum;                 // $1C: Checksum
 
    uint8_t        interpreter_number;       // $1E:
    uint8_t        interpreter_version;      // $1F:
    uint8_t        screen_lines;             // $20:
    uint8_t        screen_cols;              // $21:
-   Big16          screen_width;
-   Big16          screen_height;
+   STB::Big16     screen_width;
+   STB::Big16     screen_height;
 
    // TODO these are swapped v5 V v6?
    uint8_t        font_height;
    uint8_t        font_width;
 
-   Big16          routines;
-   Big16          static_strings;
+   STB::Big16     routines;
+   STB::Big16     static_strings;
    uint8_t        background_colour;
    uint8_t        foreground_colour;
-   Big16          terminating_characters;
-   Big16          width_text_stream3;
-   Big16          standard_revision;
-   Big16          alphabet_table;
-   Big16          header_ext;
+   STB::Big16     terminating_characters;
+   STB::Big16     width_text_stream3;
+   STB::Big16     standard_revision;
+   STB::Big16     alphabet_table;
+   STB::Big16     header_ext;
    uint8_t        pad2[8];
 
    ZHeader()

@@ -38,7 +38,7 @@ class Zif : public TerminalLauncher
 private:
    ZOptions   zoptions;
 
-   virtual int run(const char* story) override
+   virtual int startTerminalLauncher(const char* story) override
    {
       ZMachine(term, zoptions).open(story);
       return 0;
