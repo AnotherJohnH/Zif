@@ -26,15 +26,14 @@
 //! Configuration/features of the interpreter
 struct ZConfig
 {
-   unsigned  interp_major_version{0};
-   unsigned  interp_minor_version{0};
-   bool      status_line{false};          //!< Status line available
-   bool      screen_splitting{false};     //!< Screen splitting available
-   bool      var_pitch_font{false};       //!< variable pitch font the default
-   bool      pictures{false};             //!< picture display available
-   bool      sounds{false};               //!< sounds available
-   bool      transcripting{false};        //!< transcripting starts on
+   unsigned interp_major_version{0};
+   unsigned interp_minor_version{0};
+   bool     status_line{false};      //!< Status line available
+   bool     screen_splitting{false}; //!< Screen splitting available
+   bool     var_pitch_font{false};   //!< variable pitch font the default
+   bool     pictures{false};         //!< picture display available
+   bool     sounds{false};           //!< sounds available
+   bool     transcripting{false};    //!< transcripting starts on
 };
 
 #endif
-

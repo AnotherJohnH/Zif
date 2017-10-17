@@ -23,8 +23,8 @@
 #ifndef ZHEADER_H
 #define ZHEADER_H
 
-#include  <stdint.h>
-#include  <cassert>
+#include <cassert>
+#include <stdint.h>
 
 #include "STB/Endian.h"
 
@@ -34,53 +34,47 @@
 //! Overlay for a Z story header
 struct ZHeader
 {
-   uint8_t        version;                  // $00: Version number
-   uint8_t        flags1;                   // $01: Flags 1
-   STB::Big16     release;                  // $02
-   STB::Big16     himem;                    // $04: Byte address of high memory
-   STB::Big16     init_pc;                  // $06: Byte address of first instruction
-   STB::Big16     dict;                     // $08: Byte address of dictionary
-   STB::Big16     obj;                      // $0A: Byte address of object table
-   STB::Big16     glob;                     // $0C: Byte address of globals
-   STB::Big16     stat;                     // $0E: Byte address of static memory
-   uint8_t        flags2;                   // $10: Flags 2
-   uint8_t        pad1[7];
-   STB::Big16     abbr;                     // $18: Byte address of abbreviations table
-   STB::Big16     length;                   // $1A: Length of file
-   STB::Big16     checksum;                 // $1C: Checksum
+   uint8_t    version;             // $00: Version number
+   uint8_t    flags1;              // $01: Flags 1
+   STB::Big16 release;             // $02
+   STB::Big16 himem;               // $04: Byte address of high memory
+   STB::Big16 init_pc;             // $06: Byte address of first instruction
+   STB::Big16 dict;                // $08: Byte address of dictionary
+   STB::Big16 obj;                 // $0A: Byte address of object table
+   STB::Big16 glob;                // $0C: Byte address of globals
+   STB::Big16 stat;                // $0E: Byte address of static memory
+   uint8_t    flags2;              // $10: Flags 2
+   uint8_t    pad1[7];
+   STB::Big16 abbr;                // $18: Byte address of abbreviations table
+   STB::Big16 length;              // $1A: Length of file
+   STB::Big16 checksum;            // $1C: Checksum
 
-   uint8_t        interpreter_number;       // $1E:
-   uint8_t        interpreter_version;      // $1F:
-   uint8_t        screen_lines;             // $20:
-   uint8_t        screen_cols;              // $21:
-   STB::Big16     screen_width;
-   STB::Big16     screen_height;
+   uint8_t    interpreter_number;  // $1E:
+   uint8_t    interpreter_version; // $1F:
+   uint8_t    screen_lines;        // $20:
+   uint8_t    screen_cols;         // $21:
+   STB::Big16 screen_width;
+   STB::Big16 screen_height;
 
    // TODO these are swapped v5 V v6?
-   uint8_t        font_height;
-   uint8_t        font_width;
+   uint8_t font_height;
+   uint8_t font_width;
 
-   STB::Big16     routines;
-   STB::Big16     static_strings;
-   uint8_t        background_colour;
-   uint8_t        foreground_colour;
-   STB::Big16     terminating_characters;
-   STB::Big16     width_text_stream3;
-   STB::Big16     standard_revision;
-   STB::Big16     alphabet_table;
-   STB::Big16     header_ext;
-   uint8_t        pad2[8];
+   STB::Big16 routines;
+   STB::Big16 static_strings;
+   uint8_t    background_colour;
+   uint8_t    foreground_colour;
+   STB::Big16 terminating_characters;
+   STB::Big16 width_text_stream3;
+   STB::Big16 standard_revision;
+   STB::Big16 alphabet_table;
+   STB::Big16 header_ext;
+   uint8_t    pad2[8];
 
-   ZHeader()
-   {
-      assert(sizeof(ZHeader) == 64);
-   }
+   ZHeader() { assert(sizeof(ZHeader) == 64); }
 
    //! Check for supported versions
-   bool isVersionValid() const
-   {
-      return (version >= 1) && (version <= 8);
-   }
+   bool isVersionValid() const { return (version >= 1) && (version <= 8); }
 
    //! Return size of story (bytes)
    uint32_t getStorySize() const
@@ -165,66 +159,65 @@ struct ZHeader
                           : uint32_t(init_pc);
    }
 
-   //! 
+   //!
    void print() const
    {
-      printf( "Version : %d\n",            version);
-      printf( "Flags1  : %02X\n",          flags1);
-      printf( "Flags2  : %02X\n",          flags2);
-      printf( "Length  : 0x%04X\n",        (uint16_t)length);
-      printf( "\n" );
-      printf( "Dynamic Memory : 0x0040-0x%04X\n", (uint16_t)stat - 1);
-      printf( "Static Memory  : 0x%04X-0x%04X\n", (uint16_t)stat,
+      printf("Version : %d\n",     version);
+      printf("Flags1  : %02X\n",   flags1);
+      printf("Flags2  : %02X\n",   flags2);
+      printf("Length  : 0x%04X\n", (uint16_t)length);
+      printf("\n" );
+      printf("Dynamic Memory : 0x0040-0x%04X\n", (uint16_t)stat - 1);
+      printf("Static Memory  : 0x%04X-0x%04X\n", (uint16_t)stat,
                                                   getStorySize() > 0xFFFF ? 0xFFFF
                                                                           : getStorySize());
-      printf( "High Memory    : 0x%04X-0x%05X\n", (uint16_t)himem, getStorySize());
-      printf( "\n" );
-      printf( "Objects : 0x%04X\n",      (uint16_t)obj     );
-      printf( "Globals : 0x%04X\n",      (uint16_t)glob    );
-      printf( "Abbr    : 0x%04X\n",      (uint16_t)abbr    );
-      printf( "Dict    : 0x%04X\n",      (uint16_t)dict    );
-      printf( "Init PC : 0x%04X\n",      (uint16_t)init_pc );
-      printf( "\n" );
+      printf("High Memory    : 0x%04X-0x%05X\n", (uint16_t)himem, getStorySize());
+      printf("\n" );
+      printf("Objects : 0x%04X\n", (uint16_t)obj);
+      printf("Globals : 0x%04X\n", (uint16_t)glob);
+      printf("Abbr    : 0x%04X\n", (uint16_t)abbr);
+      printf("Dict    : 0x%04X\n", (uint16_t)dict);
+      printf("Init PC : 0x%04X\n", (uint16_t)init_pc);
+      printf("\n" );
    }
 
    //!
    void init(ZConsole& console, ZConfig& config)
    {
-      if (version <= 3)
+      if(version <= 3)
       {
-         if (config.status_line)      flags1 |= 1<<4;
-         if (config.screen_splitting) flags1 |= 1<<5;
-         if (config.var_pitch_font)   flags1 |= 1<<6;
+         if(config.status_line)      flags1 |= 1 << 4;
+         if(config.screen_splitting) flags1 |= 1 << 5;
+         if(config.var_pitch_font)   flags1 |= 1 << 6;
       }
       else
       {
-         if (console.getAttr(ZConsole::BOLD))          flags1 |= 1<<2;
-         if (console.getAttr(ZConsole::ITALIC))        flags1 |= 1<<3;
-         if (console.getAttr(ZConsole::FIXED_FONT))    flags1 |= 1<<4;
-         if (console.getAttr(ZConsole::READ_TIMEOUT))  flags1 |= 1<<7;
+         if(console.getAttr(ZConsole::BOLD))         flags1 |= 1 << 2;
+         if(console.getAttr(ZConsole::ITALIC))       flags1 |= 1 << 3;
+         if(console.getAttr(ZConsole::FIXED_FONT))   flags1 |= 1 << 4;
+         if(console.getAttr(ZConsole::READ_TIMEOUT)) flags1 |= 1 << 7;
 
-         if (version >= 5)
+         if(version >= 5)
          {
-            if (console.getAttr(ZConsole::COLOURS))  flags1 |= 1<<0;
+            if(console.getAttr(ZConsole::COLOURS)) flags1 |= 1 << 0;
 
-            if (version >= 6)
+            if(version >= 6)
             {
-               if (config.pictures)   flags1 |= 1<<1;
-               if (config.sounds)     flags1 |= 1<<5;
+               if(config.pictures) flags1 |= 1 << 1;
+               if(config.sounds)   flags1 |= 1 << 5;
             }
          }
       }
 
       // 8.1.5.1
-      if ((version == 5) && !console.getAttr(ZConsole::GRAPHIC_FONT))
+      if((version == 5) && !console.getAttr(ZConsole::GRAPHIC_FONT))
       {
-         flags2 &= ~(1<<3);
+         flags2 &= ~(1 << 3);
       }
 
-      standard_revision = (config.interp_major_version<<8) |
-                           config.interp_minor_version;
+      standard_revision = (config.interp_major_version << 8) | config.interp_minor_version;
 
-      if (version >= 4)
+      if(version >= 4)
       {
          interpreter_number  = 0;
          interpreter_version = 'A';
@@ -238,8 +231,8 @@ struct ZHeader
       screen_lines = console.getAttr(ZConsole::LINES);
       screen_cols  = console.getAttr(ZConsole::COLS);
 
-      font_height  = console.getAttr(ZConsole::FONT_HEIGHT);
-      font_width   = console.getAttr(ZConsole::FONT_WIDTH);
+      font_height = console.getAttr(ZConsole::FONT_HEIGHT);
+      font_width  = console.getAttr(ZConsole::FONT_WIDTH);
    }
 };
 

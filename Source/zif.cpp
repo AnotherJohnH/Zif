@@ -21,10 +21,10 @@
 //------------------------------------------------------------------------------
 
 
-#include  "ZMachine.h"
-#include  "ZOptions.h"
+#include "ZMachine.h"
+#include "ZOptions.h"
 
-#include  "TerminalLauncher.h"
+#include "TerminalLauncher.h"
 
 #define  PROGRAM         "Zif"
 #define  DESCRIPTION     "Z-code engine for IF"
@@ -36,7 +36,7 @@
 class Zif : public TerminalLauncher
 {
 private:
-   ZOptions   zoptions;
+   ZOptions zoptions;
 
    virtual int startTerminalLauncher(const char* story) override
    {
@@ -46,16 +46,12 @@ private:
 
 public:
    Zif(int argc_, const char* argv_[])
-      : TerminalLauncher(PROGRAM, AUTHOR, DESCRIPTION, VERSION, COPYRIGHT_YEAR,
-                         "[Z-file]", "zif.cfg")
+      : TerminalLauncher(PROGRAM, AUTHOR, DESCRIPTION, VERSION, COPYRIGHT_YEAR, "[Z-file]",
+                         "zif.cfg")
    {
       parseArgsAndStart(argc_, argv_);
    }
 };
 
 
-int main(int argc, const char *argv[])
-{
-    Zif(argc, argv);
-}
-
+int main(int argc, const char* argv[]) { Zif(argc, argv); }

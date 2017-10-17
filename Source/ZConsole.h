@@ -23,8 +23,8 @@
 #ifndef Z_CONSOLE_H
 #define Z_CONSOLE_H
 
-#include <cstdint>
 #include <cctype>
+#include <cstdint>
 
 #include "PLT/Curses.h"
 #include "PLT/Device.h"
@@ -58,18 +58,18 @@ public:
       : curses(device_)
    {
       int status = device_->ioctl(PLT::Device::IOCTL_TERM_FONTS);
-      if (status > 0)
+      if(status > 0)
       {
          num_fonts_avail = status;
       }
 
-      status = device_->ioctl(PLT::Device::IOCTL_TERM_COLOURS);
+      status        = device_->ioctl(PLT::Device::IOCTL_TERM_COLOURS);
       colours_avail = status > 1;
    }
 
    ~ZConsole()
    {
-      if (isInputFileOpen())
+      if(isInputFileOpen())
       {
          closeInputFile();
       }
@@ -77,23 +77,23 @@ public:
 
    void init(ZOptions& options, uint8_t version)
    {
-      if (options.input != nullptr)
+      if(options.input != nullptr)
       {
          openInputFile(options.input);
-         if (!isInputFileOpen())
+         if(!isInputFileOpen())
          {
             // error("Failed to open input file \"%s\"", options.input);
          }
       }
 
-      if (options.width != 0)
+      if(options.width != 0)
       {
          curses.cols = options.width;
       }
 
       screen_enable = !options.batch;
 
-      if (!screen_enable) return;
+      if(!screen_enable) return;
 
       curses.raw();
       curses.noecho();
@@ -127,20 +127,14 @@ public:
       }
    }
 
-   void getCursorPos(unsigned& line, unsigned& col)
-   {
-      curses.getyx(line, col);
-   }
+   void getCursorPos(unsigned& line, unsigned& col) { curses.getyx(line, col); }
 
-   void clear()
-   {
-      curses.clear();
-   }
+   void clear() { curses.clear(); }
 
    //! Select the current font
    bool setFont(unsigned font_idx)
    {
-      if (screen_enable && (font_idx <= num_fonts_avail))
+      if(screen_enable && (font_idx <= num_fonts_avail))
       {
          curses.fontset(font_idx - 1);
          return true;
@@ -152,11 +146,11 @@ public:
    //! Set (curses format) attributes
    void setAttributes(unsigned attr)
    {
-      if (!screen_enable) return;
+      if(!screen_enable) return;
 
       // The spec states that styles can be combined but is not required
       // the following allows combined styles
-      if (attr == 0)
+      if(attr == 0)
          curses.attrset(0);
       else
          curses.attron(attr);
@@ -165,18 +159,18 @@ public:
    //! Set colours
    void setColours(signed fg, signed bg)
    {
-      if (!screen_enable) return;
+      if(!screen_enable) return;
 
       convertCodeToColour(fg_col, fg);
 
-      if (fg_col >= COL_EXT_BASE)
+      if(fg_col >= COL_EXT_BASE)
          curses.extfgcolour(fg_col & 0xFF);
       else
          curses.fgcolour(fg_col);
 
       convertCodeToColour(bg_col, bg);
 
-      if (bg_col >= COL_EXT_BASE)
+      if(bg_col >= COL_EXT_BASE)
          curses.extbgcolour(bg_col & 0xFF);
       else
          curses.bgcolour(bg_col);
@@ -185,7 +179,7 @@ public:
    //! Move cursor
    void moveCursor(unsigned line, unsigned col)
    {
-      if (!screen_enable) return;
+      if(!screen_enable) return;
 
       curses.move(line, col);
    }
@@ -199,15 +193,15 @@ public:
       while(true)
       {
          ch = getInput(timeout_100ms);
-         if (ch < 0)
+         if(ch < 0)
          {
             exit(0); // TODO this seems a bit severe!
          }
-         else if (ch == 0x7F)
+         else if(ch == 0x7F)
          {
             ch = '\b';
          }
-         else if (ch < 0x7F)
+         else if(ch < 0x7F)
          {
             break;
          }
@@ -215,7 +209,7 @@ public:
 
       zscii = ch;
 
-      scroll = 0;
+      scroll           = 0;
       only_white_space = true;
 
       return ch != 0;
@@ -224,9 +218,9 @@ public:
    //! Write ZSCII character
    void write(uint16_t zscii)
    {
-      if (!screen_enable) return;
+      if(!screen_enable) return;
 
-      if (zscii >= 128 )
+      if(zscii >= 128)
       {
          curses.addch('?');
       }
@@ -235,15 +229,15 @@ public:
          curses.addch(zscii);
       }
 
-      if (!isspace(zscii))
+      if(!isspace(zscii))
       {
          only_white_space = false;
       }
 
-      if ((zscii == '\n') && !isInputFileOpen())
+      if((zscii == '\n') && !isInputFileOpen())
       {
          scroll++;
-         if (scroll == (curses.lines - 1))
+         if(scroll == (curses.lines - 1))
          {
             waitForKey();
          }
@@ -252,43 +246,43 @@ public:
 
    void waitForKey()
    {
-      if (only_white_space) return;
+      if(only_white_space) return;
 
       curses.addstr("...");
       curses.getch();
       curses.addstr("\b\b\b   \b\b\b");
 
-      scroll = 0;
+      scroll           = 0;
       only_white_space = true;
    }
 
 protected:
-   PLT::Curses  curses;
+   PLT::Curses curses;
 
 private:
    bool openInputFile(const char* filename_);
    void closeInputFile();
    bool isInputFileOpen();
 
-   int  getInput(unsigned timeout_ms);
+   int getInput(unsigned timeout_ms);
 
    // Convert Z colour codes to a curses colour index
    void convertCodeToColour(unsigned& current, signed code)
    {
-      if (code == 0)
+      if(code == 0)
       {
          // no change
       }
-      else if (code == 1)
+      else if(code == 1)
       {
          current = COL_DEFAULT;
       }
-      else if ((code >= 2) && (code <= 9))
+      else if((code >= 2) && (code <= 9))
       {
          // black, red, green, yellow, blue, magenta, cyan, white
          current = code - 2;
       }
-      else if (extended_colours)
+      else if(extended_colours)
       {
          switch(code)
          {
@@ -305,14 +299,14 @@ private:
    static const unsigned COL_DEFAULT  = 9;
    static const unsigned COL_EXT_BASE = 0x100;
 
-   unsigned  num_fonts_avail{1};
-   bool      colours_avail{true};
-   unsigned  scroll{0};
-   bool      only_white_space{true};
-   bool      screen_enable{true};
-   bool      extended_colours{false};
-   unsigned  fg_col{COL_DEFAULT};
-   unsigned  bg_col{COL_DEFAULT};
+   unsigned num_fonts_avail{1};
+   bool     colours_avail{true};
+   unsigned scroll{0};
+   bool     only_white_space{true};
+   bool     screen_enable{true};
+   bool     extended_colours{false};
+   unsigned fg_col{COL_DEFAULT};
+   unsigned bg_col{COL_DEFAULT};
 };
 
 #endif

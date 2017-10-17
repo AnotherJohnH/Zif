@@ -33,15 +33,15 @@ private:
    const unsigned SMALL_PROP_BITS = 5;
    const unsigned LARGE_PROP_BITS = 6;
 
-   ZMemory*    memory{nullptr};
-   uint16_t    obj_table{0};    //!< Address of object table
-   bool        small{true};     //!< true => Small table v1 to v3
+   ZMemory* memory{nullptr};
+   uint16_t obj_table{0}; //!< Address of object table
+   bool     small{true};  //!< true => Small table v1 to v3
 
    unsigned getPropBits() const { return small ? SMALL_PROP_BITS : LARGE_PROP_BITS; }
-   unsigned getMaxProps() const { return (1<<getPropBits()) - 1; }
+   unsigned getMaxProps() const { return (1 << getPropBits()) - 1; }
    uint16_t getMaxObjs()  const { return small ? 255 : 65535; }
-   unsigned getMaxAttr()  const { return small ?  32 :    48; }
-   unsigned getObjSize()  const { return small ?   9 :    14; }
+   unsigned getMaxAttr()  const { return small ? 32 : 48; }
+   unsigned getObjSize()  const { return small ? 9 : 14; }
 
    //! Return the default value for a property
    uint16_t getDefaultProp(unsigned index) const
@@ -56,16 +56,16 @@ private:
    {
       assert((index > 0) && (index <= getMaxObjs()));
 
-      return obj_table + getMaxProps()*sizeof(uint16_t) + (index - 1) * getObjSize();
+      return obj_table + getMaxProps() * sizeof(uint16_t) + (index - 1) * getObjSize();
    }
 
    //! Return the nth object link (0=>parent, 1=>sibling, 2=>child)
    uint16_t getObjLink(uint16_t obj, unsigned n) const
    {
-      if (obj == 0) return 0;  // XXX seems this is ok!
+      if(obj == 0) return 0; // XXX seems this is ok!
 
       uint32_t addr = getObjAddress(obj) + (getMaxAttr() / 8);
-      if (small)
+      if(small)
          return memory->readByte(addr + n);
       else
          return memory->readWord(addr + n * sizeof(uint16_t));
@@ -75,7 +75,7 @@ private:
    void setObjLink(uint16_t obj, unsigned n, uint16_t link)
    {
       uint32_t addr = getObjAddress(obj) + (getMaxAttr() / 8);
-      if (small)
+      if(small)
          memory->writeByte(addr + n, link);
       else
          memory->writeWord(addr + n * sizeof(uint16_t), link);
@@ -84,7 +84,7 @@ private:
    unsigned fetchPropInfo(uint32_t& addr, unsigned& index) const
    {
       uint8_t id = memory->readByte(addr++);
-      if (id == 0)
+      if(id == 0)
       {
          index = 0;
          return 0;
@@ -94,16 +94,16 @@ private:
 
       unsigned size;
 
-      if (small)
+      if(small)
       {
-         size  = (id >> SMALL_PROP_BITS) + 1;
+         size = (id >> SMALL_PROP_BITS) + 1;
       }
       else
       {
-         if (id & (1<<7))
+         if(id & (1 << 7))
          {
             size = memory->readByte(addr++) & 0x3F;
-            if (size == 0)
+            if(size == 0)
             {
                size = 0x40;
             }
@@ -116,7 +116,7 @@ private:
 
       assert(index != 0);
 
-      //printf("\ngetPropInfo %d %04X %d\n", index, addr, size);
+      // printf("\ngetPropInfo %d %04X %d\n", index, addr, size);
 
       return size;
    }
@@ -126,23 +126,23 @@ private:
       uint32_t addr = getPropTableAddress(obj);
 
       // Skip object name
-      uint8_t  name_len = memory->readByte(addr++);
+      uint8_t name_len = memory->readByte(addr++);
       addr += name_len * 2;
 
       while(true)
       {
          unsigned p;
          size = fetchPropInfo(addr, p);
-         if (size == 0)
+         if(size == 0)
          {
             break;
          }
-         else if (p == prop)
+         else if(p == prop)
          {
             return addr;
          }
-         else if (p < prop)
-         {  // Not found (properties are stored in decending order)
+         else if(p < prop)
+         { // Not found (properties are stored in decending order)
             break;
          }
 
@@ -168,40 +168,40 @@ public:
    //! Return the state of an objects attribute
    bool getAttr(uint16_t obj, unsigned attr) const
    {
-      if (obj == 0) return false;  // XXX seems this is ok!
+      if(obj == 0) return false; // XXX seems this is ok!
 
       assert(attr < getMaxAttr());
 
-      uint32_t addr = getObjAddress(obj) + (attr/8);
+      uint32_t addr = getObjAddress(obj) + (attr / 8);
       unsigned bit  = 7 - (attr & 7);
       uint8_t  byte = memory->readByte(addr);
-      return (byte & (1<<bit)) != 0;
+      return (byte & (1 << bit)) != 0;
    }
 
    //! Set the state of an objects attribute
    void setAttr(uint16_t obj, unsigned attr, bool set)
    {
-      if (obj == 0) return;  // XXX seems this is ok!
+      if(obj == 0) return; // XXX seems this is ok!
 
       assert(attr < getMaxAttr());
 
-      uint32_t addr = getObjAddress(obj) + (attr/8);
+      uint32_t addr = getObjAddress(obj) + (attr / 8);
       unsigned bit  = 7 - (attr & 7);
       uint8_t  byte = memory->readByte(addr);
-      if (set)
-         byte |= 1<<bit;
+      if(set)
+         byte |= 1 << bit;
       else
-         byte &= ~(1<<bit);
+         byte &= ~(1 << bit);
       memory->writeByte(addr, byte);
    }
 
-   uint16_t getParent( uint16_t obj) const { return getObjLink(obj, 0); }
+   uint16_t getParent(uint16_t obj)  const { return getObjLink(obj, 0); }
    uint16_t getSibling(uint16_t obj) const { return getObjLink(obj, 1); }
-   uint16_t getChild(  uint16_t obj) const { return getObjLink(obj, 2); }
+   uint16_t getChild(uint16_t obj)   const { return getObjLink(obj, 2); }
 
-   void setParent( uint16_t obj, uint16_t parent)  { setObjLink(obj, 0, parent);  }
+   void setParent(uint16_t obj, uint16_t parent)   { setObjLink(obj, 0, parent); }
    void setSibling(uint16_t obj, uint16_t sibling) { setObjLink(obj, 1, sibling); }
-   void setChild(  uint16_t obj, uint16_t child)   { setObjLink(obj, 2, child);   }
+   void setChild(uint16_t obj, uint16_t child)     { setObjLink(obj, 2, child); }
 
    uint32_t getPropTableAddress(uint16_t obj) const
    {
@@ -217,7 +217,7 @@ public:
 
    uint32_t getPropAddr(uint16_t obj, unsigned prop) const
    {
-      if (obj == 0) return 0;  // XXX seems this is ok!
+      if(obj == 0) return 0; // XXX seems this is ok!
 
       unsigned size;
       return findProp(obj, prop, size);
@@ -225,18 +225,18 @@ public:
 
    uint32_t getPropNext(uint16_t obj, unsigned prop) const
    {
-      if (obj == 0) return 0;  // XXX seems this is ok!
+      if(obj == 0) return 0; // XXX seems this is ok!
 
       uint32_t addr = getPropTableAddress(obj);
 
       // Skip object name
-      uint8_t  name_len = memory->readByte(addr++);
+      uint8_t name_len = memory->readByte(addr++);
       addr += name_len * 2;
 
-      if (prop == 0)
+      if(prop == 0)
       {
          unsigned p;
-         (void) fetchPropInfo(addr, p);
+         (void)fetchPropInfo(addr, p);
          return p;
       }
 
@@ -244,11 +244,11 @@ public:
       {
          unsigned p;
          unsigned size = fetchPropInfo(addr, p);
-         if (size == 0)
+         if(size == 0)
          {
             break;
          }
-         else if ((prop == 0) || (p < prop))
+         else if((prop == 0) || (p < prop))
          {
             // properties are stored in decending order
             return p;
@@ -263,10 +263,10 @@ public:
    unsigned propSize(uint32_t addr) const
    {
       --addr;
-      if (!small)
+      if(!small)
       {
          uint8_t id = memory->readByte(addr);
-         if ((id & (1<<7)) != 0)
+         if((id & (1 << 7)) != 0)
          {
             --addr;
          }
@@ -277,7 +277,7 @@ public:
 
    uint16_t getProp(uint16_t obj, unsigned prop) const
    {
-      if (obj == 0) return 0;  // XXX seems this is ok!
+      if(obj == 0) return 0; // XXX seems this is ok!
 
       unsigned size;
       uint32_t addr = findProp(obj, prop, size);
@@ -292,7 +292,7 @@ public:
 
    void setProp(uint16_t obj, unsigned prop, uint16_t value)
    {
-      if (obj == 0) return;  // XXX seems this is ok!
+      if(obj == 0) return; // XXX seems this is ok!
 
       unsigned size;
       uint32_t addr = findProp(obj, prop, size);
@@ -308,17 +308,17 @@ public:
    //! Remove an object from the tree
    void remove(uint16_t obj)
    {
-      if (obj == 0) return;  // XXX seems this is ok!
+      if(obj == 0) return; // XXX seems this is ok!
 
       uint16_t parent = getParent(obj);
-      if (parent)
+      if(parent)
       {
          uint16_t prev = 0;
          for(uint16_t o = getChild(parent); o; o = getSibling(o))
          {
-            if (o == obj)
+            if(o == obj)
             {
-               if (prev == 0)
+               if(prev == 0)
                {
                   setChild(parent, getSibling(obj));
                }
@@ -341,7 +341,7 @@ public:
    //! Insert an object into the tree
    void insert(uint16_t obj, uint16_t parent)
    {
-      if (obj == 0 || parent==0) return;  // XXX seems this is ok!
+      if(obj == 0 || parent == 0) return; // XXX seems this is ok!
 
       // remove object from pre-exiting container
       remove(obj);

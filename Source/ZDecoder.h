@@ -20,52 +20,69 @@
 // SOFTWARE.
 //------------------------------------------------------------------------------
 
-#include <cassert>
-#include <cstdarg>
-#include <cstdio>
-
-#include "ZLog.h"
+#ifndef ZDECODER_H
+#define ZDECODER_H
 
 
-ZLog::~ZLog()
+class ZDecoder
 {
-   if(handle != nullptr)
+public:
+   enum OperandFormat : uint8_t
    {
-      fclose((FILE*)handle);
-   }
-}
+      NONE,
+      ONE_WORD_CONST,
+      ONE_BYTE_CONST,
+      ONE_VARIABLE,
+      TWO_BYTE_BYTE,
+      TWO_BYTE_VAR,
+      TWO_VAR_BYTE,
+      TWO_BYTE_BYTE,
+      VAR4,
+      VAR8
+   };
 
-
-void ZLog::ensureOpen()
-{
-   if(handle == nullptr)
+   ZDecoder()
    {
-      char filename[FILENAME_MAX];
-      sprintf(filename, "%s.log", name);
-      handle = fopen(filename, "w");
-      assert(handle); // TODO report an error to the user
+      for(unsigned op = 0; op < 256; op++)
+      {
+         if(op < 0x80)
+         {
+            opcode&(1 << 6) ? OP_VARIABLE : OP_SMALL_CONST;
+            opcode&(1 << 5) ? OP_VARIABLE : OP_SMALL_CONST;
+         }
+         else if(op < 0xB0)
+         {
+            fetchOperand((opcode >> 4) & 3);
+         }
+         else if(op < 0xC0)
+         {
+            if(op == 0xBE)
+            {
+               op_format[op] = VAR4;
+            }
+            else
+            {
+               op_format[op] = NONE;
+            }
+         }
+         else if(opcode < 0xE0)
+         {
+            op_format[i] = VAR4;
+         }
+         else
+         {
+            if((opcode == 0xEC) || (opcode == 0xFA))
+               op_format = VAR8;
+            else
+               op_format = VAR4;
+         }
+      }
    }
-}
 
+   OperandFormat getFormat(uint8_t op) const {}
 
-void ZLog::write(char ch)
-{
-   ensureOpen();
+private:
+   OperandFormat op_format[256];
+};
 
-   fputc(ch, (FILE*)handle);
-}
-
-
-void ZLog::printf(const char* format, ...)
-{
-   ensureOpen();
-
-   FILE* fp = (FILE*)handle;
-
-   va_list ap;
-   va_start(ap, format);
-   vfprintf(fp, format, ap);
-   va_end(ap);
-
-   fflush(fp);
-}
+#endif

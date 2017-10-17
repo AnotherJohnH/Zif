@@ -27,8 +27,8 @@
 
 #include "STB/Stack.h"
 
-#include "ZMemory.h"
 #include "ZError.h"
+#include "ZMemory.h"
 
 
 //! The game state
@@ -37,28 +37,29 @@ class ZState
 private:
    static const unsigned STACK_SIZE = 1024;
 
-   using Stack = STB::Stack<uint16_t,STACK_SIZE,uint16_t>;
+   using Stack = STB::Stack<uint16_t, STACK_SIZE, uint16_t>;
 
    // Static configuration
-   uint16_t              initial_rand_seed{0};
-   uint32_t              game_start{0};
-   uint32_t              game_end{0};
-   uint32_t              global_base{0};
-   uint32_t              memory_limit{0};
+   uint16_t initial_rand_seed{0};
+   uint32_t game_start{0};
+   uint32_t game_end{0};
+   uint32_t global_base{0};
+   uint32_t memory_limit{0};
 
    // Dynamic state
-   bool                  checksum_ok{false};
-   uint32_t              rand_state{1};
-   uint32_t              pc{0};
-   uint16_t              frame_ptr{0};
-   Stack                 stack;
-public:
-   ZMemory               memory;
-private:
+   bool     checksum_ok{false};
+   uint32_t rand_state{1};
+   uint32_t pc{0};
+   uint16_t frame_ptr{0};
+   Stack    stack;
 
+public:
+   ZMemory memory;
+
+private:
    // Terminal state
-   mutable bool          do_quit{false};
-   mutable ZError        exit_code{NO_ERROR};
+   mutable bool   do_quit{false};
+   mutable ZError exit_code{NO_ERROR};
 
 public:
    //! Return whether the machine should stop
@@ -114,7 +115,7 @@ public:
       memory.clear(game_end, memory_limit);
 
       FILE* fp = fopen(filename, "r");
-      if (fp == NULL)
+      if(fp == nullptr)
       {
          return false;
       }
@@ -124,7 +125,7 @@ public:
 
       uint16_t calculated_checksum;
 
-      if (!memory.load(fp, game_start, game_end, &calculated_checksum))
+      if(!memory.load(fp, game_start, game_end, &calculated_checksum))
       {
          return false;
       }
@@ -144,9 +145,9 @@ public:
       pushContext();
 
       FILE* fp = fopen(filename, "w");
-      if (fp != nullptr)
+      if(fp != nullptr)
       {
-         if (memory.save(fp, game_start, memory_limit))
+         if(memory.save(fp, game_start, memory_limit))
          {
             ok = fwrite(&stack, sizeof(stack), 1, fp) == 1;
          }
@@ -164,16 +165,16 @@ public:
       bool ok = false;
 
       FILE* fp = fopen(filename, "r");
-      if (fp != nullptr)
+      if(fp != nullptr)
       {
-         if (memory.load(fp, game_start, memory_limit))
+         if(memory.load(fp, game_start, memory_limit))
          {
             ok = fread(&stack, sizeof(stack), 1, fp) == 1;
          }
          fclose(fp);
       }
 
-      if (ok)
+      if(ok)
       {
          popContext();
       }
@@ -181,16 +182,13 @@ public:
       return ok;
    }
 
-   void quit() const
-   {
-      do_quit = true;
-   }
+   void quit() const { do_quit = true; }
 
    //! Report an error, terminates the machine
    bool error(ZError err_) const
    {
       // Only the first error is recorded
-      if (exit_code == NO_ERROR)
+      if(exit_code == NO_ERROR)
       {
          exit_code = err_;
          quit();
@@ -203,22 +201,16 @@ public:
    ZError getExitCode() const { return exit_code; }
 
    //! Fetch an instruction byte
-   uint8_t fetchByte()
-   {
-      return validatePC() ? memory.fetchByte(pc) : 0;
-   }
+   uint8_t fetchByte()  { return validatePC() ? memory.fetchByte(pc) : 0; }
 
    //! Fetch an instruction word
-   uint16_t fetchWord()
-   {
-      return validatePC() ? memory.fetchWord(pc) : 0;
-   }
+   uint16_t fetchWord() { return validatePC() ? memory.fetchWord(pc) : 0; }
 
 
    //! Push a word onto the stack
    void push(uint16_t value)
    {
-      if (stack.full())
+      if(stack.full())
       {
          error(ERR_STACK_OVERFLOW);
          return;
@@ -230,7 +222,7 @@ public:
    //! Pop a word from the stack
    uint16_t pop()
    {
-      if (stack.empty())
+      if(stack.empty())
       {
          error(ERR_STACK_UNDERFLOW);
          return 0;
@@ -244,7 +236,7 @@ public:
    //! Peep word at the top of the stack
    uint16_t& peek()
    {
-      if (stack.empty())
+      if(stack.empty())
       {
          static uint16_t dummy;
          error(ERR_STACK_EMPTY);
@@ -294,7 +286,7 @@ public:
    //! Return from the given frame (usually the current frame)
    uint16_t returnFromFrame(uint32_t frame_ptr_)
    {
-      if (!validateFramePtr()) return /* bad_call_type*/ 3;
+      if(!validateFramePtr()) return /* bad_call_type*/ 3;
 
       stack.resize(frame_ptr_);
 
@@ -306,10 +298,9 @@ public:
    //! Get a random value
    uint16_t random(int16_t arg)
    {
-      if (arg <= 0)
+      if(arg <= 0)
       {
-         rand_state = arg == 0 ? randomSeed()
-                               : -arg;
+         rand_state = arg == 0 ? randomSeed() : -arg;
          return 0;
       }
       else
@@ -317,7 +308,7 @@ public:
          // use xorshift, it's fast and simple
          rand_state ^= rand_state << 13;
          rand_state ^= rand_state >> 17;
-         rand_state ^= rand_state <<  5;
+         rand_state ^= rand_state << 5;
 
          uint16_t value = (rand_state >> 16) & 0x7FFF;
          return (value % arg) + 1;
@@ -327,11 +318,11 @@ public:
    //! Read a variable
    uint16_t varRead(uint8_t index, bool do_peek = false)
    {
-      if (index == 0)
+      if(index == 0)
       {
          return do_peek ? peek() : pop();
       }
-      else if (index < 16)
+      else if(index < 16)
       {
          return validateFramePtr(index) ? stack[frame_ptr + index]
                                         : 0;
@@ -347,22 +338,22 @@ public:
    //! Write a variable
    void varWrite(uint8_t index, uint16_t value, bool do_peek = false)
    {
-      if (index == 0)
+      if(index == 0)
       {
-         if (do_peek)
+         if(do_peek)
             peek() = value;
          else
             push(value);
       }
-      else if (index < 16)
+      else if(index < 16)
       {
-         if (!validateFramePtr(index)) return;
+         if(!validateFramePtr(index)) return;
          stack[frame_ptr + index] = value;
       }
       else
       {
          uint32_t addr = global_base + (index - 16) * 2;
-         if (!validateAddr(addr)) return;
+         if(!validateAddr(addr)) return;
          memory.writeWord(addr, value);
       }
    }
@@ -373,12 +364,11 @@ private:
    {
       // TODO maybe (pc >= game_start) && (pc < game_end)
       // if self-modifying code is excluded
-      return (pc >= game_start) && (pc < memory_limit) ? true
-                                                       : error(ERR_BAD_PC);
+      return (pc >= game_start) && (pc < memory_limit) ? true : error(ERR_BAD_PC);
    }
 
    //! Range check frame pointer
-   bool validateFramePtr(uint16_t offset=0) const
+   bool validateFramePtr(uint16_t offset = 0) const
    {
       return (frame_ptr > 0) && ((frame_ptr + offset) < stack.size()) ? true
                                                                       : error(ERR_BAD_FRAME_PTR);
@@ -387,8 +377,7 @@ private:
    //! Range check address
    bool validateAddr(uint32_t addr) const
    {
-      return addr < memory_limit ? true
-                                 : error(ERR_BAD_ADDRESS);
+      return addr < memory_limit ? true : error(ERR_BAD_ADDRESS);
    }
 
    //! Save dynamic registers on the stack
@@ -420,7 +409,7 @@ private:
 
    uint32_t pop32()
    {
-      uint32_t value = pop()<<16;
+      uint32_t value = pop() << 16;
       return value | pop();
    }
 

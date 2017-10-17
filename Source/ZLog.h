@@ -27,15 +27,18 @@
 class ZLog
 {
 public:
-   ZLog(const char* name_) : name(name_) {}
+   ZLog(const char* name_)
+      : name(name_)
+   {}
+
    ~ZLog();
 
    void write(char ch);
    void printf(const char* format, ...);
 
 private:
-   const char*  name;
-   void*        handle{nullptr};
+   const char* name;
+   void*       handle{nullptr};
 
    void ensureOpen();
 };

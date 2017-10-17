@@ -20,19 +20,17 @@
 // SOFTWARE.
 //------------------------------------------------------------------------------
 
-#include <cstdio>
 #include <cstdarg>
+#include <cstdio>
 
 #include "ZStream.h"
 
 
 void ZStream::vWritef(const char* format, va_list ap)
 {
-   char  message[256]; // XXX this is unsafe
+   char message[256]; // XXX this is unsafe
 
    vsprintf(message, format, ap);
 
    writeRaw(message);
 }
-
-

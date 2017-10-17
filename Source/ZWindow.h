@@ -24,10 +24,10 @@
 #define Z_WINDOW_MANAGER_H
 
 #include "ZConsole.h"
-#include "ZStream.h"
 #include "ZOptions.h"
+#include "ZStream.h"
 
-//! 
+//!
 class ZWindowManager
 {
 private:
@@ -35,26 +35,24 @@ private:
 
    struct Vec
    {
-      uint16_t x, y;
-
-      Vec() : x(0), y(0) {}
+      uint16_t x{0}, y{0};
    };
 
    struct ZWindow
    {
-      Vec       pos;
-      Vec       size;
-      Vec       cursor;
-      uint16_t  left_margin;
-      uint16_t  right_margin;
-      uint16_t  newline_handler;
-      uint16_t  interrupt_countdown;
-      uint8_t   text_style;
-      uint16_t  colour_data;
-      uint8_t   font_number;
-      uint8_t   font_size;
-      uint8_t   attr;
-      int16_t   line_count;
+      Vec      pos;
+      Vec      size;
+      Vec      cursor;
+      uint16_t left_margin;
+      uint16_t right_margin;
+      uint16_t newline_handler;
+      uint16_t interrupt_countdown;
+      uint8_t  text_style;
+      uint16_t colour_data;
+      uint8_t  font_number;
+      uint8_t  font_size;
+      uint8_t  attr;
+      int16_t  line_count;
 
       ZWindow()
          : left_margin(0)
@@ -82,10 +80,7 @@ public:
       , stream(stream_)
    {}
 
-   void init(ZOptions& options)
-   {
-      printer_enabled = options.print;
-   }
+   void init(ZOptions& options) { printer_enabled = options.print; }
 
    uint16_t getWindowProp(unsigned index_, unsigned prop_)
    {
@@ -119,9 +114,9 @@ public:
 
       console.moveCursor(1, 1);
 
-      for(unsigned i=0; i<console.getAttr(ZConsole::COLS); i++)
+      for(unsigned i = 0; i < console.getAttr(ZConsole::COLS); i++)
       {
-         if (left[i] == '\0') break;
+         if(left[i] == '\0') break;
 
          console.write(left[i]);
       }
@@ -131,26 +126,23 @@ public:
       stream.enableStream(2, printer_enabled);
    }
 
-   void split(unsigned upper_height_)
-   {
-      window[UPPER].size.y = upper_height_;
-   }
+   void split(unsigned upper_height_) { window[UPPER].size.y = upper_height_; }
 
    void select(unsigned index_)
    {
-      if (index == index_) return;
+      if(index == index_) return;
 
       index = index_;
 
-      if (index == UPPER)
+      if(index == UPPER)
       {
-         printer_enabled = stream.enableStream(2, false); 
+         printer_enabled = stream.enableStream(2, false);
 
          unsigned line, col;
          console.getCursorPos(line, col);
          window[LOWER].cursor.y = line;
          window[LOWER].cursor.x = col;
-         lower_buffering = stream.setBuffering(false);
+         lower_buffering        = stream.setBuffering(false);
          stream.setCol(1);
          console.moveCursor(1, 1);
       }
@@ -171,12 +163,12 @@ public:
    }
 
 private:
-   ZConsole&  console;
-   ZStream&   stream;
-   ZWindow    window[MAX_WINDOW];
-   unsigned   index{LOWER};
-   bool       lower_buffering{true};
-   bool       printer_enabled{false};
+   ZConsole& console;
+   ZStream&  stream;
+   ZWindow   window[MAX_WINDOW];
+   unsigned  index{LOWER};
+   bool      lower_buffering{true};
+   bool      printer_enabled{false};
 };
 
 #endif

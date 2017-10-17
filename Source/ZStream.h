@@ -46,27 +46,28 @@ public:
    ZStream(ZConsole& console_, ZMemory& memory_)
       : console(console_)
       , memory(memory_)
-   {}
+   {
+   }
 
    //! Initialise streams for a new story
    void init(ZOptions& options, uint8_t version)
    {
-      console_enable     = true;
-      printer_enable     = options.print;
-      memory_enable      = false;
-      snooper_enable     = options.key;
+      console_enable = true;
+      printer_enable = options.print;
+      memory_enable  = false;
+      snooper_enable = options.key;
 
-      buffer_enable      = true;
-      buffer_size        = 0;
-      buffer_col         = 1;
+      buffer_enable = true;
+      buffer_size   = 0;
+      buffer_col    = 1;
 
       printer_echo_input = version <= 5;
 
-      if (options.info)
+      if(options.info)
       {
          message_filter = INFO;
       }
-      else if (options.warn)
+      else if(options.warn)
       {
          message_filter = WARNING;
       }
@@ -97,15 +98,12 @@ public:
    }
 
    //! Synchronise current col used for line breaking
-   void setCol(unsigned col_)
-   {
-      buffer_col = col_;
-   }
+   void setCol(unsigned col_) { buffer_col = col_; }
 
    //! Control automatic line breaking
    bool setBuffering(bool buffer_enable_)
    {
-      bool prev = buffer_enable;
+      bool prev     = buffer_enable;
       buffer_enable = buffer_enable_;
       return prev;
    }
@@ -115,7 +113,7 @@ public:
    {
       // TODO is the test required? flush else where in this module
       //      is not conditional
-      if (buffer_enable)  flushOutputBuffer();
+      if(buffer_enable) flushOutputBuffer();
    }
 
    //! Control state of output streams
@@ -127,14 +125,14 @@ public:
       {
       case 1: state = &console_enable; break;
       case 2: state = &printer_enable; break;
-      case 3: state = &memory_enable;  break;
+      case 3: state = &memory_enable; break;
       case 4: state = &snooper_enable; break;
 
       default: assert(!"unexpected index"); return false;
       }
 
       bool prev = *state;
-      *state = next;
+      *state    = next;
       return prev;
    }
 
@@ -155,14 +153,14 @@ public:
       flushOutputBuffer();
 
       bool ok = console.read(zscii, timeout);
-      if (ok)
+      if(ok)
       {
          // Echo input to enabled output streams
-         if (console_enable)                        console.write(zscii);
-         if (printer_enable && printer_echo_input)  print(zscii);
-         if (snooper_enable)                        snooper.write(zscii);
+         if(console_enable)                       console.write(zscii);
+         if(printer_enable && printer_echo_input) print(zscii);
+         if(snooper_enable)                       snooper.write(zscii);
 
-         if (zscii == '\n') buffer_col = 1;
+         if(zscii == '\n') buffer_col = 1;
       }
 
       return ok;
@@ -171,12 +169,12 @@ public:
    //! Write ZSCII character (may be buffered)
    void writeChar(uint16_t zscii)
    {
-      if (memory_enable)
+      if(memory_enable)
       {
          memory.writeWord(memory_len_ptr, memory.readWord(memory_len_ptr) + 1);
          memory.writeByte(memory_ptr++, zscii);
       }
-      else if (buffer_enable)
+      else if(buffer_enable)
       {
          sendBuffered(zscii);
       }
@@ -191,7 +189,7 @@ public:
    {
       int32_t value = value_; // So that 32768 can be represented
 
-      if (value < 0)
+      if(value < 0)
       {
          writeChar('-');
          value = -value;
@@ -226,12 +224,12 @@ public:
    //! Report a message (with variable args)
    void vmessage(MessageLevel level, const char* format, va_list ap)
    {
-      if (level < message_filter) return;
+      if(level < message_filter) return;
 
       // Start message on a new-line
       unsigned line, col;
       console.getCursorPos(line, col);
-      if (col != 1)
+      if(col != 1)
       {
          writeRaw("\n");
       }
@@ -243,7 +241,7 @@ public:
 
       switch(level)
       {
-      case INFO:    writeRaw(" ");      break;
+      case INFO:    writeRaw(" "); break;
       case WARNING: writeRaw(" WRN: "); break;
       case ERROR:   writeRaw(" ERR: "); break;
       }
@@ -253,7 +251,7 @@ public:
       writeRaw("\n");
 
       // TODO wait for keypress on any exit
-      if (level == ERROR)
+      if(level == ERROR)
       {
          uint16_t zscii;
          console.read(zscii, 0);
@@ -267,21 +265,21 @@ private:
    //! Unbuffered write of an output character
    void send(uint16_t zscii)
    {
-      if (zscii == '\0') return;
+      if(zscii == '\0') return;
 
-      if (zscii == '\n')
+      if(zscii == '\n')
          buffer_col = 1;
       else
          buffer_col++;
 
-      if (console_enable)  console.write(zscii);
-      if (printer_enable)  print(zscii);
+      if(console_enable) console.write(zscii);
+      if(printer_enable) print(zscii);
    }
 
    //! Flush any output that has been buffered
    void flushOutputBuffer()
    {
-      for(unsigned i=0; i<buffer_size; i++)
+      for(unsigned i = 0; i < buffer_size; i++)
       {
          send(buffer[i]);
       }
@@ -292,9 +290,9 @@ private:
    //! Buffered write of an output character
    void sendBuffered(uint16_t zscii)
    {
-      if ((zscii == ' ') || (zscii == '\n') || (buffer_size == MAX_WORD_LENGTH))
+      if((zscii == ' ') || (zscii == '\n') || (buffer_size == MAX_WORD_LENGTH))
       {
-         if ((buffer_col + buffer_size) > console.getAttr(ZConsole::COLS))
+         if((buffer_col + buffer_size) > console.getAttr(ZConsole::COLS))
          {
             send('\n');
          }
@@ -313,13 +311,13 @@ private:
    void print(uint16_t zscii)
    {
       // Filter repeated new-line
-      if (zscii == '\r')
+      if(zscii == '\r')
       {
          zscii = '\n';
       }
-      if (zscii == '\n')
+      if(zscii == '\n')
       {
-         if (++printer_newline_count >= PRINTER_NEWLINE_LIMIT) return;
+         if(++printer_newline_count >= PRINTER_NEWLINE_LIMIT) return;
       }
       else
       {
@@ -334,32 +332,32 @@ private:
 
 protected:
    // Console stream state
-   bool       console_enable{true};
-   ZConsole&  console;
+   bool      console_enable{true};
+   ZConsole& console;
 
 private:
    // Buffer used for automatic line breaks
-   bool       buffer_enable{false};
-   uint8_t    buffer_size{0};
-   uint8_t    buffer[MAX_WORD_LENGTH];
-   unsigned   buffer_col{1};
+   bool     buffer_enable{false};
+   uint8_t  buffer_size{0};
+   uint8_t  buffer[MAX_WORD_LENGTH];
+   unsigned buffer_col{1};
 
    // Printer stream state
-   bool       printer_enable{false};
-   bool       printer_echo_input{false};
-   unsigned   printer_newline_count{ 1 };
-   ZLog       printer{"print"};
+   bool     printer_enable{false};
+   bool     printer_echo_input{false};
+   unsigned printer_newline_count{1};
+   ZLog     printer{"print"};
 
    // Memory stream state
-   bool       memory_enable{false};
-   int16_t    memory_width;
-   uint32_t   memory_len_ptr;
-   uint32_t   memory_ptr;
-   ZMemory&   memory;
+   bool     memory_enable{false};
+   int16_t  memory_width;
+   uint32_t memory_len_ptr;
+   uint32_t memory_ptr;
+   ZMemory& memory;
 
    // Input snooper stream state
-   bool       snooper_enable{false};
-   ZLog       snooper{"key"};
+   bool snooper_enable{false};
+   ZLog snooper{"key"};
 
    MessageLevel message_filter{ERROR};
 };

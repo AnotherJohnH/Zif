@@ -35,59 +35,57 @@ class ZText
 private:
    enum State : uint8_t
    {
-       NORMAL,
-       DECODE_ABBR,
-       ABBR_1,
-       ABBR_2,
-       ABBR_3,
-       ASCII_UPPER,
-       ASCII_LOWER
+      NORMAL,
+      DECODE_ABBR,
+      ABBR_1,
+      ABBR_2,
+      ABBR_3,
+      ASCII_UPPER,
+      ASCII_LOWER
    };
 
    // Linkage
-   ZStream&        stream;
-   const ZMemory&  memory;
+   ZStream&       stream;
+   const ZMemory& memory;
 
    // Configuration
-   uint8_t         version;
-   uint16_t        abbr;
+   uint8_t  version;
+   uint16_t abbr;
 
    // Decoder state
-   State      state;
-   uint8_t    a;
-   uint8_t    next_a;
-   uint8_t    ascii;
+   State   state;
+   uint8_t a;
+   uint8_t next_a;
+   uint8_t ascii;
 
    void decodeAbbr(unsigned index)
    {
-      uint32_t entry = memory.readWord(abbr + index*2) * 2;
+      uint32_t entry = memory.readWord(abbr + index * 2) * 2;
 
       state = DECODE_ABBR;
 
-      while(decode(memory.fetchWord(entry)));
+      while(decode(memory.fetchWord(entry))) {}
    }
 
    void resetDecoder()
    {
-      state   = NORMAL;
-      a       = 0;
-      next_a  = 0;
-      ascii   = 0;
+      state  = NORMAL;
+      a      = 0;
+      next_a = 0;
+      ascii  = 0;
    }
 
    void decodeZChar(uint8_t code)
    {
       // Alphabet table (v1) [3.5.4]
-      static const char* alphabet_v1 =
-         "abcdefghijklmnopqrstuvwxyz"     // A0
-         "ABCDEFGHIJKLMNOPQRSTUVWXYZ"     // A1
-         " 0123456789.,!?_#'\"/\\<-:()";  // A2
+      static const char* alphabet_v1 = "abcdefghijklmnopqrstuvwxyz"    // A0
+                                       "ABCDEFGHIJKLMNOPQRSTUVWXYZ"    // A1
+                                       " 0123456789.,!?_#'\"/\\<-:()"; // A2
 
       // Alphabet table (v2 - v4) [3.5.3]
-      static const char* alphabet_v2_v4 =
-         "abcdefghijklmnopqrstuvwxyz"     // A0
-         "ABCDEFGHIJKLMNOPQRSTUVWXYZ"     // A1
-         " \n0123456789.,!?_#'\"/\\-:()"; // A2
+      static const char* alphabet_v2_v4 = "abcdefghijklmnopqrstuvwxyz"     // A0
+                                          "ABCDEFGHIJKLMNOPQRSTUVWXYZ"     // A1
+                                          " \n0123456789.,!?_#'\"/\\-:()"; // A2
 
       switch(state)
       {
@@ -95,7 +93,7 @@ private:
       case ABBR_2:
       case ABBR_3:
          decodeAbbr((state - ABBR_1) * 32 + code);
-         a = next_a;
+         a     = next_a;
          state = NORMAL;
          return;
 
@@ -105,7 +103,7 @@ private:
          return;
 
       case ASCII_LOWER:
-         stream.writeChar((ascii<<5) | code);
+         stream.writeChar((ascii << 5) | code);
          state = NORMAL;
          return;
 
@@ -122,12 +120,12 @@ private:
          return;
 
       case 1:
-         if (version == 1)
+         if(version == 1)
          {
             // Z char 1 is a new line (v1) [3.5.2]
             stream.writeChar('\n');
          }
-         else if (state == NORMAL)
+         else if(state == NORMAL)
          {
             // Abbreviation 0-31 (v2+) [3.3]
             state = ABBR_1;
@@ -135,13 +133,13 @@ private:
          break;
 
       case 2:
-         if (version <= 2)
+         if(version <= 2)
          {
             // Shift up (v1 and v2) [3.2.2]
             next_a = a;
-            a = (a + 1) % 3;
+            a      = (a + 1) % 3;
          }
-         else if (state == NORMAL)
+         else if(state == NORMAL)
          {
             // Abbreviation 32-63 (v3+) [3.3]
             state = ABBR_2;
@@ -149,13 +147,13 @@ private:
          return;
 
       case 3:
-         if (version <= 2)
+         if(version <= 2)
          {
             // Shift down (v1 and v2) [3.2.2]
             next_a = a;
-            a = (a + 2) % 3;
+            a      = (a + 2) % 3;
          }
-         else if (state == NORMAL)
+         else if(state == NORMAL)
          {
             // 3.3 Abbreviation 64-95 (v3+) [3.3]
             state = ABBR_3;
@@ -163,29 +161,29 @@ private:
          return;
 
       case 4:
-          // Shift up [3.2.3]
-          a = (a + 1) % 3;
-          // Apply shift-lock (v1 and v2) [3.2.2]
-          next_a = version < 3 ? a : 0;
-          return;
+         // Shift up [3.2.3]
+         a = (a + 1) % 3;
+         // Apply shift-lock (v1 and v2) [3.2.2]
+         next_a = version < 3 ? a : 0;
+         return;
 
       case 5:
-          // Shift down [3.2.3]
-          a = (a + 2) % 3;
-          // Apply shift-lock (v1 and v2) [3.2.2]
-          next_a = version < 3 ? a : 0;
-          return;
+         // Shift down [3.2.3]
+         a = (a + 2) % 3;
+         // Apply shift-lock (v1 and v2) [3.2.2]
+         next_a = version < 3 ? a : 0;
+         return;
 
       default:
          // [3.5]
-         if (a == 2)
+         if(a == 2)
          {
-            if (code == 6)
+            if(code == 6)
             {
                state = ASCII_UPPER;
                break;
             }
-            else if ((code == 7) && (version != 1))
+            else if((code == 7) && (version != 1))
             {
                stream.writeChar('\n');
                break;
@@ -193,17 +191,17 @@ private:
          }
 
          {
-            const char*  table = alphabet_v2_v4;
+            const char* table = alphabet_v2_v4;
 
-            if (version == 1)
+            if(version == 1)
             {
                table = alphabet_v1;
             }
-            else if (version >= 5)
+            else if(version >= 5)
             {
             }
 
-            stream.writeChar(table[(a * 26)+code-6]);
+            stream.writeChar(table[(a * 26) + code - 6]);
          }
          break;
       }
@@ -214,7 +212,7 @@ private:
    //! Decode text packed into a 16bit word
    bool decode(uint16_t word)
    {
-      bool cont = (word & (1<<15)) == 0;
+      bool cont = (word & (1 << 15)) == 0;
 
       decodeZChar((word >> 10) & 0x1F);
       decodeZChar((word >>  5) & 0x1F);
@@ -242,7 +240,7 @@ public:
    {
       resetDecoder();
 
-      while(decode(memory.fetchWord(addr)));
+      while(decode(memory.fetchWord(addr))) {}
 
       return addr;
    }
@@ -250,9 +248,9 @@ public:
    //! Write raw text starting at the given address
    void printTable(uint32_t addr, unsigned width, unsigned height, unsigned skip)
    {
-      for(unsigned line=0; line<height; line++)
+      for(unsigned line = 0; line < height; line++)
       {
-         for(unsigned col=0; col<width; col++)
+         for(unsigned col = 0; col < width; col++)
          {
             stream.writeChar(memory.fetchByte(addr));
          }

@@ -23,8 +23,8 @@
 #ifndef ZMEMORY_H
 #define ZMEMORY_H
 
-#include  <cassert>
-#include  <cstdint>
+#include <cassert>
+#include <cstdint>
 
 
 //! Memory for ZMachine
@@ -33,14 +33,11 @@ class ZMemory
 private:
    static const uint32_t MAX_SIZE = 512 * 1024;
 
-   uint32_t  limit{MAX_SIZE};
-   uint8_t   data[MAX_SIZE];
+   uint32_t limit{MAX_SIZE};
+   uint8_t  data[MAX_SIZE];
 
 public:
-   ZMemory()
-   {
-      clear(0, MAX_SIZE);
-   }
+   ZMemory() { clear(0, MAX_SIZE); }
 
    //! Set memory size limit (bytes)
    void setLimit(uint32_t limit_)
@@ -80,12 +77,12 @@ public:
    uint16_t fetchWord(uint32_t& addr) const
    {
       uint16_t value = fetchByte(addr);
-      return (value<<8) | fetchByte(addr);
+      return (value << 8) | fetchByte(addr);
    }
 
    void writeWord(uint32_t addr, uint16_t value)
    {
-      writeByte(addr,     value >> 8);
+      writeByte(addr, value >> 8);
       writeByte(addr + 1, value & 0xFF);
    }
 
@@ -96,16 +93,16 @@ public:
    {
       assert((start < MAX_SIZE) && (end <= MAX_SIZE));
 
-      if (fread(&data[start], end - start, 1, fp) != 1)
+      if(fread(&data[start], end - start, 1, fp) != 1)
       {
          return false;
       }
 
-      if (checksum_ptr != nullptr)
+      if(checksum_ptr != nullptr)
       {
          uint16_t checksum = 0;
 
-         for(uint32_t addr=start; addr<end; ++addr)
+         for(uint32_t addr = start; addr < end; ++addr)
          {
             checksum += data[addr];
          }
@@ -127,7 +124,7 @@ public:
    //! Clear a block of memory
    void clear(uint32_t start, uint32_t end)
    {
-      for(uint32_t addr=start; addr<end; addr++)
+      for(uint32_t addr = start; addr < end; addr++)
       {
          writeByte(addr, 0);
       }
@@ -136,7 +133,7 @@ public:
    //! Copy a block of memory (copy lowest address first)
    void copyForward(uint32_t from, uint32_t to, uint32_t size)
    {
-      for(uint32_t i=0; i<size; i++)
+      for(uint32_t i = 0; i < size; i++)
       {
          writeByte(to + i, readByte(from + i));
       }
@@ -145,7 +142,7 @@ public:
    //! Copy a block of memory (copy highest address first)
    void copyBackward(uint32_t from, uint32_t to, uint32_t size)
    {
-      for(uint32_t i=size; i>0; i--)
+      for(uint32_t i = size; i > 0; i--)
       {
          writeByte(to + i - 1, readByte(from + i - 1));
       }
