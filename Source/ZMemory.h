@@ -26,6 +26,8 @@
 #include <cassert>
 #include <cstdint>
 
+#include "PLT/File.h"
+
 
 //! Memory for ZMachine
 class ZMemory
@@ -89,11 +91,11 @@ public:
 
    //! Load a block of memory from an open file stream
    //  With optional checksum calculation
-   bool load(FILE* fp, uint32_t start, uint32_t end, uint16_t* checksum_ptr = nullptr)
+   bool load(PLT::File& file, uint32_t start, uint32_t end, uint16_t* checksum_ptr = nullptr)
    {
       assert((start < MAX_SIZE) && (end <= MAX_SIZE));
 
-      if(fread(&data[start], end - start, 1, fp) != 1)
+      if (!file.read(&data[start], end - start))
       {
          return false;
       }
@@ -114,11 +116,11 @@ public:
    }
 
    //! Save a block of memory to an open file stream
-   bool save(FILE* fp, uint32_t start, uint32_t end) const
+   bool save(PLT::File& file, uint32_t start, uint32_t end) const
    {
       assert((start < MAX_SIZE) && (end <= MAX_SIZE));
 
-      return fwrite(&data[start], end - start, 1, fp) == 1;
+      return file.write(&data[start], end - start);
    }
 
    //! Clear a block of memory

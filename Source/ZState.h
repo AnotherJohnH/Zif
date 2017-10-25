@@ -23,9 +23,8 @@
 #ifndef ZSTATE_H
 #define ZSTATE_H
 
-#include <cstdio>
-
 #include "STB/Stack.h"
+#include "PLT/File.h"
 
 #include "ZError.h"
 #include "ZMemory.h"
@@ -114,23 +113,21 @@ public:
 
       memory.clear(game_end, memory_limit);
 
-      FILE* fp = fopen(filename, "r");
-      if(fp == nullptr)
+      PLT::File file(filename, "r");
+      if(!file.isOpen())
       {
          return false;
       }
 
       // skip the header
-      fseek(fp, game_start, SEEK_SET);
+      file.seek(game_start);
 
       uint16_t calculated_checksum;
 
-      if(!memory.load(fp, game_start, game_end, &calculated_checksum))
+      if(!memory.load(file, game_start, game_end, &calculated_checksum))
       {
          return false;
       }
-
-      fclose(fp);
 
       checksum_ok = calculated_checksum == header_checksum;
 
@@ -144,14 +141,13 @@ public:
 
       pushContext();
 
-      FILE* fp = fopen(filename, "w");
-      if(fp != nullptr)
+      PLT::File file(filename, "w");
+      if(file.isOpen())
       {
-         if(memory.save(fp, game_start, memory_limit))
+         if(memory.save(file, game_start, memory_limit))
          {
-            ok = fwrite(&stack, sizeof(stack), 1, fp) == 1;
+            ok = file.write(&stack, sizeof(stack));
          }
-         fclose(fp);
       }
 
       popContext();
@@ -164,14 +160,13 @@ public:
    {
       bool ok = false;
 
-      FILE* fp = fopen(filename, "r");
-      if(fp != nullptr)
+      PLT::File file(filename, "r");
+      if(file.isOpen())
       {
-         if(memory.load(fp, game_start, memory_limit))
+         if(memory.load(file, game_start, memory_limit))
          {
-            ok = fread(&stack, sizeof(stack), 1, fp) == 1;
+            ok = file.read(&stack, sizeof(stack));
          }
-         fclose(fp);
       }
 
       if(ok)

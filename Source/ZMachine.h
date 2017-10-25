@@ -1200,21 +1200,20 @@ private:
 
    bool loadHeader()
    {
-      FILE* fp = fopen(filename, "r");
-      if (fp == 0)
+      PLT::File file(filename, "r");
+
+      if (!file.isOpen())
       {
          error("Failed to open story z-file \"%s\"", filename);
          return false;
       }
 
       // Read header
-      if (!memory.load(fp, 0, sizeof(ZHeader)))
+      if (!memory.load(file, 0, sizeof(ZHeader)))
       {
          error("Z-file header read failed");
          return false;
       }
-
-      fclose(fp);
 
       header = (ZHeader*) &memory.readByte(0);
 
