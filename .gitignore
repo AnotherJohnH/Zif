@@ -1,8 +1,7 @@
 *.o
 *.a
 *.bc
+*.tgz
 .DS_Store
 .sconsign.dblite
-*.tgz
-*app
 zif

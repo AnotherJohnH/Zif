@@ -20,6 +20,7 @@
 // SOFTWARE.
 //------------------------------------------------------------------------------
 
+#include <cstdio>
 
 #include "ZMachine.h"
 #include "ZOptions.h"
@@ -33,7 +34,7 @@
 #define  VERSION         PROJ_VERSION
 
 
-class Zif : public TerminalLauncher
+class ZifApp : public TerminalLauncher
 {
 private:
    ZOptions zoptions;
@@ -45,13 +46,16 @@ private:
    }
 
 public:
-   Zif(int argc_, const char* argv_[])
-      : TerminalLauncher(PROGRAM, AUTHOR, DESCRIPTION, VERSION, COPYRIGHT_YEAR, "[Z-file]",
-                         "zif.cfg")
+   ZifApp(int argc, const char* argv[])
+      : TerminalLauncher(PROGRAM, AUTHOR, DESCRIPTION, VERSION, COPYRIGHT_YEAR,
+                         "[Z-file]", "zif.cfg")
    {
-      parseArgsAndStart(argc_, argv_);
+      parseArgsAndStart(argc, argv);
    }
 };
 
 
-int main(int argc, const char* argv[]) { Zif(argc, argv); }
+int main(int argc, const char* argv[])
+{
+   ZifApp(argc, argv);
+}
