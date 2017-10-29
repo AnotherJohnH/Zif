@@ -26,8 +26,8 @@
 #include <cctype>
 #include <cstdint>
 
-#include "PLT/Curses.h"
-#include "PLT/Device.h"
+#include "TRM/Curses.h"
+#include "TRM/Device.h"
 
 #include "ZOptions.h"
 
@@ -54,16 +54,16 @@ public:
       READ_TIMEOUT
    };
 
-   ZConsole(PLT::Device* device_)
+   ZConsole(TRM::Device* device_)
       : curses(device_)
    {
-      int status = device_->ioctl(PLT::Device::IOCTL_TERM_FONTS);
+      int status = device_->ioctl(TRM::Device::IOCTL_TERM_FONTS);
       if(status > 0)
       {
          num_fonts_avail = status;
       }
 
-      status        = device_->ioctl(PLT::Device::IOCTL_TERM_COLOURS);
+      status        = device_->ioctl(TRM::Device::IOCTL_TERM_COLOURS);
       colours_avail = status > 1;
    }
 
@@ -257,7 +257,7 @@ public:
    }
 
 protected:
-   PLT::Curses curses;
+   TRM::Curses curses;
 
 private:
    bool openInputFile(const char* filename_);

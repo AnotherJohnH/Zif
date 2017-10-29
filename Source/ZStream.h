@@ -235,7 +235,7 @@ public:
       }
 
       // Identify message source
-      console.setAttributes(PLT::A_REVERSE);
+      console.setAttributes(TRM::A_REVERSE);
       writeRaw("ZIF");
       console.setAttributes(0);
 

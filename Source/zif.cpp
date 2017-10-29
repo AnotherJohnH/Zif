@@ -25,7 +25,7 @@
 #include "ZMachine.h"
 #include "ZOptions.h"
 
-#include "TerminalLauncher.h"
+#include "TRM/Launcher.h"
 
 #define  PROGRAM         "Zif"
 #define  DESCRIPTION     "Z-code engine for IF"
@@ -34,7 +34,7 @@
 #define  VERSION         PROJ_VERSION
 
 
-class ZifApp : public TerminalLauncher
+class ZifApp : public TRM::Launcher
 {
 private:
    ZOptions zoptions;
@@ -47,8 +47,8 @@ private:
 
 public:
    ZifApp(int argc, const char* argv[])
-      : TerminalLauncher(PROGRAM, AUTHOR, DESCRIPTION, VERSION, COPYRIGHT_YEAR,
-                         "[Z-file]", "zif.cfg")
+      : TRM::Launcher(PROGRAM, AUTHOR, DESCRIPTION, VERSION, COPYRIGHT_YEAR,
+                      "[Z-file]", "zif.cfg")
    {
       parseArgsAndStart(argc, argv);
    }
