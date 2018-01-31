@@ -29,9 +29,10 @@
 
 #define  PROGRAM         "Zif"
 #define  DESCRIPTION     "Z-code engine for IF"
-#define  COPYRIGHT_YEAR  "2015-2017"
+#define  LINK            "https://github.com/AnotherJohnH/Zif"
 #define  AUTHOR          "John D. Haughton"
 #define  VERSION         PROJ_VERSION
+#define  COPYRIGHT_YEAR  "2015-2018"
 
 
 class ZifApp : public TRM::Launcher
@@ -47,7 +48,7 @@ private:
 
 public:
    ZifApp(int argc, const char* argv[])
-      : TRM::Launcher(PROGRAM, AUTHOR, DESCRIPTION, VERSION, COPYRIGHT_YEAR,
+      : TRM::Launcher(PROGRAM, DESCRIPTION, LINK, AUTHOR, VERSION, COPYRIGHT_YEAR,
                       "[Z-file]", "zif.cfg")
    {
       parseArgsAndStart(argc, argv);
