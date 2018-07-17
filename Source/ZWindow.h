@@ -69,11 +69,8 @@ private:
    };
 
 public:
-   enum Window
-   {
-      LOWER = 0,
-      UPPER = 1
-   };
+   static const unsigned WINDOW_LOWER{0};
+   static const unsigned WINDOW_UPPER{1};
 
    ZWindowManager(ZConsole& console_, ZStream& stream_)
       : console(console_)
@@ -126,7 +123,7 @@ public:
       stream.enableStream(2, printer_enabled);
    }
 
-   void split(unsigned upper_height_) { window[UPPER].size.y = upper_height_; }
+   void split(unsigned upper_height_) { window[WINDOW_UPPER].size.y = upper_height_; }
 
    void select(unsigned index_)
    {
@@ -134,14 +131,14 @@ public:
 
       index = index_;
 
-      if(index == UPPER)
+      if(index == WINDOW_UPPER)
       {
          printer_enabled = stream.enableStream(2, false);
 
          unsigned line, col;
          console.getCursorPos(line, col);
-         window[LOWER].cursor.y = line;
-         window[LOWER].cursor.x = col;
+         window[WINDOW_LOWER].cursor.y = line;
+         window[WINDOW_LOWER].cursor.x = col;
          lower_buffering        = stream.setBuffering(false);
          stream.setCol(1);
          console.moveCursor(1, 1);
@@ -150,9 +147,9 @@ public:
       {
          stream.enableStream(2, printer_enabled);
 
-         console.moveCursor(window[LOWER].cursor.y, window[LOWER].cursor.x);
+         console.moveCursor(window[WINDOW_LOWER].cursor.y, window[WINDOW_LOWER].cursor.x);
          stream.setBuffering(lower_buffering);
-         stream.setCol(window[LOWER].cursor.x);
+         stream.setCol(window[WINDOW_LOWER].cursor.x);
       }
    }
 
@@ -166,7 +163,7 @@ private:
    ZConsole& console;
    ZStream&  stream;
    ZWindow   window[MAX_WINDOW];
-   unsigned  index{LOWER};
+   unsigned  index{WINDOW_LOWER};
    bool      lower_buffering{true};
    bool      printer_enabled{false};
 };

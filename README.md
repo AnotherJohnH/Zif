@@ -16,10 +16,10 @@ This project is just for the fun of writing code and the learning that brings.
 
 [![Build Status](https://travis-ci.org/AnotherJohnH/Zif.svg?branch=master)](https://travis-ci.org/AnotherJohnH/Zif)
 
-The application is currently alpha quality. It has been built and seen to run on various platforms.
-Many popular Z-code games downloaded from the interactive fiction archive start to run as expected
-although further testing is necessary. But a significant number of issues need to be addressed
-before zif is ready for it's intended purpose.
+The application is currently beta quality. It has been built and seen to run on various platforms.
+Many popular Z-code games downloaded from the interactive fiction archive start to run as expected.
+Although further testing is necessary initial indications are that there is enough functionality
+in place to play many of the available games. 
 
 |Target|Build|Run|
 |---|---|---|

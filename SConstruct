@@ -6,7 +6,7 @@ source  = ['Source/zif.cpp',
 
 binary  = 'zif'
 app     = 'Zif'
-version = '0.4.3'
+version = '0.5.0'
 
 # Get a build environment
 env,lib = SConscript('Platform/build.scons', ['app', 'version'])
