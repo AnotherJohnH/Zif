@@ -33,7 +33,7 @@
 class ZMemory
 {
 private:
-   static const uint32_t MAX_SIZE = 512 * 1024;
+   static const uint32_t MAX_SIZE{512 * 1024};
 
    uint32_t limit{MAX_SIZE};
    uint8_t  data[MAX_SIZE];
@@ -50,38 +50,44 @@ public:
 
    // Byte access
 
+   //! Read byte
    const uint8_t& readByte(uint32_t addr) const
    {
       assert(addr < limit);
       return data[addr];
    }
 
+   //! Read byte and increment address
    uint8_t fetchByte(uint32_t& addr) const
    {
       assert(addr < limit);
       return data[addr++];
    }
 
+   //! Write byte
    void writeByte(uint32_t addr, uint8_t value)
    {
       assert(addr < limit);
       data[addr] = value;
    }
 
-   // Word access
+   // 16-bit word access
 
+   //! Read 16-bit word
    uint16_t readWord(uint32_t addr) const
    {
       uint16_t word = readByte(addr);
       return (word << 8) | readByte(addr + 1);
    }
 
+   //! Read 16-bit word and increment address
    uint16_t fetchWord(uint32_t& addr) const
    {
       uint16_t value = fetchByte(addr);
       return (value << 8) | fetchByte(addr);
    }
 
+   //! Write 16-bit word
    void writeWord(uint32_t addr, uint16_t value)
    {
       writeByte(addr, value >> 8);
@@ -89,13 +95,13 @@ public:
    }
 
 
-   //! Load a block of memory from an open file stream
-   //  With optional checksum calculation
+   //! Load a block of memory from an open file stream.
+   //! With optional checksum calculation
    bool load(PLT::File& file, uint32_t start, uint32_t end, uint16_t* checksum_ptr = nullptr)
    {
       assert((start < MAX_SIZE) && (end <= MAX_SIZE));
 
-      if (!file.read(&data[start], end - start))
+      if(!file.read(&data[start], end - start))
       {
          return false;
       }

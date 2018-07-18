@@ -105,6 +105,7 @@ public:
    //! Return console attribute
    unsigned getAttr(Attr attr) const
    {
+      // clang-format off
       switch(attr)
       {
       case LINES:        return curses.lines;
@@ -125,6 +126,7 @@ public:
 
       default: return 0;
       }
+      // clang-format on
    }
 
    void getCursorPos(unsigned& line, unsigned& col) { curses.getyx(line, col); }
@@ -184,8 +186,8 @@ public:
       curses.move(line, col);
    }
 
-   //! Read ZSCII character
-   //  Returns false on timeout
+   //! Read ZSCII character.
+   //! Returns false on timeout
    bool read(uint16_t& zscii, unsigned timeout_100ms)
    {
       int ch;
@@ -286,7 +288,7 @@ private:
       {
          switch(code)
          {
-         case -1: break; // TODO colour of pixel under cursor
+         case -1: break;                               // TODO colour of pixel under cursor
          case 10: current = COL_EXT_BASE + 250; break; // ANSI 256-colour mode light grey
          case 11: current = COL_EXT_BASE + 244; break; // ANSI 256-colour mode medium grey
          case 12: current = COL_EXT_BASE + 237; break; // ANSI 256-colour mode dark grey
