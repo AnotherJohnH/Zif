@@ -64,7 +64,9 @@ private:
 
       state = DECODE_ABBR;
 
-      for(; decode(memory.readWord(entry)); entry += 2) {}
+      for(; decode(memory.readWord(entry)); entry += 2)
+      {
+      }
    }
 
    void resetDecoder()
@@ -227,7 +229,8 @@ public:
       , memory(memory_)
       , version(0)
       , abbr(0)
-   {}
+   {
+   }
 
    void init(uint8_t version_, uint32_t abbr_)
    {
@@ -240,7 +243,9 @@ public:
    {
       resetDecoder();
 
-      for(; decode(memory.readWord(addr)); addr += 2) {}
+      for(; decode(memory.readWord(addr)); addr += 2)
+      {
+      }
 
       return addr + 2;
    }

@@ -29,7 +29,8 @@ class ZLog
 public:
    ZLog(const char* name_)
       : name(name_)
-   {}
+   {
+   }
 
    ~ZLog();
 

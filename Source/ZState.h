@@ -23,8 +23,8 @@
 #ifndef ZSTATE_H
 #define ZSTATE_H
 
-#include "STB/Stack.h"
 #include "PLT/File.h"
+#include "STB/Stack.h"
 
 #include "ZError.h"
 #include "ZMemory.h"
@@ -198,7 +198,7 @@ public:
    uint8_t fetchByte()
    {
       uint8_t byte = 0;
-      if (validatePC())
+      if(validatePC())
       {
          byte = memory[pc++];
       }
@@ -209,7 +209,7 @@ public:
    uint16_t fetchWord()
    {
       uint16_t word = 0;
-      if (validatePC())
+      if(validatePC())
       {
          word = memory.readWord(pc);
          pc += 2;

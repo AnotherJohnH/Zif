@@ -65,7 +65,8 @@ private:
          , font_size(0)
          , attr(0)
          , line_count(0)
-      {}
+      {
+      }
    };
 
 public:
@@ -75,7 +76,8 @@ public:
    ZWindowManager(ZConsole& console_, ZStream& stream_)
       : console(console_)
       , stream(stream_)
-   {}
+   {
+   }
 
    void init(ZOptions& options) { printer_enabled = options.print; }
 
@@ -139,7 +141,7 @@ public:
          console.getCursorPos(line, col);
          window[WINDOW_LOWER].cursor.y = line;
          window[WINDOW_LOWER].cursor.x = col;
-         lower_buffering        = stream.setBuffering(false);
+         lower_buffering               = stream.setBuffering(false);
          stream.setCol(1);
          console.moveCursor(1, 1);
       }

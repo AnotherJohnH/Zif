@@ -156,7 +156,8 @@ private:
 public:
    ZObject(ZMemory& memory_)
       : memory{memory_}
-   {}
+   {
+   }
 
    //! Initialise with game information
    void init(uint16_t obj_table_, uint8_t version_)

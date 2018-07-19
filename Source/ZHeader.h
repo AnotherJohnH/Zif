@@ -108,18 +108,18 @@ struct ZHeader
       case 1:
       case 2:
       case 3:
-         return 128*1024;
+         return 128 * 1024;
 
       case 4:
       case 5:
-         return 256*1024;
+         return 256 * 1024;
 
       case 7:
-         return 320*1024;
+         return 320 * 1024;
 
       case 6:
       case 8:
-         return 512*1024;
+         return 512 * 1024;
 
       default:
          return 0;
@@ -162,23 +162,23 @@ struct ZHeader
    //!
    void print() const
    {
-      printf("Version : %d\n",     version);
-      printf("Flags1  : %02X\n",   flags1);
-      printf("Flags2  : %02X\n",   flags2);
+      printf("Version : %d\n", version);
+      printf("Flags1  : %02X\n", flags1);
+      printf("Flags2  : %02X\n", flags2);
       printf("Length  : 0x%04X\n", (uint16_t)length);
-      printf("\n" );
+      printf("\n");
       printf("Dynamic Memory : 0x0040-0x%04X\n", (uint16_t)stat - 1);
       printf("Static Memory  : 0x%04X-0x%04X\n", (uint16_t)stat,
                                                   getStorySize() > 0xFFFF ? 0xFFFF
                                                                           : getStorySize());
       printf("High Memory    : 0x%04X-0x%05X\n", (uint16_t)himem, getStorySize());
-      printf("\n" );
+      printf("\n");
       printf("Objects : 0x%04X\n", (uint16_t)obj);
       printf("Globals : 0x%04X\n", (uint16_t)glob);
       printf("Abbr    : 0x%04X\n", (uint16_t)abbr);
       printf("Dict    : 0x%04X\n", (uint16_t)dict);
       printf("Init PC : 0x%04X\n", (uint16_t)init_pc);
-      printf("\n" );
+      printf("\n");
    }
 
    //!

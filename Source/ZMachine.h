@@ -23,18 +23,18 @@
 #ifndef ZMACHINE_H
 #define ZMACHINE_H
 
-#include <stdint.h>
 #include <cstring>
+#include <stdint.h>
 
-#include "ZOptions.h"
-#include "ZWindow.h"
-#include "ZState.h"
-#include "ZHeader.h"
 #include "ZConfig.h"
-#include "ZObject.h"
-#include "ZText.h"
-#include "ZParser.h"
+#include "ZHeader.h"
 #include "ZLog.h"
+#include "ZObject.h"
+#include "ZOptions.h"
+#include "ZParser.h"
+#include "ZState.h"
+#include "ZText.h"
+#include "ZWindow.h"
 
 
 #define TRACE if (1) ; else trace.printf
@@ -58,38 +58,36 @@ private:
       OP_NONE        = 3
    };
 
-   ZLog                  trace{"trace"};
-   ZOptions&             options;
-   ZConsole              console;
-   ZStream               stream;
-   ZWindowManager        window_mgr;
-   ZObject               object;
-   ZText                 text;
-   ZParser               parser;
-   ZHeader*              header{};
-
-   const char*           filename{};
-
-   uint32_t              inst_addr;
-   unsigned              num_arg;
+   ZLog           trace{"trace"};
+   ZOptions&      options;
+   ZConsole       console;
+   ZStream        stream;
+   ZWindowManager window_mgr;
+   ZObject        object;
+   ZText          text;
+   ZParser        parser;
+   ZHeader*       header{};
+   const char*    filename{};
+   uint32_t       inst_addr;
+   unsigned       num_arg;
    union
    {
-       uint16_t uarg[MAX_OPERANDS];
-       int16_t  sarg[MAX_OPERANDS];
+      uint16_t uarg[MAX_OPERANDS];
+      int16_t  sarg[MAX_OPERANDS];
    };
 
-   unsigned              undo_index{0};
+   unsigned undo_index{0};
 
    // Op-code decoders
-   OpPtr  op0[0x10];
-   OpPtr  op1[0x10];
-   OpPtr  op2[0x20];
-   OpPtr  opV[0x20];
-   OpPtr  opE[0x20];
+   OpPtr op0[0x10];
+   OpPtr op1[0x10];
+   OpPtr op2[0x20];
+   OpPtr opV[0x20];
+   OpPtr opE[0x20];
 
    void info(const char* format, ...)
    {
-      va_list  ap;
+      va_list ap;
       va_start(ap, format);
       stream.vmessage(ZStream::INFO, format, ap);
       va_end(ap);
@@ -97,7 +95,7 @@ private:
 
    void warning(const char* format, ...)
    {
-      va_list  ap;
+      va_list ap;
       va_start(ap, format);
       stream.vmessage(ZStream::WARNING, format, ap);
       va_end(ap);
@@ -105,7 +103,7 @@ private:
 
    void error(const char* format, ...)
    {
-      va_list  ap;
+      va_list ap;
       va_start(ap, format);
       stream.vmessage(ZStream::ERROR, format, ap);
       va_end(ap);
@@ -119,23 +117,23 @@ private:
    //! Conditional branch (4.7)
    void branch(bool cond)
    {
-      uint8_t  type           = ZState::fetchByte();
-      bool     branch_if_true = (type & (1<<7)) != 0;
-      bool     long_branch    = (type & (1<<6)) == 0;
-      int16_t  offset         = type & 0x3F;
+      uint8_t type           = ZState::fetchByte();
+      bool    branch_if_true = (type & (1 << 7)) != 0;
+      bool    long_branch    = (type & (1 << 6)) == 0;
+      int16_t offset         = type & 0x3F;
 
-      if (long_branch)
+      if(long_branch)
       {
-         offset = (offset<<8) | fetchByte();
+         offset = (offset << 8) | fetchByte();
          // Sign extend
          offset = int16_t(offset << 2) >> 2;
       }
 
       TRACE(" B%c %04X", branch_if_true ? 'T' : 'F', offset & 0xFFFF);
 
-      if (cond == branch_if_true)
+      if(cond == branch_if_true)
       {
-         if ((offset == 0) || (offset == 1))
+         if((offset == 0) || (offset == 1))
          {
             // return false or true from the current routine (4.7.1)
             subRet(offset);
@@ -161,16 +159,16 @@ private:
 
       ZState::push(argc);
 
-      for(unsigned i=0; i<num_locals; ++i)
+      for(unsigned i = 0; i < num_locals; ++i)
       {
          uint16_t value = 0;
 
-         if (version() <= 4)
+         if(version() <= 4)
          {
             value = fetchWord();
          }
 
-         if (i < argc)
+         if(i < argc)
          {
             value = argv[i];
          }
@@ -183,9 +181,9 @@ private:
    }
 
    //! Return from a sub-routine
-   void subRet(uint16_t value, uint16_t frame_ptr=0xFFFF)
+   void subRet(uint16_t value, uint16_t frame_ptr = 0xFFFF)
    {
-      if (frame_ptr == 0xFFFF)
+      if(frame_ptr == 0xFFFF)
       {
          frame_ptr = ZState::getFramePtr();
       }
@@ -204,9 +202,9 @@ private:
 
    bool readChar(uint16_t timeout, uint16_t routine, uint16_t& ch)
    {
-      if (!stream.readChar(ch, timeout))
+      if(!stream.readChar(ch, timeout))
       {
-         if (routine == 0) return false;
+         if(routine == 0) return false;
 
          subCall(0, routine, 0, 0);
 
@@ -243,7 +241,12 @@ private:
    void op0_print()        { ZState::jump(text.print(ZState::getPC())); }
 
    //! print_ret - Print the literal Z-encoded string, a new-line then return true
-   void op0_print_ret()    { op0_print(); op0_new_line(); subRet(1); }
+   void op0_print_ret()
+   {
+      op0_print();
+      op0_new_line();
+      subRet(1);
+   }
 
    //! nop - Probably the offiical "nop"
    void op0_nop()          {}
@@ -263,7 +266,10 @@ private:
    void op0_restore_v1()   { branch(ZState::restore(DEFAULT_SAVE_FILE)); }
 
    //! v4 restore -> (result)
-   void op0_restore_v4()   { if (!ZState::restore(DEFAULT_SAVE_FILE)) varWrite(fetchByte(), 0); }
+   void op0_restore_v4()
+   {
+      if(!ZState::restore(DEFAULT_SAVE_FILE)) varWrite(fetchByte(), 0);
+   }
 
    //! restart
    void op0_restart()      { start(); }
@@ -295,7 +301,7 @@ private:
    //============================================================================
    // One operand instructions
 
-   void op1_jz()            { branch(uarg[0] == 0); }
+   void op1_jz() { branch(uarg[0] == 0); }
 
    void op1_get_sibling()
    {
@@ -353,8 +359,8 @@ private:
              ((num_arg > 3) && (uarg[0] == uarg[3])));
    }
 
-   void op2_jl()            { branch(sarg[0] < sarg[1]); }
-   void op2_jg()            { branch(sarg[0] > sarg[1]); }
+   void op2_jl() { branch(sarg[0] < sarg[1]); }
+   void op2_jg() { branch(sarg[0] > sarg[1]); }
 
    void op2_dec_chk()
    {
@@ -403,7 +409,7 @@ private:
 
    void op2_div()
    {
-      if (sarg[1] == 0)
+      if(sarg[1] == 0)
       {
          ZState::error(ERR_DIV_BY_ZERO);
          return;
@@ -413,7 +419,7 @@ private:
 
    void op2_mod()
    {
-      if (sarg[1] == 0)
+      if(sarg[1] == 0)
       {
          ZState::error(ERR_DIV_BY_ZERO);
          return;
@@ -461,32 +467,32 @@ private:
 
       for(uint8_t len=0; len<max; len++)
       {
-          uint16_t ch;
+         uint16_t ch;
 
-          if (!readChar(timeout, routine, ch))
-          {
-             return;
-          }
+         if(!readChar(timeout, routine, ch))
+         {
+            return;
+         }
 
-          if (ch == '\b')
-          {
-             // => delete
-             if (buffer > start)
-             {
-                stream.writeRaw(" \b");
-                --buffer;
-                --len;
-             }
-          }
-          else if (ch == '\n')
-          {
-             memory[buffer] = '\0';
-             break;
-          }
-          else
-          {
-             memory[buffer++] = tolower(ch);
-          }
+         if(ch == '\b')
+         {
+            // => delete
+            if(buffer > start)
+            {
+               stream.writeRaw(" \b");
+               --buffer;
+               --len;
+            }
+         }
+         else if(ch == '\n')
+         {
+            memory[buffer] = '\0';
+            break;
+         }
+         else
+         {
+            memory[buffer++] = tolower(ch);
+         }
       }
 
       parser.tokenise(memory, parse, start, header->dict, false);
@@ -500,44 +506,44 @@ private:
       uint16_t timeout = num_arg >= 3 ? uarg[2] : 0;
       uint16_t routine = num_arg >= 4 ? uarg[3] : 0;
 
-      uint8_t  max = memory[buffer++];
-      uint8_t  len = memory[buffer++];
+      uint8_t max = memory[buffer++];
+      uint8_t len = memory[buffer++];
 
       uint16_t start = buffer;
 
-      for(; len<max; len++)
+      for(; len < max; len++)
       {
-          uint16_t ch;
+         uint16_t ch;
 
-          if (!readChar(timeout, routine, ch))
-          {
-             return;
-          }
+         if(!readChar(timeout, routine, ch))
+         {
+            return;
+         }
 
-          if (ch == '\b')
-          {
-             // => delete
-             if (buffer > start)
-             {
-                stream.writeRaw(" \b");
-                --buffer;
-                --len;
-             }
-          }
-          else if (ch == '\n')
-          {
-             memory[buffer] = '\0';
-             memory[start - 1] = len;
-             varWrite(fetchByte(), ch);
-             break;
-          }
-          else
-          {
-             memory[buffer++] = ch;
-          }
+         if(ch == '\b')
+         {
+            // => delete
+            if(buffer > start)
+            {
+               stream.writeRaw(" \b");
+               --buffer;
+               --len;
+            }
+         }
+         else if(ch == '\n')
+         {
+            memory[buffer]    = '\0';
+            memory[start - 1] = len;
+            varWrite(fetchByte(), ch);
+            break;
+         }
+         else
+         {
+            memory[buffer++] = ch;
+         }
       }
 
-      if (parse != 0)
+      if(parse != 0)
       {
          parser.tokenise(memory, parse, start, header->dict, false);
       }
@@ -555,14 +561,14 @@ private:
 
    void opV_pull_v6()
    {
-      uint16_t  value;
-      if (num_arg == 1)
+      uint16_t value;
+      if(num_arg == 1)
       {
          // User stack
          uint16_t st  = uarg[0];
          uint16_t ptr = memory.readWord(st);
          memory.writeWord(st, ++ptr);
-         value = memory.readWord(ptr + 2*ptr);
+         value = memory.readWord(ptr + 2 * ptr);
       }
       else
       {
@@ -587,10 +593,10 @@ private:
       stream.flush();
 
       unsigned attr = 0;
-      if (uarg[0] & (1<<0)) attr |= TRM::A_REVERSE;
-      if (uarg[0] & (1<<1)) attr |= TRM::A_BOLD;
-      if (uarg[0] & (1<<2)) attr |= TRM::A_ITALIC;
-      if (uarg[0] & (1<<3)) attr |= TRM::A_FIXED;
+      if(uarg[0] & (1 << 0)) attr |= TRM::A_REVERSE;
+      if(uarg[0] & (1 << 1)) attr |= TRM::A_BOLD;
+      if(uarg[0] & (1 << 2)) attr |= TRM::A_ITALIC;
+      if(uarg[0] & (1 << 3)) attr |= TRM::A_FIXED;
       stream.setAttributes(attr);
    }
 
@@ -603,7 +609,7 @@ private:
    {
       int16_t number = sarg[0];
 
-      if (number == 3)
+      if(number == 3)
       {
          uint32_t  table  = num_arg >= 2 ? uarg[1] : 0;
          int16_t   width  = num_arg == 3 ? sarg[2] : 0;
@@ -613,23 +619,17 @@ private:
       else
       {
          bool set = number > 0;
-         number = abs(number);
-         if (number > 4)
+         number   = abs(number);
+         if(number > 4)
             ZState::error(ERR_BAD_STREAM);
          else
             stream.enableStream(abs(number), set);
       }
    }
 
-   void opV_input_stream()
-   {
-      TODO_ERROR();
-   }
+   void opV_input_stream() { TODO_ERROR(); }
 
-   void opV_sound_effect()
-   {
-      TODO_WARN("sound_effect");
-   }
+   void opV_sound_effect() { TODO_WARN("sound_effect"); }
 
    void opV_read_char()
    {
@@ -638,7 +638,7 @@ private:
       uint16_t routine = num_arg >= 3 ? uarg[2] : 0;
       uint16_t ch;
 
-      if (readChar(timeout, routine, ch))
+      if(readChar(timeout, routine, ch))
       {
          varWrite(fetchByte(), ch);
       }
@@ -652,12 +652,12 @@ private:
       uint16_t form   = num_arg == 4 ? uarg[3] : 0x82;
       uint16_t result = 0;
 
-      for(uint16_t i=0; i<len; ++i)
+      for(uint16_t i = 0; i < len; ++i)
       {
          uint16_t v = (form & 0x80) ? memory.readWord(table)
                                     : memory[table];
 
-         if (v == x)
+         if(v == x)
          {
             result = table;
             break;
@@ -681,10 +681,7 @@ private:
       parser.tokenise(memory, parse, text + 1, dict, flag);
    }
 
-   void opV_encode_text()
-   {
-      TODO_ERROR();
-   }
+   void opV_encode_text() { TODO_ERROR(); }
 
    void opV_copy_table()
    {
@@ -692,11 +689,11 @@ private:
       uint16_t to   = uarg[1];
       int16_t  size = sarg[2];
 
-      if (to == 0)
+      if(to == 0)
       {
          memory.clear(from, from + size);
       }
-      else if ((size < 0) || (from > to))
+      else if((size < 0) || (from > to))
       {
          memory.copyForward(from, to, abs(size));
       }
@@ -716,10 +713,7 @@ private:
       text.printTable(addr, width, height, skip);
    }
 
-   void opV_check_arg_count()
-   {
-      branch(uarg[0] <= ZState::getNumFrameArgs());
-   }
+   void opV_check_arg_count() { branch(uarg[0] <= ZState::getNumFrameArgs()); }
 
    //============================================================================
    // Extended operand instructions
@@ -729,8 +723,12 @@ private:
       uint16_t table = uarg[0];
       uint16_t bytes = uarg[1];
       uint16_t name  = uarg[2];
-      (void) table; (void) bytes; (void) name; // TODO use supplied parameters
-      uint8_t  ret   = fetchByte();
+
+      (void)table;
+      (void)bytes;
+      (void)name; // TODO use supplied parameters
+
+      uint8_t ret = fetchByte();
       varWrite(ret, 2);
       varWrite(ret, ZState::save(DEFAULT_SAVE_FILE) ? 1 : 0);
    }
@@ -740,13 +738,17 @@ private:
       uint16_t table = uarg[0];
       uint16_t bytes = uarg[1];
       uint16_t name  = uarg[2];
-      (void) table; (void) bytes; (void) name; // TODO use supplied parameters
-      if (!ZState::restore(DEFAULT_SAVE_FILE)) varWrite(fetchByte(), 0);
+
+      (void)table;
+      (void)bytes;
+      (void)name; // TODO use supplied parameters
+
+      if(!ZState::restore(DEFAULT_SAVE_FILE)) varWrite(fetchByte(), 0);
    }
 
    void opE_log_shift()
    {
-      if (sarg[1] < 0)
+      if(sarg[1] < 0)
          varWrite(fetchByte(), uarg[0] >> -sarg[1]);
       else
          varWrite(fetchByte(), uarg[0] << sarg[1]);
@@ -754,7 +756,7 @@ private:
 
    void opE_art_shift()
    {
-      if (sarg[1] < 0)
+      if(sarg[1] < 0)
          varWrite(fetchByte(), sarg[0] >> -sarg[1]);
       else
          varWrite(fetchByte(), sarg[0] << sarg[1]);
@@ -767,7 +769,7 @@ private:
 
       undo_index = (undo_index + 1) % options.undo;
 
-      uint8_t  ret   = fetchByte();
+      uint8_t ret = fetchByte();
       varWrite(ret, 2);
       varWrite(ret, ZState::save(filename) ? 1 : 0);
    }
@@ -780,23 +782,14 @@ private:
       char filename[12];
       sprintf(filename, "undo_%x.sav", undo_index);
 
-      if (!ZState::restore(filename)) varWrite(fetchByte(), 0);
+      if(!ZState::restore(filename)) varWrite(fetchByte(), 0);
    }
 
-   void opE_print_unicode()
-   {
-      TODO_WARN("print_unicode");
-   }
+   void opE_print_unicode() { TODO_WARN("print_unicode"); }
 
-   void opE_check_unicode()
-   {
-      TODO_ERROR();
-   }
+   void opE_check_unicode() { TODO_ERROR(); }
 
-   void opE_draw_picture()
-   {
-      TODO_WARN("draw_picture");
-   }
+   void opE_draw_picture() { TODO_WARN("draw_picture"); }
 
    //! EXT:4
    //  set_font font
@@ -812,9 +805,9 @@ private:
       uint16_t y    = uarg[1];
       uint16_t x    = uarg[2];
 
-      (void) wind;
-      (void) y;
-      (void) x;
+      (void)wind;
+      (void)y;
+      (void)x;
 
       TODO_WARN("move_window");
    }
@@ -825,9 +818,9 @@ private:
       uint16_t y    = uarg[1];
       uint16_t x    = uarg[2];
 
-      (void) wind;
-      (void) y;
-      (void) x;
+      (void)wind;
+      (void)y;
+      (void)x;
 
       TODO_WARN("window_size");
    }
@@ -838,9 +831,9 @@ private:
       uint16_t flags     = uarg[1];
       uint16_t operation = uarg[2];
 
-      (void) wind;
-      (void) flags;
-      (void) operation;
+      (void)wind;
+      (void)flags;
+      (void)operation;
 
       TODO_WARN("set_wind_style");
    }
@@ -853,10 +846,7 @@ private:
       varWrite(fetchByte(), window_mgr.getWindowProp(wind, prop));
    }
 
-   void opE_mouse_window()
-   {
-      TODO_WARN("mouse_window");
-   }
+   void opE_mouse_window() { TODO_WARN("mouse_window"); }
 
    void initDecoder()
    {
@@ -992,12 +982,12 @@ private:
       opV[0x1F] = version() >= 5 ? &ZMachine::opV_check_arg_count : &ZMachine::ILLEGAL;
 
       // Externded instructions
-      for(unsigned i=0; i<=0x1F; i++)
+      for(unsigned i = 0; i <= 0x1F; i++)
       {
          opE[i] = &ZMachine::ILLEGAL;
       }
 
-      if (version() < 5) return;
+      if(version() < 5) return;
 
       opE[0x00] = &ZMachine::opE_save_table;
       opE[0x01] = &ZMachine::opE_restore_table;
@@ -1009,7 +999,7 @@ private:
       opE[0x0B] = &ZMachine::opE_print_unicode;
       opE[0x0C] = &ZMachine::opE_check_unicode;
 
-      if (version() < 6) return;
+      if(version() < 6) return;
 
       opE[0x05] = &ZMachine::opE_draw_picture;
       opE[0x06] = &ZMachine::TODO_ERROR;
@@ -1060,7 +1050,7 @@ private:
    {
       uint16_t op_types;
 
-      if (n == 4)
+      if(n == 4)
       {
          op_types = fetchByte() << 8;
          TRACE(" t%02X", op_types >> 8);
@@ -1074,11 +1064,11 @@ private:
       }
 
       // Unpack the type of the operands
-      for(unsigned i=0; i<n; ++i)
+      for(unsigned i = 0; i < n; ++i)
       {
          OperandType type = OperandType(op_types >> 14);
 
-         if (type == OP_NONE) return;
+         if(type == OP_NONE) return;
 
          fetchOperand(type);
 
@@ -1101,8 +1091,8 @@ private:
 
    void doOp2(uint8_t op_code)
    {
-      fetchOperand(op_code & (1<<6) ? OP_VARIABLE : OP_SMALL_CONST);
-      fetchOperand(op_code & (1<<5) ? OP_VARIABLE : OP_SMALL_CONST);
+      fetchOperand(op_code & (1 << 6) ? OP_VARIABLE : OP_SMALL_CONST);
+      fetchOperand(op_code & (1 << 5) ? OP_VARIABLE : OP_SMALL_CONST);
 
       (this->*op2[op_code & 0x1F])();
    }
@@ -1117,7 +1107,7 @@ private:
 
    void doOpV(uint8_t op_code)
    {
-      if ((op_code == 0xEC) || (op_code == 0xFA))
+      if((op_code == 0xEC) || (op_code == 0xFA))
          fetchOperands(8);
       else
          fetchOperands(4);
@@ -1141,21 +1131,21 @@ private:
 
       clearOperands();
 
-      if (opcode < 0x80)
+      if(opcode < 0x80)
       {
          // 0xxxxxx
          doOp2(opcode);
       }
-      else if (opcode < 0xB0)
+      else if(opcode < 0xB0)
       {
          // 1000xxxx
          // 1001xxxx
          // 1010xxxx
          doOp1(opcode);
       }
-      else if (opcode < 0xC0)
+      else if(opcode < 0xC0)
       {
-         if (opcode == 0xBE)
+         if(opcode == 0xBE)
          {
             // 10111110
             doOpE(fetchByte());
@@ -1166,7 +1156,7 @@ private:
             doOp0(opcode);
          }
       }
-      else if (opcode < 0xE0)
+      else if(opcode < 0xE0)
       {
          // 110xxxxx
          doOp2_var(opcode);
@@ -1187,12 +1177,12 @@ private:
       // TODO the header should be reset (only bits 0 and 1 from Flags 2
       //      shoud be preserved)
 
-      if (!ZState::reset(filename, header->getEntryPoint(), header->checksum))
+      if(!ZState::reset(filename, header->getEntryPoint(), header->checksum))
       {
          error("Failed to read story z-file \"%s\"", filename);
       }
 
-      if (!isChecksumOk())
+      if(!isChecksumOk())
       {
          warning("checksum fail");
       }
@@ -1202,14 +1192,14 @@ private:
    {
       PLT::File file(filename, "r");
 
-      if (!file.isOpen())
+      if(!file.isOpen())
       {
          error("Failed to open story z-file \"%s\"", filename);
          return false;
       }
 
       // Read header
-      if (!memory.load(file, 0, sizeof(ZHeader)))
+      if(!memory.load(file, 0, sizeof(ZHeader)))
       {
          error("Z-file header read failed");
          return false;
@@ -1217,7 +1207,7 @@ private:
 
       header = reinterpret_cast<ZHeader*>(&memory[0]);
 
-      if (!header->isVersionValid())
+      if(!header->isVersionValid())
       {
          error("Unexpected version %u", header->version);
          return false;
@@ -1230,22 +1220,22 @@ private:
    {
       static unsigned tick = 0;
 
-      inst_addr = ZState::getPC();
+      inst_addr      = ZState::getPC();
       uint8_t opcode = memory[inst_addr];
 
       trace.printf("%4d %06X: %02X ", tick++, inst_addr, opcode);
 
-      if (opcode < 0x80)
+      if(opcode < 0x80)
       {
          trace.printf("2OP:%02X", opcode & 0x1F);
       }
-      else if (opcode < 0xB0)
+      else if(opcode < 0xB0)
       {
          trace.printf("1OP:%1X", opcode & 0xF);
       }
-      else if (opcode < 0xC0)
+      else if(opcode < 0xC0)
       {
-         if ((opcode & 0xF) == 0xE)
+         if((opcode & 0xF) == 0xE)
          {
             uint8_t ext_opcode = memory[inst_addr + 1];
             trace.printf("EXT:%02X", ext_opcode & 0x1F);
@@ -1255,7 +1245,7 @@ private:
             trace.printf("0OP:%1X", opcode & 0xF);
          }
       }
-      else if (opcode < 0xE0)
+      else if(opcode < 0xE0)
       {
          trace.printf("2OP:%02X", opcode & 0x1F);
       }
@@ -1275,18 +1265,19 @@ public:
       , window_mgr(console, stream)
       , object(memory)
       , text(stream, memory)
-   {}
+   {
+   }
 
    //! Play a Z file
    void open(const char* filename_)
    {
       filename = filename_;
 
-      if (!loadHeader()) return;
+      if(!loadHeader()) return;
 
       console.init(options, header->version);
 
-      ZConfig  config;
+      ZConfig config;
       config.interp_major_version = 1;
       config.interp_minor_version = 0;
 
@@ -1310,7 +1301,7 @@ public:
 
       start();
 
-      if (options.trace)
+      if(options.trace)
       {
          while(!isQuitRequested())
          {
@@ -1331,7 +1322,7 @@ public:
       info("quit");
 
       ZError exit_code = ZState::getExitCode();
-      if (exit_code != NO_ERROR)
+      if(exit_code != NO_ERROR)
       {
          error("PC=%06x OP=%02X %02X : %s",
                inst_addr,
