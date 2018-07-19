@@ -42,34 +42,33 @@ public:
       ERROR
    };
 
-   ZStream(ZConsoleIf& console_, ZMemory& memory_)
+   ZStream(ZConsoleIf& console_, ZOptions& options_, ZMemory& memory_)
       : console(console_)
       , memory(memory_)
    {
-   }
-
-   //! Initialise streams for a new story
-   void init(ZOptions& options, uint8_t version)
-   {
       console_enable = true;
-      printer_enable = options.print;
+      printer_enable = options_.print;
       memory_enable  = false;
-      snooper_enable = options.key;
+      snooper_enable = options_.key;
 
       buffer_enable = true;
       buffer_size   = 0;
       buffer_col    = 1;
 
-      printer_echo_input = version <= 5;
-
-      if(options.info)
+      if(options_.info)
       {
          message_filter = INFO;
       }
-      else if(options.warn)
+      else if(options_.warn)
       {
          message_filter = WARNING;
       }
+   }
+
+   //! 
+   void setPrinterEchoInput(bool state)
+   {
+      printer_echo_input = state;
    }
 
    //! Select the current font

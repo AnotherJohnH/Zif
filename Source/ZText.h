@@ -50,8 +50,8 @@ private:
    const ZMemory& memory;
 
    // Configuration
-   uint8_t  version;
-   uint16_t abbr;
+   uint8_t  version{0};
+   uint16_t abbr{0};
 
    // Decoder state
    State   state;
@@ -228,8 +228,6 @@ public:
    ZText(ZStream& stream_, ZMemory& memory_)
       : stream(stream_)
       , memory(memory_)
-      , version(0)
-      , abbr(0)
    {
    }
 

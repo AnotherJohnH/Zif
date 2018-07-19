@@ -1257,8 +1257,8 @@ public:
    ZMachine(ZConsoleIf& console_, ZOptions& options_)
       : options(options_)
       , console(console_)
-      , stream(console, memory)
-      , window_mgr(console, stream)
+      , stream(console, options_, memory)
+      , window_mgr(console, options_, stream)
       , object(memory)
       , text(stream, memory)
    {
@@ -1271,16 +1271,14 @@ public:
 
       if(!loadHeader()) return 1;
 
-      console.setExtendedColours(header->version == 6);
-
       ZConfig config;
       config.interp_major_version = 1;
       config.interp_minor_version = 0;
 
       header->init(console, config);
 
-      stream.init(options, header->version);
-      window_mgr.init(options);
+      console.setExtendedColours(header->version == 6);
+      stream.setPrinterEchoInput(header->version <= 5);
       text.init(header->version, header->abbr);
       parser.init(header->version);
       object.init(header->obj, header->version);

@@ -73,13 +73,12 @@ public:
    static const unsigned WINDOW_LOWER{0};
    static const unsigned WINDOW_UPPER{1};
 
-   ZWindowManager(ZConsoleIf& console_, ZStream& stream_)
+   ZWindowManager(ZConsoleIf& console_, ZOptions& options, ZStream& stream_)
       : console(console_)
       , stream(stream_)
    {
+       printer_enabled = options.print;
    }
-
-   void init(ZOptions& options) { printer_enabled = options.print; }
 
    uint16_t getWindowProp(unsigned index_, unsigned prop_)
    {
