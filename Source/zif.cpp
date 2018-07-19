@@ -20,8 +20,8 @@
 // SOFTWARE.
 //------------------------------------------------------------------------------
 
-#include "ZConsole.h"
 #include "ZMachine.h"
+#include "ZConsole.h"
 #include "ZOptions.h"
 
 #include "TRM/Launcher.h"

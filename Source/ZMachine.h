@@ -25,6 +25,7 @@
 
 #include <cstring>
 #include <cstdint>
+#include <cctype>
 
 #include "ZConfig.h"
 #include "ZHeader.h"

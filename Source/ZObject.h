@@ -156,7 +156,7 @@ private:
 
 public:
    ZObject(ZMemory& memory_)
-      : memory{memory_}
+      : memory(memory_)
    {
    }
 
