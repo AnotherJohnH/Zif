@@ -24,9 +24,8 @@
 #define Z_STREAM_H
 
 #include <cassert>
-#include <cstdarg>
 
-#include "ZConsole.h"
+#include "ZConsoleIf.h"
 #include "ZLog.h"
 #include "ZMemory.h"
 #include "ZOptions.h"
@@ -43,7 +42,7 @@ public:
       ERROR
    };
 
-   ZStream(ZConsole& console_, ZMemory& memory_)
+   ZStream(ZConsoleIf& console_, ZMemory& memory_)
       : console(console_)
       , memory(memory_)
    {
@@ -235,7 +234,7 @@ public:
       }
 
       // Identify message source
-      console.setAttributes(TRM::A_REVERSE);
+      console.setAttributes(A_REVERSE);
       writeRaw("ZIF");
       console.setAttributes(0);
 
@@ -259,6 +258,7 @@ public:
    }
 
 private:
+   static const unsigned A_REVERSE             = 1 << 1;
    static const unsigned MAX_WORD_LENGTH       = 16;
    static const unsigned PRINTER_NEWLINE_LIMIT = 3;
 
@@ -292,7 +292,7 @@ private:
    {
       if((zscii == ' ') || (zscii == '\n') || (buffer_size == MAX_WORD_LENGTH))
       {
-         if((buffer_col + buffer_size) > console.getAttr(ZConsole::COLS))
+         if((buffer_col + buffer_size) > console.getAttr(ZConsoleIf::COLS))
          {
             send('\n');
          }
@@ -330,12 +330,10 @@ private:
    //! printf style write to output streams
    void vWritef(const char* format, va_list ap);
 
-protected:
    // Console stream state
-   bool      console_enable{true};
-   ZConsole& console;
+   bool        console_enable{true};
+   ZConsoleIf& console;
 
-private:
    // Buffer used for automatic line breaks
    bool     buffer_enable{false};
    uint8_t  buffer_size{0};

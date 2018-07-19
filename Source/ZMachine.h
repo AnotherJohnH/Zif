@@ -24,7 +24,7 @@
 #define ZMACHINE_H
 
 #include <cstring>
-#include <stdint.h>
+#include <cstdint>
 
 #include "ZConfig.h"
 #include "ZHeader.h"
@@ -61,7 +61,7 @@ private:
 
    ZLog           trace{"trace"};
    ZOptions&      options;
-   ZConsole       console;
+   ZConsoleIf&    console;
    ZStream        stream;
    ZWindowManager window_mgr;
    ZObject        object;
@@ -1259,9 +1259,9 @@ private:
    }
 
 public:
-   ZMachine(TRM::Device* device_, ZOptions& options_)
+   ZMachine(ZConsoleIf& console_, ZOptions& options_)
       : options(options_)
-      , console(device_)
+      , console(console_)
       , stream(console, memory)
       , window_mgr(console, stream)
       , object(memory)
@@ -1270,13 +1270,13 @@ public:
    }
 
    //! Play a Z file
-   void open(const char* filename_)
+   int play(const char* filename_)
    {
       filename = filename_;
 
-      if(!loadHeader()) return;
+      if(!loadHeader()) return 1;
 
-      console.init(options, header->version);
+      console.setExtendedColours(header->version == 6);
 
       ZConfig config;
       config.interp_major_version = 1;
@@ -1330,7 +1330,10 @@ public:
                memory[inst_addr],
                memory[inst_addr+1],
                ZErrorString(exit_code));
+         return 1;
       }
+
+      return 0;
    }
 };
 

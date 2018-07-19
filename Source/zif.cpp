@@ -20,6 +20,7 @@
 // SOFTWARE.
 //------------------------------------------------------------------------------
 
+#include "ZConsole.h"
 #include "ZMachine.h"
 #include "ZOptions.h"
 
@@ -37,12 +38,14 @@
 class ZifApp : public TRM::Launcher
 {
 private:
-   ZOptions zoptions;
+   ZOptions options;
 
    virtual int startTerminalLauncher(const char* story) override
    {
-      ZMachine(term, zoptions).open(story);
-      return 0;
+      ZConsole console(term, options);
+      ZMachine machine(console, options);
+
+      return machine.play(story);
    }
 
 public:

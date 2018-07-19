@@ -29,32 +29,14 @@
 #include "TRM/Curses.h"
 #include "TRM/Device.h"
 
+#include "ZConsoleIf.h"
 #include "ZOptions.h"
 
 //! Interface to console implementation
-class ZConsole
+class ZConsole : public ZConsoleIf
 {
 public:
-   enum Attr
-   {
-      LINES,
-      COLS,
-
-      COLOURS,
-      BOLD,
-      ITALIC,
-
-      FONT_HEIGHT,
-      FONT_WIDTH,
-
-      PICTURE_FONT,
-      GRAPHIC_FONT,
-      FIXED_FONT,
-
-      READ_TIMEOUT
-   };
-
-   ZConsole(TRM::Device* device_)
+   ZConsole(TRM::Device* device_, ZOptions& options)
       : curses(device_)
    {
       int status = device_->ioctl(TRM::Device::IOCTL_TERM_FONTS);
@@ -65,19 +47,7 @@ public:
 
       status        = device_->ioctl(TRM::Device::IOCTL_TERM_COLOURS);
       colours_avail = status > 1;
-   }
 
-   ~ZConsole()
-   {
-      if(isInputFileOpen())
-      {
-         closeInputFile();
-      }
-   }
-
-   //! Initialise
-   void init(ZOptions& options, uint8_t version)
-   {
       if(options.input != nullptr)
       {
          openInputFile(options.input);
@@ -99,12 +69,18 @@ public:
       curses.raw();
       curses.noecho();
       curses.clear();
+   }
 
-      extended_colours = version == 6;
+   ~ZConsole()
+   {
+      if(isInputFileOpen())
+      {
+         closeInputFile();
+      }
    }
 
    //! Return console attribute
-   unsigned getAttr(Attr attr) const
+   virtual unsigned getAttr(Attr attr) const override
    {
       // clang-format off
       switch(attr)
@@ -131,16 +107,19 @@ public:
    }
 
    //! Get current position of cursor
-   void getCursorPos(unsigned& line, unsigned& col)
+   virtual void getCursorPos(unsigned& line, unsigned& col) override
    {
        curses.getyx(line, col);
    }
 
    //! Clear the console
-   void clear() { curses.clear(); }
+   virtual void clear() override
+   {
+      curses.clear();
+   }
 
    //! Select the current font
-   bool setFont(unsigned font_idx)
+   virtual bool setFont(unsigned font_idx) override
    {
       if(screen_enable && (font_idx <= num_fonts_avail))
       {
@@ -152,7 +131,7 @@ public:
    }
 
    //! Set (curses format) attributes
-   void setAttributes(unsigned attr)
+   virtual void setAttributes(unsigned attr) override
    {
       if(!screen_enable) return;
 
@@ -165,7 +144,7 @@ public:
    }
 
    //! Set foreground and background colours
-   void setColours(signed fg, signed bg)
+   virtual void setColours(signed fg, signed bg) override
    {
       if(!screen_enable) return;
 
@@ -185,7 +164,7 @@ public:
    }
 
    //! Move cursor
-   void moveCursor(unsigned line, unsigned col)
+   virtual void moveCursor(unsigned line, unsigned col) override
    {
       if(!screen_enable) return;
 
@@ -194,7 +173,7 @@ public:
 
    //! Read ZSCII character.
    //! Returns false on timeout
-   bool read(uint16_t& zscii, unsigned timeout_100ms)
+   virtual bool read(uint16_t& zscii, unsigned timeout_100ms) override
    {
       int ch;
 
@@ -224,7 +203,7 @@ public:
    }
 
    //! Write ZSCII character
-   void write(uint16_t zscii)
+   virtual void write(uint16_t zscii) override
    {
       if(!screen_enable) return;
 
@@ -253,7 +232,7 @@ public:
    }
 
    //! Wait for any key press
-   void waitForKey()
+   virtual void waitForKey() override
    {
       if(only_white_space) return;
 
@@ -311,7 +290,6 @@ private:
    unsigned    scroll{0};
    bool        only_white_space{true};
    bool        screen_enable{true};
-   bool        extended_colours{false};
    unsigned    fg_col{COL_DEFAULT};
    unsigned    bg_col{COL_DEFAULT};
 };
