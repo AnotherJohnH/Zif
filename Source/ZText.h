@@ -64,7 +64,7 @@ private:
 
       state = DECODE_ABBR;
 
-      while(decode(memory.fetchWord(entry))) {}
+      for(; decode(memory.readWord(entry)); entry += 2) {}
    }
 
    void resetDecoder()
@@ -240,9 +240,9 @@ public:
    {
       resetDecoder();
 
-      while(decode(memory.fetchWord(addr))) {}
+      for(; decode(memory.readWord(addr)); addr += 2) {}
 
-      return addr;
+      return addr + 2;
    }
 
    //! Write raw text starting at the given address
@@ -252,7 +252,7 @@ public:
       {
          for(unsigned col = 0; col < width; col++)
          {
-            stream.writeChar(memory.fetchByte(addr));
+            stream.writeChar(memory[addr++]);
          }
 
          addr += skip;

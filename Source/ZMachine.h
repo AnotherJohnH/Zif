@@ -391,7 +391,7 @@ private:
    //  which must lie in static or dynamic memory)
    void op2_loadb()
    {
-      varWrite(fetchByte(), memory.readByte(uarg[0] + uarg[1]));
+      varWrite(fetchByte(), memory[uarg[0] + uarg[1]]);
    }
 
    void op2_get_prop()      { varWrite(fetchByte(), object.getProp(uarg[0], uarg[1])); }
@@ -441,7 +441,7 @@ private:
    void opV_call_vn()        { subCall(1, uarg[0], num_arg-1, &uarg[1]); }
    void opV_call_vn2()       { opV_call_vn(); }
    void opV_storew()         { memory.writeWord(uarg[0] + 2*uarg[1], uarg[2]); }
-   void opV_storeb()         { memory.writeByte(uarg[0] + uarg[1], uarg[2]); }
+   void opV_storeb()         { memory[uarg[0] + uarg[1]] = uarg[2]; }
    void opV_put_prop()       { object.setProp(uarg[0], uarg[1], uarg[2]); }
 
    //! V1 sread text parse
@@ -456,7 +456,7 @@ private:
 
       if (SHOW_STATUS) showStatus();
 
-      uint8_t  max = memory.readByte(buffer++) - 1;
+      uint8_t  max = memory[buffer++] - 1;
       uint16_t start = buffer;
 
       for(uint8_t len=0; len<max; len++)
@@ -480,12 +480,12 @@ private:
           }
           else if (ch == '\n')
           {
-             memory.writeByte(buffer, '\0');
+             memory[buffer] = '\0';
              break;
           }
           else
           {
-             memory.writeByte(buffer++, tolower(ch));
+             memory[buffer++] = tolower(ch);
           }
       }
 
@@ -500,8 +500,8 @@ private:
       uint16_t timeout = num_arg >= 3 ? uarg[2] : 0;
       uint16_t routine = num_arg >= 4 ? uarg[3] : 0;
 
-      uint8_t  max = memory.readByte(buffer++);
-      uint8_t  len = memory.readByte(buffer++);
+      uint8_t  max = memory[buffer++];
+      uint8_t  len = memory[buffer++];
 
       uint16_t start = buffer;
 
@@ -526,14 +526,14 @@ private:
           }
           else if (ch == '\n')
           {
-             memory.writeByte(buffer, '\0');
-             memory.writeByte(start - 1, len);
+             memory[buffer] = '\0';
+             memory[start - 1] = len;
              varWrite(fetchByte(), ch);
              break;
           }
           else
           {
-             memory.writeByte(buffer++, ch);
+             memory[buffer++] = ch;
           }
       }
 
@@ -655,7 +655,7 @@ private:
       for(uint16_t i=0; i<len; ++i)
       {
          uint16_t v = (form & 0x80) ? memory.readWord(table)
-                                    : memory.readByte(table);
+                                    : memory[table];
 
          if (v == x)
          {
@@ -1215,7 +1215,7 @@ private:
          return false;
       }
 
-      header = (ZHeader*) &memory.readByte(0);
+      header = reinterpret_cast<ZHeader*>(&memory[0]);
 
       if (!header->isVersionValid())
       {
@@ -1231,7 +1231,7 @@ private:
       static unsigned tick = 0;
 
       inst_addr = ZState::getPC();
-      uint8_t opcode = memory.readByte(inst_addr);
+      uint8_t opcode = memory[inst_addr];
 
       trace.printf("%4d %06X: %02X ", tick++, inst_addr, opcode);
 
@@ -1247,7 +1247,7 @@ private:
       {
          if ((opcode & 0xF) == 0xE)
          {
-            uint8_t ext_opcode = memory.readByte(inst_addr + 1);
+            uint8_t ext_opcode = memory[inst_addr + 1];
             trace.printf("EXT:%02X", ext_opcode & 0x1F);
          }
          else
@@ -1273,7 +1273,7 @@ public:
       , console(device_)
       , stream(console, memory)
       , window_mgr(console, stream)
-      , object(&memory)
+      , object(memory)
       , text(stream, memory)
    {}
 
@@ -1335,8 +1335,8 @@ public:
       {
          error("PC=%06x OP=%02X %02X : %s",
                inst_addr,
-               memory.readByte(inst_addr),
-               memory.readByte(inst_addr+1),
+               memory[inst_addr],
+               memory[inst_addr+1],
                ZErrorString(exit_code));
       }
    }

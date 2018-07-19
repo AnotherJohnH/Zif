@@ -141,12 +141,12 @@ public:
    {
       unsigned max_word_len = version <= 4 ? 6 : 9;
 
-      uint8_t  num_sep      = memory.readByte(dict);
-      uint8_t  entry_length = memory.readByte(dict + 1 + num_sep);
+      uint8_t  num_sep      = memory[dict];
+      uint8_t  entry_length = memory[dict + 1 + num_sep];
       uint16_t num_entry    = memory.readWord(dict + 1 + num_sep + 1);
       uint32_t first        = dict + 1 + num_sep + 3;
 
-      unsigned max_num_word = memory.readByte(out);
+      unsigned max_num_word = memory[out];
       uint8_t  num_word     = 0;
 
       unsigned word_len = 0;
@@ -155,7 +155,7 @@ public:
 
       for(unsigned i = 0; i < 256; i++)
       {
-         uint8_t ch = memory.readByte(text + i);
+         uint8_t ch = memory[text + i];
 
          // Check for default seperator and terminator
          bool is_sep = (ch == ' ') || (ch == '\0');
@@ -163,7 +163,7 @@ public:
          // Check for custom seperators
          for(uint8_t j = 0; !is_sep && (j < num_sep); j++)
          {
-            is_sep = (memory.readByte(dict + 1 + j) == ch);
+            is_sep = (memory[dict + 1 + j] == ch);
          }
 
          if(!is_sep)
@@ -204,8 +204,8 @@ public:
             if((entry != 0) || !partial)
             {
                memory.writeWord(out + 2 + num_word * 4, entry);
-               memory.writeByte(out + 2 + num_word * 4 + 2, word_len);
-               memory.writeByte(out + 2 + num_word * 4 + 3, start);
+               memory[out + 2 + num_word * 4 + 2] = word_len;
+               memory[out + 2 + num_word * 4 + 3] = start;
             }
 
             num_word++;
@@ -216,7 +216,7 @@ public:
          if((ch == '\0') || (num_word == max_num_word)) break;
       }
 
-      memory.writeByte(out + 1, num_word);
+      memory[out + 1] = num_word;
    }
 };
 

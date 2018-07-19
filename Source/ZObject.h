@@ -33,7 +33,7 @@ private:
    const unsigned SMALL_PROP_BITS = 5;
    const unsigned LARGE_PROP_BITS = 6;
 
-   ZMemory* memory{nullptr};
+   ZMemory& memory;
    uint16_t obj_table{0}; //!< Address of object table
    bool     small{true};  //!< true => Small table v1 to v3
 
@@ -48,7 +48,7 @@ private:
    {
       assert((index > 0) && (index <= getMaxProps()));
 
-      return memory->readWord(obj_table + (index - 1) * sizeof(uint16_t));
+      return memory.readWord(obj_table + (index - 1) * sizeof(uint16_t));
    }
 
    //! Return the address for the given object index
@@ -66,9 +66,9 @@ private:
 
       uint32_t addr = getObjAddress(obj) + (getMaxAttr() / 8);
       if(small)
-         return memory->readByte(addr + n);
+         return memory[addr + n];
       else
-         return memory->readWord(addr + n * sizeof(uint16_t));
+         return memory.readWord(addr + n * sizeof(uint16_t));
    }
 
    //! Set the nth object link (0=>parent, 1=>sibling, 2=>child)
@@ -76,14 +76,14 @@ private:
    {
       uint32_t addr = getObjAddress(obj) + (getMaxAttr() / 8);
       if(small)
-         memory->writeByte(addr + n, link);
+         memory[addr + n] = link;
       else
-         memory->writeWord(addr + n * sizeof(uint16_t), link);
+         memory.writeWord(addr + n * sizeof(uint16_t), link);
    }
 
    unsigned fetchPropInfo(uint32_t& addr, unsigned& index) const
    {
-      uint8_t id = memory->readByte(addr++);
+      uint8_t id = memory[addr++];
       if(id == 0)
       {
          index = 0;
@@ -102,7 +102,7 @@ private:
       {
          if(id & (1 << 7))
          {
-            size = memory->readByte(addr++) & 0x3F;
+            size = memory[addr++] & 0x3F;
             if(size == 0)
             {
                size = 0x40;
@@ -126,7 +126,7 @@ private:
       uint32_t addr = getPropTableAddress(obj);
 
       // Skip object name
-      uint8_t name_len = memory->readByte(addr++);
+      uint8_t name_len = memory[addr++];
       addr += name_len * 2;
 
       while(true)
@@ -154,7 +154,7 @@ private:
    }
 
 public:
-   ZObject(ZMemory* memory_)
+   ZObject(ZMemory& memory_)
       : memory{memory_}
    {}
 
@@ -174,7 +174,7 @@ public:
 
       uint32_t addr = getObjAddress(obj) + (attr / 8);
       unsigned bit  = 7 - (attr & 7);
-      uint8_t  byte = memory->readByte(addr);
+      uint8_t  byte = memory[addr];
       return (byte & (1 << bit)) != 0;
    }
 
@@ -187,12 +187,12 @@ public:
 
       uint32_t addr = getObjAddress(obj) + (attr / 8);
       unsigned bit  = 7 - (attr & 7);
-      uint8_t  byte = memory->readByte(addr);
+      uint8_t  byte = memory[addr];
       if(set)
          byte |= 1 << bit;
       else
          byte &= ~(1 << bit);
-      memory->writeByte(addr, byte);
+      memory[addr] = byte;
    }
 
    uint16_t getParent(uint16_t obj)  const { return getObjLink(obj, 0); }
@@ -206,8 +206,8 @@ public:
    uint32_t getPropTableAddress(uint16_t obj) const
    {
       uint32_t addr = getObjAddress(obj);
-      return small ? memory->readWord(addr + 7)
-                   : memory->readWord(addr + 12);
+      return small ? memory.readWord(addr + 7)
+                   : memory.readWord(addr + 12);
    }
 
    uint32_t getName(uint16_t obj) const
@@ -230,7 +230,7 @@ public:
       uint32_t addr = getPropTableAddress(obj);
 
       // Skip object name
-      uint8_t name_len = memory->readByte(addr++);
+      uint8_t name_len = memory[addr++];
       addr += name_len * 2;
 
       if(prop == 0)
@@ -265,7 +265,7 @@ public:
       --addr;
       if(!small)
       {
-         uint8_t id = memory->readByte(addr);
+         uint8_t id = memory[addr];
          if((id & (1 << 7)) != 0)
          {
             --addr;
@@ -284,8 +284,8 @@ public:
       switch(size)
       {
       case 0:  return getDefaultProp(prop);
-      case 1:  return memory->readByte(addr);
-      default: return memory->readWord(addr);
+      case 1:  return memory[addr];
+      default: return memory.readWord(addr);
       }
       return 0;
    }
@@ -298,10 +298,10 @@ public:
       uint32_t addr = findProp(obj, prop, size);
       switch(size)
       {
-      case 0:  assert(!"property not found");
-      case 1:  return memory->writeByte(addr, uint8_t(value));
-      case 2:  return memory->writeWord(addr, value);
-      default: assert(!"property size must be 1 or 2");
+      case 0:  assert(!"property not found"); break;
+      case 1:  memory[addr] = uint8_t(value); break;
+      case 2:  memory.writeWord(addr, value); break;
+      default: assert(!"property size must be 1 or 2"); break;
       }
    }
 

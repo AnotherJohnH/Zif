@@ -94,7 +94,7 @@ public:
          error(ERR_BAD_CONFIG);
       }
 
-      memory.setLimit(memory_limit);
+      memory.resize(memory_limit);
    }
 
    //! Reset the dynamic state to the initial conditions
@@ -122,13 +122,12 @@ public:
       // skip the header
       file.seek(game_start);
 
-      uint16_t calculated_checksum;
-
-      if(!memory.load(file, game_start, game_end, &calculated_checksum))
+      if(!memory.load(file, game_start, game_end))
       {
          return false;
       }
 
+      uint16_t calculated_checksum = memory.checksum(game_start, game_end);
       checksum_ok = calculated_checksum == header_checksum;
 
       return true;
@@ -196,10 +195,27 @@ public:
    ZError getExitCode() const { return exit_code; }
 
    //! Fetch an instruction byte
-   uint8_t fetchByte()  { return validatePC() ? memory.fetchByte(pc) : 0; }
+   uint8_t fetchByte()
+   {
+      uint8_t byte = 0;
+      if (validatePC())
+      {
+         byte = memory[pc++];
+      }
+      return byte;
+   }
 
    //! Fetch an instruction word
-   uint16_t fetchWord() { return validatePC() ? memory.fetchWord(pc) : 0; }
+   uint16_t fetchWord()
+   {
+      uint16_t word = 0;
+      if (validatePC())
+      {
+         word = memory.readWord(pc);
+         pc += 2;
+      }
+      return word;
+   }
 
 
    //! Push a word onto the stack

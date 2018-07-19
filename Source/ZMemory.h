@@ -39,36 +39,30 @@ private:
    uint8_t  data[MAX_SIZE];
 
 public:
-   ZMemory() { clear(0, MAX_SIZE); }
+   ZMemory()
+   {
+      clear(0, MAX_SIZE);
+   }
 
    //! Set memory size limit (bytes)
-   void setLimit(uint32_t limit_)
+   void resize(uint32_t limit_)
    {
       assert(limit_ <= MAX_SIZE);
       limit = limit_;
    }
 
-   // Byte access
-
-   //! Read byte
-   const uint8_t& readByte(uint32_t addr) const
+   //! Get constant reference to a memory byte
+   const uint8_t& operator[](uint32_t addr) const
    {
       assert(addr < limit);
       return data[addr];
    }
 
-   //! Read byte and increment address
-   uint8_t fetchByte(uint32_t& addr) const
+   //! Get reference to a memory byte
+   uint8_t& operator[](uint32_t addr)
    {
       assert(addr < limit);
-      return data[addr++];
-   }
-
-   //! Write byte
-   void writeByte(uint32_t addr, uint8_t value)
-   {
-      assert(addr < limit);
-      data[addr] = value;
+      return data[addr];
    }
 
    // 16-bit word access
@@ -76,65 +70,54 @@ public:
    //! Read 16-bit word
    uint16_t readWord(uint32_t addr) const
    {
-      uint16_t word = readByte(addr);
-      return (word << 8) | readByte(addr + 1);
-   }
-
-   //! Read 16-bit word and increment address
-   uint16_t fetchWord(uint32_t& addr) const
-   {
-      uint16_t value = fetchByte(addr);
-      return (value << 8) | fetchByte(addr);
+      uint16_t msb = operator[](addr);
+      return (msb << 8) | operator[](addr + 1);
    }
 
    //! Write 16-bit word
-   void writeWord(uint32_t addr, uint16_t value)
+   void writeWord(uint32_t addr, uint16_t word)
    {
-      writeByte(addr, value >> 8);
-      writeByte(addr + 1, value & 0xFF);
+      operator[](addr)     = word >> 8;
+      operator[](addr + 1) = word & 0xFF;
    }
 
-
-   //! Load a block of memory from an open file stream.
-   //! With optional checksum calculation
-   bool load(PLT::File& file, uint32_t start, uint32_t end, uint16_t* checksum_ptr = nullptr)
+   //! Compute checksum for a block of memory
+   uint16_t checksum(uint32_t start, uint32_t end)
    {
-      assert((start < MAX_SIZE) && (end <= MAX_SIZE));
+      uint16_t checksum = 0;
 
-      if(!file.read(&data[start], end - start))
+      for(uint32_t addr = start; addr < end; ++addr)
       {
-         return false;
+         checksum += data[addr];
       }
 
-      if(checksum_ptr != nullptr)
-      {
-         uint16_t checksum = 0;
-
-         for(uint32_t addr = start; addr < end; ++addr)
-         {
-            checksum += data[addr];
-         }
-
-         *checksum_ptr = checksum;
-      }
-
-      return true;
+      return checksum;
    }
 
    //! Save a block of memory to an open file stream
    bool save(PLT::File& file, uint32_t start, uint32_t end) const
    {
-      assert((start < MAX_SIZE) && (end <= MAX_SIZE));
+      assert((start < limit) && (end <= limit));
 
       return file.write(&data[start], end - start);
+   }
+
+   //! Load a block of memory from an open file stream
+   bool load(PLT::File& file, uint32_t start, uint32_t end)
+   {
+      assert((start < MAX_SIZE) && (end <= MAX_SIZE));
+
+      return file.read(&data[start], end - start);
    }
 
    //! Clear a block of memory
    void clear(uint32_t start, uint32_t end)
    {
+      assert((start < limit) && (end <= limit));
+
       for(uint32_t addr = start; addr < end; addr++)
       {
-         writeByte(addr, 0);
+         data[addr] = 0;
       }
    }
 
@@ -143,7 +126,7 @@ public:
    {
       for(uint32_t i = 0; i < size; i++)
       {
-         writeByte(to + i, readByte(from + i));
+         operator[](to + i) = operator[](from + i);
       }
    }
 
@@ -152,7 +135,7 @@ public:
    {
       for(uint32_t i = size; i > 0; i--)
       {
-         writeByte(to + i - 1, readByte(from + i - 1));
+         operator[](to + i - 1) = operator[](from + i - 1);
       }
    }
 };
