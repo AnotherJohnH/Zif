@@ -29,7 +29,7 @@
 #include "PLT/File.h"
 
 
-//! Memory for ZMachine
+//! Z machine memory
 class ZMemory
 {
 private:

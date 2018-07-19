@@ -30,6 +30,7 @@
 
 // See the Z specification section 3.
 
+//! Decompressor for text
 class ZText
 {
 private:
@@ -232,6 +233,7 @@ public:
    {
    }
 
+   //! Initialise
    void init(uint8_t version_, uint32_t abbr_)
    {
       version = version_;
@@ -243,8 +245,9 @@ public:
    {
       resetDecoder();
 
-      for(; decode(memory.readWord(addr)); addr += 2)
+      while(decode(memory.readWord(addr)))
       {
+          addr += 2;
       }
 
       return addr + 2;

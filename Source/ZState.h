@@ -30,7 +30,7 @@
 #include "ZMemory.h"
 
 
-//! The game state
+//! Z machine state
 class ZState
 {
 private:

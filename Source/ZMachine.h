@@ -34,7 +34,7 @@
 #include "ZParser.h"
 #include "ZState.h"
 #include "ZText.h"
-#include "ZWindow.h"
+#include "ZWindowManager.h"
 
 
 #define TRACE if (1) ; else trace.printf
@@ -43,6 +43,7 @@
 static const char* DEFAULT_SAVE_FILE = "zif.sav";
 
 
+//! Z machine implementation
 class ZMachine : public ZState
 {
 private:

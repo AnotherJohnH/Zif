@@ -23,11 +23,13 @@
 #ifndef ZCONFIG_H
 #define ZCONFIG_H
 
-//! Configuration/features of the interpreter
+#include <cstdint>
+
+//! Configuration of interpreter features
 struct ZConfig
 {
-   unsigned interp_major_version{0};
-   unsigned interp_minor_version{0};
+   uint8_t  interp_major_version{0};
+   uint8_t  interp_minor_version{0};
    bool     status_line{false};      //!< Status line available
    bool     screen_splitting{false}; //!< Screen splitting available
    bool     var_pitch_font{false};   //!< variable pitch font the default

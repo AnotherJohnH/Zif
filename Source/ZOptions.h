@@ -25,7 +25,7 @@
 
 #include "STB/ConsoleApp.h"
 
-//!
+//! Command line options
 struct ZOptions
 {
    STB::Option<bool>        print{'p', "print", "Print output to \"print.log\""};

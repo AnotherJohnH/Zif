@@ -20,8 +20,6 @@
 // SOFTWARE.
 //------------------------------------------------------------------------------
 
-#include <cstdio>
-
 #include "ZMachine.h"
 #include "ZOptions.h"
 
@@ -35,6 +33,7 @@
 #define  COPYRIGHT_YEAR  "2015-2018"
 
 
+//! The Zif Launcher Application
 class ZifApp : public TRM::Launcher
 {
 private:

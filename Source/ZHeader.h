@@ -24,7 +24,7 @@
 #define ZHEADER_H
 
 #include <cassert>
-#include <stdint.h>
+#include <cstdint>
 
 #include "STB/Endian.h"
 

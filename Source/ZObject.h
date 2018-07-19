@@ -27,6 +27,7 @@
 
 #include "ZMemory.h"
 
+//! Z machine object directory
 class ZObject
 {
 private:

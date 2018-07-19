@@ -31,7 +31,7 @@
 
 #include "ZOptions.h"
 
-//! Console interface
+//! Interface to console implementation
 class ZConsole
 {
 public:
@@ -75,6 +75,7 @@ public:
       }
    }
 
+   //! Initialise
    void init(ZOptions& options, uint8_t version)
    {
       if(options.input != nullptr)
@@ -129,8 +130,13 @@ public:
       // clang-format on
    }
 
-   void getCursorPos(unsigned& line, unsigned& col) { curses.getyx(line, col); }
+   //! Get current position of cursor
+   void getCursorPos(unsigned& line, unsigned& col)
+   {
+       curses.getyx(line, col);
+   }
 
+   //! Clear the console
    void clear() { curses.clear(); }
 
    //! Select the current font
@@ -158,7 +164,7 @@ public:
          curses.attron(attr);
    }
 
-   //! Set colours
+   //! Set foreground and background colours
    void setColours(signed fg, signed bg)
    {
       if(!screen_enable) return;
@@ -246,6 +252,7 @@ public:
       }
    }
 
+   //! Wait for any key press
    void waitForKey()
    {
       if(only_white_space) return;
@@ -257,9 +264,6 @@ public:
       scroll           = 0;
       only_white_space = true;
    }
-
-protected:
-   TRM::Curses curses;
 
 private:
    bool openInputFile(const char* filename_);
@@ -301,14 +305,15 @@ private:
    static const unsigned COL_DEFAULT  = 9;
    static const unsigned COL_EXT_BASE = 0x100;
 
-   unsigned num_fonts_avail{1};
-   bool     colours_avail{true};
-   unsigned scroll{0};
-   bool     only_white_space{true};
-   bool     screen_enable{true};
-   bool     extended_colours{false};
-   unsigned fg_col{COL_DEFAULT};
-   unsigned bg_col{COL_DEFAULT};
+   TRM::Curses curses;
+   unsigned    num_fonts_avail{1};
+   bool        colours_avail{true};
+   unsigned    scroll{0};
+   bool        only_white_space{true};
+   bool        screen_enable{true};
+   bool        extended_colours{false};
+   unsigned    fg_col{COL_DEFAULT};
+   unsigned    bg_col{COL_DEFAULT};
 };
 
 #endif

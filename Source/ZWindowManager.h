@@ -27,7 +27,7 @@
 #include "ZOptions.h"
 #include "ZStream.h"
 
-//!
+//! Console window manager
 class ZWindowManager
 {
 private:

@@ -23,8 +23,11 @@
 #ifndef Z_PARSER_H
 #define Z_PARSER_H
 
+#include <cstring>
+
 #include "ZText.h"
 
+//! Translator of input commands into tokens
 class ZParser
 {
 private:
@@ -37,13 +40,12 @@ private:
       static const unsigned MAX_ZWORD = 3;
 
       uint8_t  max_len;
-      uint8_t  len;
+      uint8_t  len{0};
       uint16_t word[MAX_ZWORD];
 
    public:
       ZWord(uint8_t version)
          : max_len(version < 4 ? 6 : 9)
-         , len(0)
       {
          for(unsigned i = 0; i < size(); i++)
          {
@@ -137,10 +139,10 @@ private:
 public:
    void init(unsigned version_) { version = version_; }
 
-   void tokenise(ZMemory& memory, uint32_t out, uint32_t text, uint32_t dict, bool partial)
+   //! Translate input command into list of tokens in memory
+   void tokenise(ZMemory& memory, uint32_t out, uint32_t in, uint32_t dict, bool partial)
    {
-      unsigned max_word_len = version <= 4 ? 6 : 9;
-
+      uint8_t  max_word_len = version <= 4 ? 6 : 9;
       uint8_t  num_sep      = memory[dict];
       uint8_t  entry_length = memory[dict + 1 + num_sep];
       uint16_t num_entry    = memory.readWord(dict + 1 + num_sep + 1);
@@ -149,13 +151,13 @@ public:
       unsigned max_num_word = memory[out];
       uint8_t  num_word     = 0;
 
-      unsigned word_len = 0;
+      uint8_t  word_len = 0;
       uint8_t  word[9 + 1];
       uint8_t  start = 0;
 
       for(unsigned i = 0; i < 256; i++)
       {
-         uint8_t ch = memory[text + i];
+         uint8_t ch = memory[in + i];
 
          // Check for default seperator and terminator
          bool is_sep = (ch == ' ') || (ch == '\0');
