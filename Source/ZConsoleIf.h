@@ -46,6 +46,11 @@ public:
       READ_TIMEOUT
    };
 
+   static const unsigned ATTR_REVERSE = 1 << 0;
+   static const unsigned ATTR_BOLD    = 1 << 1;
+   static const unsigned ATTR_ITALIC  = 1 << 2;
+   static const unsigned ATTR_FIXED   = 1 << 3;
+
    void setExtendedColours(bool state)
    {
       extended_colours = state;

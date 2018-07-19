@@ -32,7 +32,7 @@
 #include "ZConsoleIf.h"
 #include "ZOptions.h"
 
-//! Interface to console implementation
+//! Console implementation
 class ZConsole : public ZConsoleIf
 {
 public:
@@ -140,7 +140,14 @@ public:
       if(attr == 0)
          curses.attrset(0);
       else
-         curses.attron(attr);
+      {
+         unsigned local_attr = 0;
+         if(attr & ATTR_REVERSE) local_attr |= TRM::A_REVERSE;
+         if(attr & ATTR_BOLD)    local_attr |= TRM::A_BOLD;
+         if(attr & ATTR_ITALIC)  local_attr |= TRM::A_ITALIC;
+         if(attr & ATTR_FIXED)   local_attr |= TRM::A_FIXED;
+         curses.attron(local_attr);
+      }
    }
 
    //! Set foreground and background colours

@@ -592,13 +592,7 @@ private:
    void opV_set_text_style()
    {
       stream.flush();
-
-      unsigned attr = 0;
-      if(uarg[0] & (1 << 0)) attr |= TRM::A_REVERSE;
-      if(uarg[0] & (1 << 1)) attr |= TRM::A_BOLD;
-      if(uarg[0] & (1 << 2)) attr |= TRM::A_ITALIC;
-      if(uarg[0] & (1 << 3)) attr |= TRM::A_FIXED;
-      stream.setAttributes(attr);
+      stream.setAttributes(uarg[0]);
    }
 
    void opV_buffer_mode()
