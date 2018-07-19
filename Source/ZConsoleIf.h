@@ -23,6 +23,8 @@
 #ifndef Z_CONSOLE_IF_H
 #define Z_CONSOLE_IF_H
 
+#include <cstdint>
+
 //! Console interface 
 class ZConsoleIf
 {
