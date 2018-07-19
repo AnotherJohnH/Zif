@@ -97,7 +97,7 @@ public:
       memory.resize(memory_limit);
    }
 
-   //! Reset the dynamic state to the initial conditions
+   //! Reset the dynamic state to the initial conditions.
    //  This includes loading the body of the game file
    bool reset(const char* filename, uint32_t pc_, uint16_t header_checksum)
    {
@@ -110,8 +110,6 @@ public:
       frame_ptr = 0;
 
       stack.clear();
-
-      memory.clear(game_end, memory_limit);
 
       PLT::File file(filename, "r");
       if(!file.isOpen())
@@ -127,8 +125,9 @@ public:
          return false;
       }
 
-      uint16_t calculated_checksum = memory.checksum(game_start, game_end);
-      checksum_ok = calculated_checksum == header_checksum;
+      checksum_ok = memory.checksum(game_start, game_end) == header_checksum;
+
+      memory.zero(game_end, memory_limit);
 
       return true;
    }

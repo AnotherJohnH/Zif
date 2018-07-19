@@ -691,7 +691,7 @@ private:
 
       if(to == 0)
       {
-         memory.clear(from, from + size);
+         memory.zero(from, from + size);
       }
       else if((size < 0) || (from > to))
       {

@@ -35,26 +35,28 @@ class ZMemory
 private:
    static const uint32_t MAX_SIZE{512 * 1024};
 
-   uint32_t limit{MAX_SIZE};
+   uint32_t limit{0};
    uint8_t  data[MAX_SIZE];
 
 public:
-   ZMemory()
-   {
-      clear(0, MAX_SIZE);
-   }
+   ZMemory() = default;
 
    //! Set memory size limit (bytes)
    void resize(uint32_t limit_)
    {
-      assert(limit_ <= MAX_SIZE);
+      assert((limit_ > limit) && (limit_ <= MAX_SIZE));
+
+      uint32_t prev_limit = limit;
       limit = limit_;
+
+      zero(prev_limit, limit);
    }
 
    //! Get constant reference to a memory byte
    const uint8_t& operator[](uint32_t addr) const
    {
       assert(addr < limit);
+
       return data[addr];
    }
 
@@ -62,6 +64,7 @@ public:
    uint8_t& operator[](uint32_t addr)
    {
       assert(addr < limit);
+
       return data[addr];
    }
 
@@ -70,20 +73,26 @@ public:
    //! Read 16-bit word
    uint16_t readWord(uint32_t addr) const
    {
-      uint16_t msb = operator[](addr);
-      return (msb << 8) | operator[](addr + 1);
+      assert(addr < (limit - 1));
+
+      uint16_t msb = data[addr];
+      return (msb << 8) | data[addr + 1];
    }
 
    //! Write 16-bit word
    void writeWord(uint32_t addr, uint16_t word)
    {
-      operator[](addr)     = word >> 8;
-      operator[](addr + 1) = word & 0xFF;
+      assert(addr < (limit - 1));
+
+      data[addr]     = word >> 8;
+      data[addr + 1] = word & 0xFF;
    }
 
    //! Compute checksum for a block of memory
    uint16_t checksum(uint32_t start, uint32_t end)
    {
+      assert((start < limit) && (end <= limit));
+
       uint16_t checksum = 0;
 
       for(uint32_t addr = start; addr < end; ++addr)
@@ -105,13 +114,20 @@ public:
    //! Load a block of memory from an open file stream
    bool load(PLT::File& file, uint32_t start, uint32_t end)
    {
-      assert((start < MAX_SIZE) && (end <= MAX_SIZE));
+      assert(start < end);
+
+      if (end > limit)
+      {
+         resize(end);
+      }
+
+      assert((start < limit) && (end <= limit));
 
       return file.read(&data[start], end - start);
    }
 
-   //! Clear a block of memory
-   void clear(uint32_t start, uint32_t end)
+   //! Zero a block of memory
+   void zero(uint32_t start, uint32_t end)
    {
       assert((start < limit) && (end <= limit));
 
@@ -124,18 +140,22 @@ public:
    //! Copy a block of memory (copy lowest address first)
    void copyForward(uint32_t from, uint32_t to, uint32_t size)
    {
+      assert(((from + size) <= limit) && ((to + size) <= limit));
+
       for(uint32_t i = 0; i < size; i++)
       {
-         operator[](to + i) = operator[](from + i);
+         data[to + i] = data[from + i];
       }
    }
 
    //! Copy a block of memory (copy highest address first)
    void copyBackward(uint32_t from, uint32_t to, uint32_t size)
    {
+      assert(((from + size) <= limit) && ((to + size) <= limit));
+
       for(uint32_t i = size; i > 0; i--)
       {
-         operator[](to + i - 1) = operator[](from + i - 1);
+         data[to + i - 1] = data[from + i - 1];
       }
    }
 };
