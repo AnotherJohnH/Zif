@@ -19,5 +19,5 @@ exe = env.Program(binary, source)
 Depends(exe, lib)
 
 env.Tar(app+'_'+env['target']+'_'+env['machine']+'_'+version+'.tgz',
-        [exe, env['platform_files'], 'LICENSE', 'zif.cfg', 'Games'])
+        [exe, env['platform_files'], 'LICENSE', 'zif.cfg', 'TermConfig.xml', 'Games'])
 
