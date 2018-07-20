@@ -194,6 +194,7 @@ public:
          else if(ch == 0x7F)
          {
             ch = '\b';
+            break;
          }
          else if(ch < 0x7F)
          {
