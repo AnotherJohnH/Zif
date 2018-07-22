@@ -1,6 +1,5 @@
 
 source  = ['Source/zif.cpp',
-           'Source/ZLog.cpp',
            'Source/ZConsole.cpp',
            'Source/ZStream.cpp']
 

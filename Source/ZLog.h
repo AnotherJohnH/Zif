@@ -23,25 +23,43 @@
 #ifndef ZLOG_H
 #define ZLOG_H
 
+#include <cstdarg>
+
+#include "PLT/File.h"
+
 //! Log file
-class ZLog
+class ZLog : public PLT::File
 {
 public:
    ZLog(const char* name_)
-      : name(name_)
+      : PLT::File(nullptr, name_, "log")
    {
    }
 
-   ~ZLog();
+   void write(char ch)
+   {
+      ensureOpen();
 
-   void write(char ch);
-   void printf(const char* format, ...);
+      PLT::File::write(&ch, 1);
+   }
+
+   void printf(const char* format, ...)
+   {
+      ensureOpen();
+
+      va_list ap;
+      va_start(ap, format);
+      PLT::File::vprintf(format, ap);
+      va_end(ap);
+
+      PLT::File::flush();
+   }
 
 private:
-   const char* name;
-   void*       handle{nullptr};
-
-   void ensureOpen();
+   void ensureOpen()
+   {
+      if (!isOpen()) openForWrite();
+   }
 };
 
 #endif

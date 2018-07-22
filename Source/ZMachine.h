@@ -41,7 +41,7 @@
 #define TRACE if (1) ; else trace.printf
 
 
-static const char* DEFAULT_SAVE_FILE = "zif.sav";
+static const char* DEFAULT_SAVE_FILE = "zif";
 
 
 //! Z machine implementation
@@ -254,23 +254,23 @@ private:
    void op0_nop()          {}
 
    //! v1 save ?(label)
-   void op0_save_v1()      { branch(ZState::save(DEFAULT_SAVE_FILE)); }
+   void op0_save_v1()      { branch(ZState::save(nullptr, DEFAULT_SAVE_FILE)); }
 
    //! v4 save -> (result)
    void op0_save_v4()
    {
       uint8_t ret = fetchByte();
       varWrite(ret, 2);
-      varWrite(ret, ZState::save(DEFAULT_SAVE_FILE) ? 1 : 0);
+      varWrite(ret, ZState::save(nullptr, DEFAULT_SAVE_FILE) ? 1 : 0);
    }
 
    //! v1 restore ?(label)
-   void op0_restore_v1()   { branch(ZState::restore(DEFAULT_SAVE_FILE)); }
+   void op0_restore_v1()   { branch(ZState::restore(nullptr, DEFAULT_SAVE_FILE)); }
 
    //! v4 restore -> (result)
    void op0_restore_v4()
    {
-      if(!ZState::restore(DEFAULT_SAVE_FILE)) varWrite(fetchByte(), 0);
+      if(!ZState::restore(nullptr, DEFAULT_SAVE_FILE)) varWrite(fetchByte(), 0);
    }
 
    //! restart
@@ -726,7 +726,7 @@ private:
 
       uint8_t ret = fetchByte();
       varWrite(ret, 2);
-      varWrite(ret, ZState::save(DEFAULT_SAVE_FILE) ? 1 : 0);
+      varWrite(ret, ZState::save(nullptr, DEFAULT_SAVE_FILE) ? 1 : 0);
    }
 
    void opE_restore_table()
@@ -739,7 +739,7 @@ private:
       (void)bytes;
       (void)name; // TODO use supplied parameters
 
-      if(!ZState::restore(DEFAULT_SAVE_FILE)) varWrite(fetchByte(), 0);
+      if(!ZState::restore(nullptr, DEFAULT_SAVE_FILE)) varWrite(fetchByte(), 0);
    }
 
    void opE_log_shift()
@@ -761,13 +761,13 @@ private:
    void opE_save_undo()
    {
       char filename[12];
-      sprintf(filename, "undo_%x.sav", undo_index);
+      sprintf(filename, "undo_%x", undo_index);
 
       undo_index = (undo_index + 1) % options.undo;
 
       uint8_t ret = fetchByte();
       varWrite(ret, 2);
-      varWrite(ret, ZState::save(filename) ? 1 : 0);
+      varWrite(ret, ZState::save(nullptr, filename) ? 1 : 0);
    }
 
    void opE_restore_undo()
@@ -776,9 +776,9 @@ private:
                                    : undo_index - 1;
 
       char filename[12];
-      sprintf(filename, "undo_%x.sav", undo_index);
+      sprintf(filename, "undo_%x", undo_index);
 
-      if(!ZState::restore(filename)) varWrite(fetchByte(), 0);
+      if(!ZState::restore(nullptr, filename)) varWrite(fetchByte(), 0);
    }
 
    void opE_print_unicode() { TODO_WARN("print_unicode"); }
@@ -1186,9 +1186,9 @@ private:
 
    bool loadHeader()
    {
-      PLT::File file(filename, "r");
+      PLT::File file(nullptr, filename);
 
-      if(!file.isOpen())
+      if(!file.openForRead())
       {
          error("Failed to open story z-file \"%s\"", filename);
          return false;

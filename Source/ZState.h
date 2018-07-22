@@ -111,8 +111,8 @@ public:
 
       stack.clear();
 
-      PLT::File file(filename, "r");
-      if(!file.isOpen())
+      PLT::File file(nullptr, filename);
+      if(!file.openForRead())
       {
          return false;
       }
@@ -133,14 +133,14 @@ public:
    }
 
    //! Save the dynamic state to a file
-   bool save(const char* filename)
+   bool save(const char* path, const char* filename)
    {
       bool ok = false;
 
       pushContext();
 
-      PLT::File file(filename, "w");
-      if(file.isOpen())
+      PLT::File file(path, filename, "sav");
+      if(file.openForWrite())
       {
          if(memory.save(file, game_start, memory_limit))
          {
@@ -154,12 +154,12 @@ public:
    }
 
    //! Restore the dynamic state from a save file
-   bool restore(const char* filename)
+   bool restore(const char* path, const char* filename)
    {
       bool ok = false;
 
-      PLT::File file(filename, "r");
-      if(file.isOpen())
+      PLT::File file(path, filename, "sav");
+      if(file.openForRead())
       {
          if(memory.load(file, game_start, memory_limit))
          {
