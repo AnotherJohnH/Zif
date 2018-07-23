@@ -24,9 +24,7 @@
 
 #include "ZConsole.h"
 
-
 static FILE* input_fp = nullptr;
-
 
 bool ZConsole::openInputFile(const char* filename)
 {
@@ -36,7 +34,11 @@ bool ZConsole::openInputFile(const char* filename)
 
 bool ZConsole::isInputFileOpen() { return input_fp != nullptr; }
 
-void ZConsole::closeInputFile() { fclose(input_fp); }
+void ZConsole::closeInputFile()
+{
+   fclose(input_fp);
+   input_fp = nullptr;
+}
 
 
 int ZConsole::getInput(unsigned timeout_100ms)
@@ -45,11 +47,13 @@ int ZConsole::getInput(unsigned timeout_100ms)
    {
       if(feof(input_fp))
       {
-         input_fp = nullptr;
+         closeInputFile();
       }
       else
       {
-         return fgetc(input_fp);
+         char ch;
+         ch = fgetc(input_fp);
+         return ch;
       }
    }
 
