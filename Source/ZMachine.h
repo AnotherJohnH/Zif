@@ -25,7 +25,7 @@
 
 #include <cctype>
 #include <cstdint>
-#include <cstlib>
+#include <cstdlib>
 #include <cstring>
 
 #include "ZConfig.h"
