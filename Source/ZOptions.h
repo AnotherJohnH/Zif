@@ -23,7 +23,7 @@
 #ifndef Z_OPTIONS_H
 #define Z_OPTIONS_H
 
-#include "STB/ConsoleApp.h"
+#include "STB/Option.h"
 
 //! Command line options
 struct ZOptions
