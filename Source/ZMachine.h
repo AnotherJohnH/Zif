@@ -23,9 +23,10 @@
 #ifndef ZMACHINE_H
 #define ZMACHINE_H
 
-#include <cstring>
-#include <cstdint>
 #include <cctype>
+#include <cstdint>
+#include <cstlib>
+#include <cstring>
 
 #include "ZConfig.h"
 #include "ZHeader.h"
@@ -149,10 +150,10 @@ private:
    }
 
    //! Call a sub-routine
-   void subCall(uint16_t         call_type,
-                uint16_t         packed_addr,
-                uint16_t         argc,
-                const uint16_t*  argv)
+   void subCall(uint16_t        call_type,
+                uint16_t        packed_addr,
+                uint16_t        argc,
+                const uint16_t* argv)
    {
       ZState::call(call_type,
                    header->unpackAddr(packed_addr, /* routine */ true));
@@ -216,31 +217,25 @@ private:
       return true;
    }
 
-   void showStatus()
-   {
-      TODO_WARN("show_status");
-   }
+   void showStatus() { TODO_WARN("show_status"); }
 
-   void ILLEGAL()     { ZState::error(ERR_ILLEGAL_OP); }
+   void ILLEGAL() { ZState::error(ERR_ILLEGAL_OP); }
 
-   void TODO_ERROR()  { ZState::error(ERR_UNIMPLEMENTED_OP); }
+   void TODO_ERROR() { ZState::error(ERR_UNIMPLEMENTED_OP); }
 
-   void TODO_WARN(const char* op)
-   {
-      warning(op);
-   }
+   void TODO_WARN(const char* op) { warning(op); }
 
    //============================================================================
    // Zero operand instructions
 
    //! rtrue - Return true (i.e. 1) from the current routine
-   void op0_rtrue()        { subRet(1); }
+   void op0_rtrue() { subRet(1); }
 
    //! rfalse - Return false (i.e. 0) from the current routine
-   void op0_rfalse()       { subRet(0); }
+   void op0_rfalse() { subRet(0); }
 
    //! print - Print the literal Z-encoded string
-   void op0_print()        { ZState::jump(text.print(ZState::getPC())); }
+   void op0_print() { ZState::jump(text.print(ZState::getPC())); }
 
    //! print_ret - Print the literal Z-encoded string, a new-line then return true
    void op0_print_ret()
@@ -251,10 +246,10 @@ private:
    }
 
    //! nop - Probably the offiical "nop"
-   void op0_nop()          {}
+   void op0_nop() {}
 
    //! v1 save ?(label)
-   void op0_save_v1()      { branch(ZState::save(nullptr, DEFAULT_SAVE_FILE)); }
+   void op0_save_v1() { branch(ZState::save(nullptr, DEFAULT_SAVE_FILE)); }
 
    //! v4 save -> (result)
    void op0_save_v4()
@@ -265,7 +260,7 @@ private:
    }
 
    //! v1 restore ?(label)
-   void op0_restore_v1()   { branch(ZState::restore(nullptr, DEFAULT_SAVE_FILE)); }
+   void op0_restore_v1() { branch(ZState::restore(nullptr, DEFAULT_SAVE_FILE)); }
 
    //! v4 restore -> (result)
    void op0_restore_v4()
@@ -274,31 +269,31 @@ private:
    }
 
    //! restart
-   void op0_restart()      { start(); }
+   void op0_restart() { start(); }
 
    //! ret_popped
-   void op0_ret_popped()   { subRet(ZState::pop()); }
+   void op0_ret_popped() { subRet(ZState::pop()); }
 
    //! pop
-   void op0_pop()          { ZState::pop(); }
+   void op0_pop() { ZState::pop(); }
 
    //! catch -> (result)
-   void op0_catch()        { varWrite(fetchByte(), ZState::getFramePtr()); }
+   void op0_catch() { varWrite(fetchByte(), ZState::getFramePtr()); }
 
    //! quit
-   void op0_quit()         { ZState::quit(); }
+   void op0_quit() { ZState::quit(); }
 
    //! new_line
-   void op0_new_line()     { stream.writeChar('\n'); }
+   void op0_new_line() { stream.writeChar('\n'); }
 
    //! show_status
-   void op0_show_status()  { showStatus(); }
+   void op0_show_status() { showStatus(); }
 
    //! verify ?(label)
-   void op0_verify()       { branch(isChecksumOk()); }
+   void op0_verify() { branch(isChecksumOk()); }
 
    //! piracy ?(label)
-   void op0_piracy()       { branch(true); }
+   void op0_piracy() { branch(true); }
 
    //============================================================================
    // One operand instructions
@@ -462,12 +457,12 @@ private:
       uint16_t timeout = TIMER && (num_arg >= 3) ? uarg[2] : 0;
       uint16_t routine = TIMER && (num_arg >= 4) ? uarg[3] : 0;
 
-      if (SHOW_STATUS) showStatus();
+      if(SHOW_STATUS) showStatus();
 
-      uint8_t  max = memory[buffer++] - 1;
+      uint8_t  max   = memory[buffer++] - 1;
       uint16_t start = buffer;
 
-      for(uint8_t len=0; len<max; len++)
+      for(uint8_t len = 0; len < max; len++)
       {
          uint16_t ch;
 
@@ -582,7 +577,7 @@ private:
 
    void opV_split_window()   { window_mgr.split(uarg[0]); }
    void opV_set_window()     { window_mgr.select(uarg[0]); }
-   void opV_call_vs2()       { subCall(0, uarg[0], num_arg-1, &uarg[1]); }
+   void opV_call_vs2()       { subCall(0, uarg[0], num_arg - 1, &uarg[1]); }
    void opV_erase_window()   { window_mgr.eraseWindow(uarg[0]); }
    void opV_erase_line_v4()  { TODO_ERROR(); }
    void opV_erase_line_v6()  { TODO_ERROR(); }
@@ -607,8 +602,8 @@ private:
 
       if(number == 3)
       {
-         uint32_t  table  = num_arg >= 2 ? uarg[1] : 0;
-         int16_t   width  = num_arg == 3 ? sarg[2] : 0;
+         uint32_t table = num_arg >= 2 ? uarg[1] : 0;
+         int16_t  width = num_arg == 3 ? sarg[2] : 0;
 
          stream.enableMemoryStream(table, width);
       }
@@ -1019,10 +1014,7 @@ private:
 
    //============================================================================
 
-   void clearOperands()
-   {
-      num_arg = 0;
-   }
+   void clearOperands() { num_arg = 0; }
 
    void fetchOperand(OperandType type)
    {
@@ -1073,10 +1065,7 @@ private:
    }
 
 
-   void doOp0(uint8_t op_code)
-   {
-      (this->*op0[op_code & 0xF])();
-   }
+   void doOp0(uint8_t op_code) { (this->*op0[op_code & 0xF])(); }
 
    void doOp1(uint8_t op_code)
    {
