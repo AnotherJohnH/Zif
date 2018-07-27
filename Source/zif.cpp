@@ -45,7 +45,7 @@ private:
       ZConsole console(term, options);
       ZMachine machine(console, options);
 
-      return machine.play(story);
+      return machine.play(story, options.restore) ? 0 : 1;
    }
 
 public:

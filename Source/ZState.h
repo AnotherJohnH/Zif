@@ -133,13 +133,13 @@ public:
    }
 
    //! Save the dynamic state to a file
-   bool save(const char* path, const char* filename)
+   bool save(const char* path, const char* name)
    {
       bool ok = false;
 
       pushContext();
 
-      PLT::File file(path, filename, "sav");
+      PLT::File file(path, name, "sav");
       if(file.openForWrite())
       {
          if(memory.save(file, game_start, memory_limit))
@@ -154,11 +154,11 @@ public:
    }
 
    //! Restore the dynamic state from a save file
-   bool restore(const char* path, const char* filename)
+   bool restore(const char* path, const char* name)
    {
       bool ok = false;
 
-      PLT::File file(path, filename, "sav");
+      PLT::File file(path, name, "sav");
       if(file.openForRead())
       {
          if(memory.load(file, game_start, memory_limit))

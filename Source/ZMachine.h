@@ -42,9 +42,6 @@
 #define TRACE if (1) ; else trace.printf
 
 
-static const char* DEFAULT_SAVE_FILE = "zif";
-
-
 //! Z machine implementation
 class ZMachine : public ZState
 {
@@ -71,6 +68,7 @@ private:
    ZParser        parser;
    ZHeader*       header{};
    const char*    filename{};
+   const char*    story{};
    uint32_t       inst_addr;
    unsigned       num_arg;
    union
@@ -249,27 +247,27 @@ private:
    void op0_nop() {}
 
    //! v1 save ?(label)
-   void op0_save_v1() { branch(ZState::save(nullptr, DEFAULT_SAVE_FILE)); }
+   void op0_save_v1() { branch(ZState::save(options.save, story)); }
 
    //! v4 save -> (result)
    void op0_save_v4()
    {
       uint8_t ret = fetchByte();
       varWrite(ret, 2);
-      varWrite(ret, ZState::save(nullptr, DEFAULT_SAVE_FILE) ? 1 : 0);
+      varWrite(ret, ZState::save(options.save, story) ? 1 : 0);
    }
 
    //! v1 restore ?(label)
-   void op0_restore_v1() { branch(ZState::restore(nullptr, DEFAULT_SAVE_FILE)); }
+   void op0_restore_v1() { branch(ZState::restore(options.save, story)); }
 
    //! v4 restore -> (result)
    void op0_restore_v4()
    {
-      if(!ZState::restore(nullptr, DEFAULT_SAVE_FILE)) varWrite(fetchByte(), 0);
+      if(!ZState::restore(options.save, story)) varWrite(fetchByte(), 0);
    }
 
    //! restart
-   void op0_restart() { start(); }
+   void op0_restart() { start(/* restore_save */false); }
 
    //! ret_popped
    void op0_ret_popped() { subRet(ZState::pop()); }
@@ -721,7 +719,7 @@ private:
 
       uint8_t ret = fetchByte();
       varWrite(ret, 2);
-      varWrite(ret, ZState::save(nullptr, DEFAULT_SAVE_FILE) ? 1 : 0);
+      varWrite(ret, ZState::save(options.save, story) ? 1 : 0);
    }
 
    void opE_restore_table()
@@ -734,7 +732,7 @@ private:
       (void)bytes;
       (void)name; // TODO use supplied parameters
 
-      if(!ZState::restore(nullptr, DEFAULT_SAVE_FILE)) varWrite(fetchByte(), 0);
+      if(!ZState::restore(options.save, story)) varWrite(fetchByte(), 0);
    }
 
    void opE_log_shift()
@@ -755,14 +753,14 @@ private:
 
    void opE_save_undo()
    {
-      char filename[12];
-      sprintf(filename, "undo_%x", undo_index);
+      char name[12];
+      sprintf(name, "undo_%x", undo_index);
 
       undo_index = (undo_index + 1) % options.undo;
 
       uint8_t ret = fetchByte();
       varWrite(ret, 2);
-      varWrite(ret, ZState::save(nullptr, filename) ? 1 : 0);
+      varWrite(ret, ZState::save(options.save, story) ? 1 : 0);
    }
 
    void opE_restore_undo()
@@ -770,10 +768,10 @@ private:
       undo_index = undo_index == 0 ? options.undo - 1
                                    : undo_index - 1;
 
-      char filename[12];
-      sprintf(filename, "undo_%x", undo_index);
+      char name[12];
+      sprintf(name, "undo_%x", undo_index);
 
-      if(!ZState::restore(nullptr, filename)) varWrite(fetchByte(), 0);
+      if(!ZState::restore(options.save, story)) varWrite(fetchByte(), 0);
    }
 
    void opE_print_unicode() { TODO_WARN("print_unicode"); }
@@ -1155,7 +1153,7 @@ private:
 
 
    //! Reset machine state to intial conditions
-   void start()
+   void start(bool restore_save)
    {
       console.clear();
 
@@ -1170,6 +1168,11 @@ private:
       if(!isChecksumOk())
       {
          warning("checksum fail");
+      }
+
+      if (restore_save)
+      {
+         ZState::restore(options.save, story);
       }
    }
 
@@ -1253,12 +1256,23 @@ public:
    {
    }
 
-   //! Play a Z file
-   int play(const char* filename_)
+   //! Play a Z file.
+   //! \return true if there were no errors
+   bool play(const char* filename_, bool restore_save = false)
    {
       filename = filename_;
 
-      if(!loadHeader()) return 1;
+      story = strrchr(filename, '/');
+      if (story == nullptr)
+      {
+         story = filename;
+      }
+      else
+      {
+         story = story + 1;
+      }
+
+      if(!loadHeader()) return false;
 
       ZConfig config;
       config.interp_major_version = 1;
@@ -1282,7 +1296,7 @@ public:
 
       info("Version : z%d\n", header->version);
 
-      start();
+      start(restore_save);
 
       if(options.trace)
       {
@@ -1312,10 +1326,10 @@ public:
                memory[inst_addr],
                memory[inst_addr+1],
                ZErrorString(exit_code));
-         return 1;
+         return false;
       }
 
-      return 0;
+      return true;
    }
 };
 
