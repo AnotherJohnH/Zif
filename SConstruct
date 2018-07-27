@@ -8,7 +8,7 @@ app     = 'Zif'
 version = '0.5.0'
 
 # Get a build environment
-env,lib = SConscript('Platform/build.scons', ['app', 'version'])
+env,libs = SConscript('Platform/build.scons', ['app', 'version'])
 env.Append(CCFLAGS = ['-DTERMINAL_EMULATOR'])
 
 # Project specific build config
@@ -20,7 +20,7 @@ else:
 
 # Builders
 exe = env.Program(binary, source)
-Depends(exe, lib)
+Depends(exe, libs)
 
 env.Tar(app+'_'+env['target']+'_'+env['machine']+'_'+version+'.tgz',
         [exe, env['platform_files'], 'LICENSE', 'zif.cfg', 'TermConfig.xml', 'Games'])
