@@ -146,24 +146,32 @@ public:
       curses.attrset(curses_attr);
    }
 
-   //! Set foreground and background colours
-   virtual void setColours(signed fg, signed bg) override
+   //! Set foreground colour
+   virtual void setForegroundColour(Colour colour) override
    {
       if(!screen_enable) return;
 
-      convertCodeToColour(fg_col, fg);
+      bool     ext;
+      unsigned curses_colour = convertColourToCurses(colour, ext);
 
-      if(fg_col >= COL_EXT_BASE)
-         curses.extfgcolour(fg_col & 0xFF);
+      if (ext)
+         curses.extfgcolour(curses_colour);
       else
-         curses.fgcolour(fg_col);
+         curses.fgcolour(curses_colour);
+   }
 
-      convertCodeToColour(bg_col, bg);
+   //! Set background colour
+   virtual void setBackgroundColour(Colour colour) override
+   {
+      if(!screen_enable) return;
 
-      if(bg_col >= COL_EXT_BASE)
-         curses.extbgcolour(bg_col & 0xFF);
+      bool     ext;
+      unsigned curses_colour = convertColourToCurses(colour, ext);
+
+      if (ext)
+         curses.extbgcolour(curses_colour);
       else
-         curses.bgcolour(bg_col);
+         curses.bgcolour(curses_colour);
    }
 
    //! Move cursor
@@ -248,32 +256,25 @@ private:
 
    int getInput(unsigned timeout_ms);
 
-   // Convert colour code to a curses colour index
-   void convertCodeToColour(unsigned& current, signed code)
+   //! Convert colour code to a curses colour index
+   unsigned convertColourToCurses(Colour colour, bool& ext)
    {
-      if(code == 0)
+      switch(colour)
       {
-         // no change
-      }
-      else if(code == 1)
-      {
-         current = COL_DEFAULT;
-      }
-      else if((code >= 2) && (code <= 9))
-      {
-         // black, red, green, yellow, blue, magenta, cyan, white
-         current = code - 2;
-      }
-      else if(extended_colours)
-      {
-         switch(code)
-         {
-         case -1: break;                               // TODO colour of pixel under cursor
-         case 10: current = COL_EXT_BASE + 250; break; // ANSI 256-colour mode light grey
-         case 11: current = COL_EXT_BASE + 244; break; // ANSI 256-colour mode medium grey
-         case 12: current = COL_EXT_BASE + 237; break; // ANSI 256-colour mode dark grey
-         default: break;
-         }
+      case BLACK:       ext = false; return 0;
+      case RED:         ext = false; return 1;
+      case GREEN:       ext = false; return 2;
+      case YELLOW:      ext = false; return 3;
+      case BLUE:        ext = false; return 4;
+      case MAGENTA:     ext = false; return 5;
+      case CYAN:        ext = false; return 6;
+      case WHITE:       ext = false; return 7;
+
+      case DEFAULT:     ext = false; return 9;
+
+      case LIGHT_GREY:  ext = true;  return 250;
+      case MEDIUM_GREY: ext = true;  return 244;
+      case DARK_GREY:   ext = true;  return 237;
       }
    }
 
@@ -287,8 +288,6 @@ private:
    unsigned    scroll{0};
    bool        only_white_space{true};
    bool        screen_enable{true};
-   unsigned    fg_col{COL_DEFAULT};
-   unsigned    bg_col{COL_DEFAULT};
 };
 
 #endif

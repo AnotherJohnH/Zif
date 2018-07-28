@@ -1272,8 +1272,7 @@ public:
 
       header->init(console, config);
 
-      console.setExtendedColours(header->version == 6);
-      stream.setPrinterEchoInput(header->version <= 5);
+      stream.init(header->version);
       text.init(header->version, header->abbr);
       parser.init(header->version);
       object.init(header->obj, header->version);

@@ -66,10 +66,11 @@ public:
       }
    }
 
-   //! 
-   void setPrinterEchoInput(bool state)
+   //! Configure stream for Z-code version
+   void init(uint8_t version)
    {
-      printer_echo_input = state;
+      console_extended_colours_enable = version == 6;
+      printer_echo_input              = version <= 5;
    }
 
    //! Select the current font
@@ -101,7 +102,17 @@ public:
    {
       flush();
 
-      console.setColours(fg, bg);
+      Console::Colour fg_col;
+      if (convertCodeToConsoleColour(fg, fg_col))
+      {
+         console.setForegroundColour(fg_col);
+      }
+
+      Console::Colour bg_col;
+      if (convertCodeToConsoleColour(bg, bg_col))
+      {
+         console.setBackgroundColour(bg_col);
+      }
    }
 
    //! Synchronise current col used for line breaking
@@ -340,11 +351,45 @@ private:
       printer.write(zscii);
    }
 
+   // Convert Z colour code to a console colour index
+   bool convertCodeToConsoleColour(signed code, Console::Colour& colour)
+   {
+      switch(code)
+      {
+      case 0: return false; // No change
+      case 1: colour = Console::DEFAULT; return true;
+      case 2: colour = Console::BLACK;   return true;
+      case 3: colour = Console::RED;     return true;
+      case 4: colour = Console::GREEN;   return true;
+      case 5: colour = Console::YELLOW;  return true;
+      case 6: colour = Console::BLUE;    return true;
+      case 7: colour = Console::MAGENTA; return true;
+      case 8: colour = Console::CYAN;    return true;
+      case 9: colour = Console::WHITE;   return true;
+      default: break;
+      }
+
+      if(console_extended_colours_enable)
+      {
+         switch(code)
+         {
+         case -1: return false; // TODO colour of pixel under cursor
+         case 10: colour = Console::LIGHT_GREY;  return true;
+         case 11: colour = Console::MEDIUM_GREY; return true;
+         case 12: colour = Console::DARK_GREY;   return true;
+         default: break;
+         }
+      }
+
+      return false;
+   }
+
    //! printf style write to output streams
    void vWritef(const char* format, va_list ap);
 
    // Console stream state
    bool     console_enable{true};
+   bool     console_extended_colours_enable{false};
    Console& console;
 
    // Buffer used for automatic line breaks

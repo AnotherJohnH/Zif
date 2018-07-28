@@ -48,17 +48,28 @@ public:
       READ_TIMEOUT
    };
 
+   enum Colour
+   {
+      BLACK,
+      RED,
+      GREEN,
+      YELLOW,
+      BLUE,
+      MAGENTA,
+      CYAN,
+      WHITE,
+      DEFAULT,
+      LIGHT_GREY,
+      MEDIUM_GREY,
+      DARK_GREY
+   };
+
    using FontStyle = uint8_t;
    static const FontStyle FONT_STYLE_NORMAL  = 0;
    static const FontStyle FONT_STYLE_REVERSE = 1 << 0;
    static const FontStyle FONT_STYLE_BOLD    = 1 << 1;
    static const FontStyle FONT_STYLE_ITALIC  = 1 << 2;
    static const FontStyle FONT_STYLE_FIXED   = 1 << 3;
-
-   void setExtendedColours(bool state)
-   {
-      extended_colours = state;
-   }
 
    //! Return console attribute
    virtual unsigned getAttr(Attr attr) const = 0;
@@ -72,8 +83,11 @@ public:
    //! Set font style
    virtual void setFontStyle(FontStyle style) = 0;
 
-   //! Set foreground and background colours
-   virtual void setColours(signed fg, signed bg) = 0;
+   //! Set background colour
+   virtual void setBackgroundColour(Colour colour) = 0;
+
+   //! Set foreground colours
+   virtual void setForegroundColour(Colour colour) = 0;
 
    //! Move the cursor
    virtual void moveCursor(unsigned line, unsigned col) = 0;
@@ -90,9 +104,6 @@ public:
 
    //! Write character
    virtual void write(uint8_t ch) = 0;
-
-protected:
-   bool extended_colours{false};
 };
 
 #endif
