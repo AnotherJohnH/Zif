@@ -28,37 +28,41 @@
 #include "PLT/File.h"
 
 //! Log file
-class Log : public PLT::File
+class Log
 {
 public:
    Log(const char* name_)
-      : PLT::File(nullptr, name_, "log")
+      : file(nullptr, name_, "log")
    {
    }
 
+   //! write a single character to the log
    void write(char ch)
    {
       ensureOpen();
 
-      PLT::File::write(&ch, 1);
+      file.write(&ch, 1);
    }
 
+   //! Formatted write to the log
    void printf(const char* format, ...)
    {
       ensureOpen();
 
       va_list ap;
       va_start(ap, format);
-      PLT::File::vprintf(format, ap);
+      file.vprintf(format, ap);
       va_end(ap);
 
-      PLT::File::flush();
+      file.flush();
    }
 
 private:
+   PLT::File file;
+
    void ensureOpen()
    {
-      if (!isOpen()) openForWrite();
+      if(!file.isOpen()) file.openForWrite();
    }
 };
 
