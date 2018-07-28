@@ -80,20 +80,20 @@ public:
       return console.setFont(font_idx);
    }
 
-   //! Set font style
-   void setFontStyle(unsigned style)
+   //! Set Z-code text style
+   void setFontStyle(unsigned text_style)
    {
       flush();
 
-      // Convert Z-code font style to a ConsoleIf font style. Might be a 1-1
+      // Convert Z-code text style to a ConsoleIf font style. Might be a 1-1
       // mapping of bits, but copying each bit is more robust
-      ConsoleIf::FontStyle style = 0;
-      if (uarg[0] & (1<<0)) style |= ConsoleIf::FONT_STYLE_REVERSE;
-      if (uarg[0] & (1<<1)) style |= ConsoleIf::FONT_STYLE_BOLD;
-      if (uarg[0] & (1<<2)) style |= ConsoleIf::FONT_STYLE_ITALIC;
-      if (uarg[0] & (1<<3)) style |= ConsoleIf::FONT_STYLE_FIXED;
+      ConsoleIf::FontStyle font_style = 0;
+      if (text_style & (1<<0)) font_style |= ConsoleIf::FONT_STYLE_REVERSE;
+      if (text_style & (1<<1)) font_style |= ConsoleIf::FONT_STYLE_BOLD;
+      if (text_style & (1<<2)) font_style |= ConsoleIf::FONT_STYLE_ITALIC;
+      if (text_style & (1<<3)) font_style |= ConsoleIf::FONT_STYLE_FIXED;
 
-      console.setFontStyle(style);
+      console.setFontStyle(font_style);
    }
 
    //! Set colours
