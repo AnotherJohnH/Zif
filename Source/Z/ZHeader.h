@@ -30,7 +30,7 @@
 #include "STB/Endian.h"
 
 #include "ZConfig.h"
-#include "ConsoleIf.h"
+#include "Console.h"
 
 //! Overlay for a Z story header
 struct ZHeader
@@ -183,7 +183,7 @@ struct ZHeader
    }
 
    //!
-   void init(ConsoleIf& console, ZConfig& config)
+   void init(Console& console, ZConfig& config)
    {
       if(version <= 3)
       {
@@ -193,14 +193,14 @@ struct ZHeader
       }
       else
       {
-         if(console.getAttr(ConsoleIf::BOLD))         flags1 |= 1 << 2;
-         if(console.getAttr(ConsoleIf::ITALIC))       flags1 |= 1 << 3;
-         if(console.getAttr(ConsoleIf::FIXED_FONT))   flags1 |= 1 << 4;
-         if(console.getAttr(ConsoleIf::READ_TIMEOUT)) flags1 |= 1 << 7;
+         if(console.getAttr(Console::BOLD))         flags1 |= 1 << 2;
+         if(console.getAttr(Console::ITALIC))       flags1 |= 1 << 3;
+         if(console.getAttr(Console::FIXED_FONT))   flags1 |= 1 << 4;
+         if(console.getAttr(Console::READ_TIMEOUT)) flags1 |= 1 << 7;
 
          if(version >= 5)
          {
-            if(console.getAttr(ConsoleIf::COLOURS)) flags1 |= 1 << 0;
+            if(console.getAttr(Console::COLOURS)) flags1 |= 1 << 0;
 
             if(version >= 6)
             {
@@ -211,7 +211,7 @@ struct ZHeader
       }
 
       // 8.1.5.1
-      if((version == 5) && !console.getAttr(ConsoleIf::GRAPHIC_FONT))
+      if((version == 5) && !console.getAttr(Console::GRAPHIC_FONT))
       {
          flags2 &= ~(1 << 3);
       }
@@ -229,11 +229,11 @@ struct ZHeader
          interpreter_version = 0;
       }
 
-      screen_lines = console.getAttr(ConsoleIf::LINES);
-      screen_cols  = console.getAttr(ConsoleIf::COLS);
+      screen_lines = console.getAttr(Console::LINES);
+      screen_cols  = console.getAttr(Console::COLS);
 
-      font_height = console.getAttr(ConsoleIf::FONT_HEIGHT);
-      font_width  = console.getAttr(ConsoleIf::FONT_WIDTH);
+      font_height = console.getAttr(Console::FONT_HEIGHT);
+      font_width  = console.getAttr(Console::FONT_WIDTH);
    }
 };
 

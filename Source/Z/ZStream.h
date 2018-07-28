@@ -25,7 +25,7 @@
 
 #include <cassert>
 
-#include "ConsoleIf.h"
+#include "Console.h"
 #include "Options.h"
 #include "Log.h"
 
@@ -43,7 +43,7 @@ public:
       ERROR
    };
 
-   ZStream(ConsoleIf& console_, Options& options_, ZMemory& memory_)
+   ZStream(Console& console_, Options& options_, ZMemory& memory_)
       : console(console_)
       , memory(memory_)
    {
@@ -85,13 +85,13 @@ public:
    {
       flush();
 
-      // Convert Z-code text style to a ConsoleIf font style. Might be a 1-1
+      // Convert Z-code text style to a Console font style. Might be a 1-1
       // mapping of bits, but copying each bit is more robust
-      ConsoleIf::FontStyle font_style = 0;
-      if (text_style & (1<<0)) font_style |= ConsoleIf::FONT_STYLE_REVERSE;
-      if (text_style & (1<<1)) font_style |= ConsoleIf::FONT_STYLE_BOLD;
-      if (text_style & (1<<2)) font_style |= ConsoleIf::FONT_STYLE_ITALIC;
-      if (text_style & (1<<3)) font_style |= ConsoleIf::FONT_STYLE_FIXED;
+      Console::FontStyle font_style = 0;
+      if (text_style & (1<<0)) font_style |= Console::FONT_STYLE_REVERSE;
+      if (text_style & (1<<1)) font_style |= Console::FONT_STYLE_BOLD;
+      if (text_style & (1<<2)) font_style |= Console::FONT_STYLE_ITALIC;
+      if (text_style & (1<<3)) font_style |= Console::FONT_STYLE_FIXED;
 
       console.setFontStyle(font_style);
    }
@@ -245,9 +245,9 @@ public:
       }
 
       // Identify message source
-      console.setFontStyle(ConsoleIf::FONT_STYLE_REVERSE);
+      console.setFontStyle(Console::FONT_STYLE_REVERSE);
       writeRaw("ZIF");
-      console.setFontStyle(ConsoleIf::FONT_STYLE_NORMAL);
+      console.setFontStyle(Console::FONT_STYLE_NORMAL);
 
       switch(level)
       {
@@ -305,7 +305,7 @@ private:
    {
       if((zscii == ' ') || (zscii == '\n') || (buffer_size == MAX_WORD_LENGTH))
       {
-         if((buffer_col + buffer_size) > console.getAttr(ConsoleIf::COLS))
+         if((buffer_col + buffer_size) > console.getAttr(Console::COLS))
          {
             send('\n');
          }
@@ -344,8 +344,8 @@ private:
    void vWritef(const char* format, va_list ap);
 
    // Console stream state
-   bool       console_enable{true};
-   ConsoleIf& console;
+   bool     console_enable{true};
+   Console& console;
 
    // Buffer used for automatic line breaks
    bool     buffer_enable{false};

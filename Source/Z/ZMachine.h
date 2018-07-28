@@ -61,7 +61,7 @@ private:
 
    Log            trace{"trace"};
    Options&       options;
-   ConsoleIf&     console;
+   Console&       console;
    ZStream        stream;
    ZWindowManager window_mgr;
    ZObject        object;
@@ -1238,7 +1238,7 @@ private:
    }
 
 public:
-   ZMachine(ConsoleIf& console_, Options& options_)
+   ZMachine(Console& console_, Options& options_)
       : options(options_)
       , console(console_)
       , stream(console, options_, memory)

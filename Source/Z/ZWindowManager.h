@@ -23,7 +23,7 @@
 #ifndef Z_WINDOW_MANAGER_H
 #define Z_WINDOW_MANAGER_H
 
-#include "ConsoleIf.h"
+#include "Console.h"
 #include "Options.h"
 #include "ZStream.h"
 
@@ -73,7 +73,7 @@ public:
    static const unsigned WINDOW_LOWER{0};
    static const unsigned WINDOW_UPPER{1};
 
-   ZWindowManager(ConsoleIf& console_, Options& options, ZStream& stream_)
+   ZWindowManager(Console& console_, Options& options, ZStream& stream_)
       : console(console_)
       , stream(stream_)
    {
@@ -112,7 +112,7 @@ public:
 
       console.moveCursor(1, 1);
 
-      for(unsigned i = 0; i < console.getAttr(ConsoleIf::COLS); i++)
+      for(unsigned i = 0; i < console.getAttr(Console::COLS); i++)
       {
          if(left[i] == '\0') break;
 
@@ -161,12 +161,12 @@ public:
    }
 
 private:
-   ConsoleIf&  console;
-   ZStream&    stream;
-   ZWindow     window[MAX_WINDOW];
-   unsigned    index{WINDOW_LOWER};
-   bool        lower_buffering{true};
-   bool        printer_enabled{false};
+   Console&  console;
+   ZStream&  stream;
+   ZWindow   window[MAX_WINDOW];
+   unsigned  index{WINDOW_LOWER};
+   bool      lower_buffering{true};
+   bool      printer_enabled{false};
 };
 
 #endif

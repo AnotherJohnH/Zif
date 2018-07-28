@@ -21,7 +21,7 @@
 //------------------------------------------------------------------------------
 
 #include "Z/ZMachine.h"
-#include "Console.h"
+#include "ConsoleImpl.h"
 #include "Options.h"
 
 #include "TRM/Launcher.h"
@@ -42,7 +42,7 @@ private:
 
    virtual int startTerminalLauncher(const char* story) override
    {
-      Console console(term, options);
+      ConsoleImpl console(term, options);
       ZMachine machine(console, options);
 
       return machine.play(story, options.restore) ? 0 : 1;

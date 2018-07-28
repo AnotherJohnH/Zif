@@ -23,272 +23,76 @@
 #ifndef CONSOLE_H
 #define CONSOLE_H
 
-#include <cctype>
 #include <cstdint>
 
-#include "TRM/Curses.h"
-#include "TRM/Device.h"
-
-#include "ConsoleIf.h"
-#include "Options.h"
-
-//! Console implementation
-class Console : public ConsoleIf
+//! Console interface 
+class Console
 {
 public:
-   Console(TRM::Device* device_, Options& options)
-      : curses(device_)
+   enum Attr
    {
-      int status = device_->ioctl(TRM::Device::IOCTL_TERM_FONTS);
-      if(status > 0)
-      {
-         num_fonts_avail = status;
-      }
+      LINES,
+      COLS,
 
-      status        = device_->ioctl(TRM::Device::IOCTL_TERM_COLOURS);
-      colours_avail = status > 1;
+      COLOURS,
+      BOLD,
+      ITALIC,
 
-      if(options.input != nullptr)
-      {
-         openInputFile(options.input);
-         if(!isInputFileOpen())
-         {
-            // error("Failed to open input file \"%s\"", options.input);
-         }
-      }
+      FONT_HEIGHT,
+      FONT_WIDTH,
 
-      if(options.width != 0)
-      {
-         curses.cols = options.width;
-      }
+      PICTURE_FONT,
+      GRAPHIC_FONT,
+      FIXED_FONT,
 
-      screen_enable = !options.batch;
+      READ_TIMEOUT
+   };
 
-      if(!screen_enable) return;
+   using FontStyle = uint8_t;
+   static const FontStyle FONT_STYLE_NORMAL  = 0;
+   static const FontStyle FONT_STYLE_REVERSE = 1 << 0;
+   static const FontStyle FONT_STYLE_BOLD    = 1 << 1;
+   static const FontStyle FONT_STYLE_ITALIC  = 1 << 2;
+   static const FontStyle FONT_STYLE_FIXED   = 1 << 3;
 
-      curses.raw();
-      curses.noecho();
-      curses.clear();
-   }
-
-   ~Console()
+   void setExtendedColours(bool state)
    {
-      if(isInputFileOpen())
-      {
-         closeInputFile();
-      }
+      extended_colours = state;
    }
 
    //! Return console attribute
-   virtual unsigned getAttr(Attr attr) const override
-   {
-      // clang-format off
-      switch(attr)
-      {
-      case LINES:        return curses.lines;
-      case COLS:         return curses.cols;
+   virtual unsigned getAttr(Attr attr) const = 0;
 
-      case COLOURS:      return colours_avail;
-      case BOLD:         return true;
-      case ITALIC:       return true;
-
-      case FONT_HEIGHT:  return 1;
-      case FONT_WIDTH:   return 1;
-
-      case PICTURE_FONT: return false;
-      case GRAPHIC_FONT: return false;
-      case FIXED_FONT:   return true;
-
-      case READ_TIMEOUT: return true;
-
-      default: return 0;
-      }
-      // clang-format on
-   }
-
-   //! Get current position of cursor
-   virtual void getCursorPos(unsigned& line, unsigned& col) override
-   {
-       curses.getyx(line, col);
-   }
-
-   //! Clear the console
-   virtual void clear() override
-   {
-      curses.clear();
-   }
+   //! Get current cursor position
+   virtual void getCursorPos(unsigned& line, unsigned& col) = 0;
 
    //! Select the current font
-   virtual bool setFont(unsigned font_idx) override
-   {
-      if(screen_enable && (font_idx <= num_fonts_avail))
-      {
-         curses.fontset(font_idx - 1);
-         return true;
-      }
+   virtual bool setFont(unsigned font_idx) = 0;
 
-      return font_idx == 1;
-   }
-
-   //! Change the font style
-   virtual void setFontStyle(FontStyle style) override
-   {
-      if(!screen_enable) return;
-
-      // Convert ConsoleIf font style to curses attributes. Might be a 1-1
-      // mapping of bits, but copying each bit is more robust
-      unsigned curses_attr = 0;
-      if(style & FONT_STYLE_REVERSE) curses_attr |= TRM::A_REVERSE;
-      if(style & FONT_STYLE_BOLD)    curses_attr |= TRM::A_BOLD;
-      if(style & FONT_STYLE_ITALIC)  curses_attr |= TRM::A_ITALIC;
-      if(style & FONT_STYLE_FIXED)   curses_attr |= TRM::A_FIXED;
-
-      curses.attrset(curses_attr);
-   }
+   //! Set font style
+   virtual void setFontStyle(FontStyle style) = 0;
 
    //! Set foreground and background colours
-   virtual void setColours(signed fg, signed bg) override
-   {
-      if(!screen_enable) return;
+   virtual void setColours(signed fg, signed bg) = 0;
 
-      convertCodeToColour(fg_col, fg);
-
-      if(fg_col >= COL_EXT_BASE)
-         curses.extfgcolour(fg_col & 0xFF);
-      else
-         curses.fgcolour(fg_col);
-
-      convertCodeToColour(bg_col, bg);
-
-      if(bg_col >= COL_EXT_BASE)
-         curses.extbgcolour(bg_col & 0xFF);
-      else
-         curses.bgcolour(bg_col);
-   }
-
-   //! Move cursor
-   virtual void moveCursor(unsigned line, unsigned col) override
-   {
-      if(!screen_enable) return;
-
-      curses.move(line, col);
-   }
-
-   //! Read character.
-   //! \returns false on timeout
-   virtual bool read(uint8_t& data, unsigned timeout_100ms) override
-   {
-      int ch;
-
-      while(true)
-      {
-         ch = getInput(timeout_100ms);
-         if(ch < 0)
-         {
-            exit(0); // TODO this seems a bit severe!
-         }
-         else if(ch == 0x7F)
-         {
-            ch = '\b';
-            break;
-         }
-         else if(ch < 0x7F)
-         {
-            break;
-         }
-      }
-
-      scroll           = 0;
-      only_white_space = true;
-
-      data = ch;
-
-      return ch != 0;
-   }
-
-   //! Write character
-   virtual void write(uint8_t ch) override
-   {
-      if(!screen_enable) return;
-
-      curses.addch(ch);
-
-      if(!isspace(ch))
-      {
-         only_white_space = false;
-      }
-
-      if((ch == '\n') && !isInputFileOpen())
-      {
-         scroll++;
-         if(scroll == (curses.lines - 1))
-         {
-            waitForKey();
-         }
-      }
-   }
+   //! Move the cursor
+   virtual void moveCursor(unsigned line, unsigned col) = 0;
 
    //! Wait for any key press
-   virtual void waitForKey() override
-   {
-      if(only_white_space) return;
+   virtual void waitForKey() = 0;
 
-      curses.addstr("...");
-      curses.getch();
-      curses.addstr("\b\b\b   \b\b\b");
+   //! Read character.
+   //! Returns false on timeout
+   virtual bool read(uint8_t& ch, unsigned timeout_100ms) = 0;
 
-      scroll           = 0;
-      only_white_space = true;
-   }
+   //! Clear the console
+   virtual void clear() = 0;
 
-private:
-   bool openInputFile(const char* filename_);
-   void closeInputFile();
-   bool isInputFileOpen();
+   //! Write character
+   virtual void write(uint8_t ch) = 0;
 
-   int getInput(unsigned timeout_ms);
-
-   // Convert colour code to a curses colour index
-   void convertCodeToColour(unsigned& current, signed code)
-   {
-      if(code == 0)
-      {
-         // no change
-      }
-      else if(code == 1)
-      {
-         current = COL_DEFAULT;
-      }
-      else if((code >= 2) && (code <= 9))
-      {
-         // black, red, green, yellow, blue, magenta, cyan, white
-         current = code - 2;
-      }
-      else if(extended_colours)
-      {
-         switch(code)
-         {
-         case -1: break;                               // TODO colour of pixel under cursor
-         case 10: current = COL_EXT_BASE + 250; break; // ANSI 256-colour mode light grey
-         case 11: current = COL_EXT_BASE + 244; break; // ANSI 256-colour mode medium grey
-         case 12: current = COL_EXT_BASE + 237; break; // ANSI 256-colour mode dark grey
-         default: break;
-         }
-      }
-   }
-
-   static const unsigned COL_NRM_BASE = 0;
-   static const unsigned COL_DEFAULT  = 9;
-   static const unsigned COL_EXT_BASE = 0x100;
-
-   TRM::Curses curses;
-   unsigned    num_fonts_avail{1};
-   bool        colours_avail{true};
-   unsigned    scroll{0};
-   bool        only_white_space{true};
-   bool        screen_enable{true};
-   unsigned    fg_col{COL_DEFAULT};
-   unsigned    bg_col{COL_DEFAULT};
+protected:
+   bool extended_colours{false};
 };
 
 #endif

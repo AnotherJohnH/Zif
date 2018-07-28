@@ -22,26 +22,26 @@
 
 #include <cstdio>
 
-#include "Console.h"
+#include "ConsoleImpl.h"
 
 static FILE* input_fp = nullptr;
 
-bool Console::openInputFile(const char* filename)
+bool ConsoleImpl::openInputFile(const char* filename)
 {
    input_fp = fopen(filename, "r");
    return isInputFileOpen();
 }
 
-bool Console::isInputFileOpen() { return input_fp != nullptr; }
+bool ConsoleImpl::isInputFileOpen() { return input_fp != nullptr; }
 
-void Console::closeInputFile()
+void ConsoleImpl::closeInputFile()
 {
    fclose(input_fp);
    input_fp = nullptr;
 }
 
 
-int Console::getInput(unsigned timeout_100ms)
+int ConsoleImpl::getInput(unsigned timeout_100ms)
 {
    if(input_fp != nullptr)
    {

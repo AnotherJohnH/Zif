@@ -1,6 +1,6 @@
 
 source  = ['Source/zif.cpp',
-           'Source/Console.cpp',
+           'Source/ConsoleImpl.cpp',
            'Source/Z/ZStream.cpp']
 
 binary  = 'zif'
