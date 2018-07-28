@@ -25,10 +25,11 @@
 
 #include <cassert>
 
-#include "ZConsoleIf.h"
-#include "ZLog.h"
+#include "ConsoleIf.h"
+#include "Options.h"
+#include "Log.h"
+
 #include "ZMemory.h"
-#include "ZOptions.h"
 
 
 //! Input/output stream handler
@@ -42,7 +43,7 @@ public:
       ERROR
    };
 
-   ZStream(ZConsoleIf& console_, ZOptions& options_, ZMemory& memory_)
+   ZStream(ConsoleIf& console_, Options& options_, ZMemory& memory_)
       : console(console_)
       , memory(memory_)
    {
@@ -291,7 +292,7 @@ private:
    {
       if((zscii == ' ') || (zscii == '\n') || (buffer_size == MAX_WORD_LENGTH))
       {
-         if((buffer_col + buffer_size) > console.getAttr(ZConsoleIf::COLS))
+         if((buffer_col + buffer_size) > console.getAttr(ConsoleIf::COLS))
          {
             send('\n');
          }
@@ -330,8 +331,8 @@ private:
    void vWritef(const char* format, va_list ap);
 
    // Console stream state
-   bool        console_enable{true};
-   ZConsoleIf& console;
+   bool       console_enable{true};
+   ConsoleIf& console;
 
    // Buffer used for automatic line breaks
    bool     buffer_enable{false};
@@ -343,7 +344,7 @@ private:
    bool     printer_enable{false};
    bool     printer_echo_input{false};
    unsigned printer_newline_count{1};
-   ZLog     printer{"print"};
+   Log      printer{"print"};
 
    // Memory stream state
    bool     memory_enable{false};
@@ -354,7 +355,7 @@ private:
 
    // Input snooper stream state
    bool snooper_enable{false};
-   ZLog snooper{"key"};
+   Log  snooper{"key"};
 
    MessageLevel message_filter{ERROR};
 };

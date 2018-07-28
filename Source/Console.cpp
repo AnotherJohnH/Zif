@@ -22,26 +22,26 @@
 
 #include <cstdio>
 
-#include "ZConsole.h"
+#include "Console.h"
 
 static FILE* input_fp = nullptr;
 
-bool ZConsole::openInputFile(const char* filename)
+bool Console::openInputFile(const char* filename)
 {
    input_fp = fopen(filename, "r");
    return isInputFileOpen();
 }
 
-bool ZConsole::isInputFileOpen() { return input_fp != nullptr; }
+bool Console::isInputFileOpen() { return input_fp != nullptr; }
 
-void ZConsole::closeInputFile()
+void Console::closeInputFile()
 {
    fclose(input_fp);
    input_fp = nullptr;
 }
 
 
-int ZConsole::getInput(unsigned timeout_100ms)
+int Console::getInput(unsigned timeout_100ms)
 {
    if(input_fp != nullptr)
    {

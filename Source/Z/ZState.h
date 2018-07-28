@@ -26,7 +26,8 @@
 #include "PLT/File.h"
 #include "STB/Stack.h"
 
-#include "ZError.h"
+#include "Error.h"
+
 #include "ZMemory.h"
 
 
@@ -58,7 +59,7 @@ public:
 private:
    // Terminal state
    mutable bool   do_quit{false};
-   mutable ZError exit_code{NO_ERROR};
+   mutable Error exit_code{NO_ERROR};
 
 public:
    //! Return whether the machine should stop
@@ -178,7 +179,7 @@ public:
    void quit() const { do_quit = true; }
 
    //! Report an error, terminates the machine
-   bool error(ZError err_) const
+   bool error(Error err_) const
    {
       // Only the first error is recorded
       if(exit_code == NO_ERROR)
@@ -191,7 +192,7 @@ public:
    }
 
    //! Get the first error code reported
-   ZError getExitCode() const { return exit_code; }
+   Error getExitCode() const { return exit_code; }
 
    //! Fetch an instruction byte
    uint8_t fetchByte()

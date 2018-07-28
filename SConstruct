@@ -1,7 +1,7 @@
 
 source  = ['Source/zif.cpp',
-           'Source/ZConsole.cpp',
-           'Source/ZStream.cpp']
+           'Source/Console.cpp',
+           'Source/Z/ZStream.cpp']
 
 binary  = 'zif'
 app     = 'Zif'
@@ -17,6 +17,8 @@ if int(debug) == 0:
    env.Append(CCFLAGS = ['-O3', '-DNDEBUG'])
 else:
    env.Append(CCFLAGS = ['-O0', '-g'])
+
+env.Append(CPPPATH = ['Source'])
 
 # Builders
 exe = env.Program(binary, source)

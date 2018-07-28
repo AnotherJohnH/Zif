@@ -20,11 +20,11 @@
 // SOFTWARE.
 //------------------------------------------------------------------------------
 
-#ifndef ZERROR_H
-#define ZERROR_H
+#ifndef ERROR_H
+#define ERROR_H
 
 
-enum ZError
+enum Error
 {
    NO_ERROR = 0,
 
@@ -44,7 +44,7 @@ enum ZError
 };
 
 
-inline const char* ZErrorString(ZError code)
+inline const char* errorString(Error code)
 {
    switch(code)
    {

@@ -20,8 +20,8 @@
 // SOFTWARE.
 //------------------------------------------------------------------------------
 
-#ifndef Z_CONSOLE_H
-#define Z_CONSOLE_H
+#ifndef CONSOLE_H
+#define CONSOLE_H
 
 #include <cctype>
 #include <cstdint>
@@ -29,14 +29,14 @@
 #include "TRM/Curses.h"
 #include "TRM/Device.h"
 
-#include "ZConsoleIf.h"
-#include "ZOptions.h"
+#include "ConsoleIf.h"
+#include "Options.h"
 
 //! Console implementation
-class ZConsole : public ZConsoleIf
+class Console : public ConsoleIf
 {
 public:
-   ZConsole(TRM::Device* device_, ZOptions& options)
+   Console(TRM::Device* device_, Options& options)
       : curses(device_)
    {
       int status = device_->ioctl(TRM::Device::IOCTL_TERM_FONTS);
@@ -71,7 +71,7 @@ public:
       curses.clear();
    }
 
-   ~ZConsole()
+   ~Console()
    {
       if(isInputFileOpen())
       {

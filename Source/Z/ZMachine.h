@@ -28,11 +28,12 @@
 #include <cstdlib>
 #include <cstring>
 
+#include "Options.h"
+#include "Log.h"
+
 #include "ZConfig.h"
 #include "ZHeader.h"
-#include "ZLog.h"
 #include "ZObject.h"
-#include "ZOptions.h"
 #include "ZParser.h"
 #include "ZState.h"
 #include "ZText.h"
@@ -58,9 +59,9 @@ private:
       OP_NONE        = 3
    };
 
-   ZLog           trace{"trace"};
-   ZOptions&      options;
-   ZConsoleIf&    console;
+   Log            trace{"trace"};
+   Options&       options;
+   ConsoleIf&     console;
    ZStream        stream;
    ZWindowManager window_mgr;
    ZObject        object;
@@ -247,23 +248,23 @@ private:
    void op0_nop() {}
 
    //! v1 save ?(label)
-   void op0_save_v1() { branch(ZState::save(options.save, story)); }
+   void op0_save_v1() { branch(ZState::save(options.save_dir, story)); }
 
    //! v4 save -> (result)
    void op0_save_v4()
    {
       uint8_t ret = fetchByte();
       varWrite(ret, 2);
-      varWrite(ret, ZState::save(options.save, story) ? 1 : 0);
+      varWrite(ret, ZState::save(options.save_dir, story) ? 1 : 0);
    }
 
    //! v1 restore ?(label)
-   void op0_restore_v1() { branch(ZState::restore(options.save, story)); }
+   void op0_restore_v1() { branch(ZState::restore(options.save_dir, story)); }
 
    //! v4 restore -> (result)
    void op0_restore_v4()
    {
-      if(!ZState::restore(options.save, story)) varWrite(fetchByte(), 0);
+      if(!ZState::restore(options.save_dir, story)) varWrite(fetchByte(), 0);
    }
 
    //! restart
@@ -719,7 +720,7 @@ private:
 
       uint8_t ret = fetchByte();
       varWrite(ret, 2);
-      varWrite(ret, ZState::save(options.save, story) ? 1 : 0);
+      varWrite(ret, ZState::save(options.save_dir, story) ? 1 : 0);
    }
 
    void opE_restore_table()
@@ -732,7 +733,7 @@ private:
       (void)bytes;
       (void)name; // TODO use supplied parameters
 
-      if(!ZState::restore(options.save, story)) varWrite(fetchByte(), 0);
+      if(!ZState::restore(options.save_dir, story)) varWrite(fetchByte(), 0);
    }
 
    void opE_log_shift()
@@ -760,7 +761,7 @@ private:
 
       uint8_t ret = fetchByte();
       varWrite(ret, 2);
-      varWrite(ret, ZState::save(options.save, story) ? 1 : 0);
+      varWrite(ret, ZState::save(options.save_dir, story) ? 1 : 0);
    }
 
    void opE_restore_undo()
@@ -771,7 +772,7 @@ private:
       char name[12];
       sprintf(name, "undo_%x", undo_index);
 
-      if(!ZState::restore(options.save, story)) varWrite(fetchByte(), 0);
+      if(!ZState::restore(options.save_dir, story)) varWrite(fetchByte(), 0);
    }
 
    void opE_print_unicode() { TODO_WARN("print_unicode"); }
@@ -1172,7 +1173,7 @@ private:
 
       if (restore_save)
       {
-         ZState::restore(options.save, story);
+         ZState::restore(options.save_dir, story);
       }
    }
 
@@ -1246,7 +1247,7 @@ private:
    }
 
 public:
-   ZMachine(ZConsoleIf& console_, ZOptions& options_)
+   ZMachine(ConsoleIf& console_, Options& options_)
       : options(options_)
       , console(console_)
       , stream(console, options_, memory)
@@ -1318,14 +1319,14 @@ public:
 
       info("quit");
 
-      ZError exit_code = ZState::getExitCode();
+      Error exit_code = ZState::getExitCode();
       if(exit_code != NO_ERROR)
       {
          error("PC=%06x OP=%02X %02X : %s",
                inst_addr,
                memory[inst_addr],
                memory[inst_addr+1],
-               ZErrorString(exit_code));
+               errorString(exit_code));
          return false;
       }
 

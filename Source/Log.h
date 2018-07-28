@@ -20,18 +20,18 @@
 // SOFTWARE.
 //------------------------------------------------------------------------------
 
-#ifndef ZLOG_H
-#define ZLOG_H
+#ifndef LOG_H
+#define LOG_H
 
 #include <cstdarg>
 
 #include "PLT/File.h"
 
 //! Log file
-class ZLog : public PLT::File
+class Log : public PLT::File
 {
 public:
-   ZLog(const char* name_)
+   Log(const char* name_)
       : PLT::File(nullptr, name_, "log")
    {
    }

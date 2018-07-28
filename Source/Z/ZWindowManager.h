@@ -23,8 +23,8 @@
 #ifndef Z_WINDOW_MANAGER_H
 #define Z_WINDOW_MANAGER_H
 
-#include "ZConsoleIf.h"
-#include "ZOptions.h"
+#include "ConsoleIf.h"
+#include "Options.h"
 #include "ZStream.h"
 
 //! Console window manager
@@ -73,7 +73,7 @@ public:
    static const unsigned WINDOW_LOWER{0};
    static const unsigned WINDOW_UPPER{1};
 
-   ZWindowManager(ZConsoleIf& console_, ZOptions& options, ZStream& stream_)
+   ZWindowManager(ConsoleIf& console_, Options& options, ZStream& stream_)
       : console(console_)
       , stream(stream_)
    {
@@ -112,7 +112,7 @@ public:
 
       console.moveCursor(1, 1);
 
-      for(unsigned i = 0; i < console.getAttr(ZConsoleIf::COLS); i++)
+      for(unsigned i = 0; i < console.getAttr(ConsoleIf::COLS); i++)
       {
          if(left[i] == '\0') break;
 
@@ -161,7 +161,7 @@ public:
    }
 
 private:
-   ZConsoleIf& console;
+   ConsoleIf&  console;
    ZStream&    stream;
    ZWindow     window[MAX_WINDOW];
    unsigned    index{WINDOW_LOWER};
