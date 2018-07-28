@@ -48,10 +48,12 @@ public:
       READ_TIMEOUT
    };
 
-   static const unsigned ATTR_REVERSE = 1 << 0;
-   static const unsigned ATTR_BOLD    = 1 << 1;
-   static const unsigned ATTR_ITALIC  = 1 << 2;
-   static const unsigned ATTR_FIXED   = 1 << 3;
+   using FontStyle = uint8_t;
+   static const FontStyle FONT_STYLE_NORMAL  = 0;
+   static const FontStyle FONT_STYLE_REVERSE = 1 << 0;
+   static const FontStyle FONT_STYLE_BOLD    = 1 << 1;
+   static const FontStyle FONT_STYLE_ITALIC  = 1 << 2;
+   static const FontStyle FONT_STYLE_FIXED   = 1 << 3;
 
    void setExtendedColours(bool state)
    {
@@ -67,8 +69,8 @@ public:
    //! Select the current font
    virtual bool setFont(unsigned font_idx) = 0;
 
-   //! Set attributes
-   virtual void setAttributes(unsigned attr) = 0;
+   //! Set font style
+   virtual void setFontStyle(FontStyle style) = 0;
 
    //! Set foreground and background colours
    virtual void setColours(signed fg, signed bg) = 0;

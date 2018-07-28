@@ -583,17 +583,8 @@ private:
    void opV_set_cursor_v4()  { console.moveCursor(uarg[0], uarg[1]); }
    void opV_set_cursor_v6()  { TODO_WARN("set_cursor_v6"); }
    void opV_get_cursor()     { TODO_ERROR(); }
-
-   void opV_set_text_style()
-   {
-      stream.flush();
-      stream.setAttributes(uarg[0]);
-   }
-
-   void opV_buffer_mode()
-   {
-      stream.setBuffering(uarg[0] != 0);
-   }
+   void opV_set_text_style() { stream.setFontStyle(uarg[0]); }
+   void opV_buffer_mode()    { stream.setBuffering(uarg[0] != 0); }
 
    void opV_output_stream()
    {

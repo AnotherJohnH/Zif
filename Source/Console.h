@@ -130,24 +130,20 @@ public:
       return font_idx == 1;
    }
 
-   //! Set (curses format) attributes
-   virtual void setAttributes(unsigned attr) override
+   //! Change the font style
+   virtual void setFontStyle(FontStyle style) override
    {
       if(!screen_enable) return;
 
-      // The spec states that styles can be combined but is not required
-      // the following allows combined styles
-      if(attr == 0)
-         curses.attrset(0);
-      else
-      {
-         unsigned local_attr = 0;
-         if(attr & ATTR_REVERSE) local_attr |= TRM::A_REVERSE;
-         if(attr & ATTR_BOLD)    local_attr |= TRM::A_BOLD;
-         if(attr & ATTR_ITALIC)  local_attr |= TRM::A_ITALIC;
-         if(attr & ATTR_FIXED)   local_attr |= TRM::A_FIXED;
-         curses.attron(local_attr);
-      }
+      // Convert ConsoleIf font style to curses attributes. Might be a 1-1
+      // mapping of bits, but copying each bit is more robust
+      unsigned curses_attr = 0;
+      if(style & FONT_STYLE_REVERSE) curses_attr |= TRM::A_REVERSE;
+      if(style & FONT_STYLE_BOLD)    curses_attr |= TRM::A_BOLD;
+      if(style & FONT_STYLE_ITALIC)  curses_attr |= TRM::A_ITALIC;
+      if(style & FONT_STYLE_FIXED)   curses_attr |= TRM::A_FIXED;
+
+      curses.attrset(curses_attr);
    }
 
    //! Set foreground and background colours
@@ -252,7 +248,7 @@ private:
 
    int getInput(unsigned timeout_ms);
 
-   // Convert Z colour codes to a curses colour index
+   // Convert colour code to a curses colour index
    void convertCodeToColour(unsigned& current, signed code)
    {
       if(code == 0)

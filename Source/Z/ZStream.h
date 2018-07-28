@@ -80,12 +80,20 @@ public:
       return console.setFont(font_idx);
    }
 
-   //! Set (curses format) attributes
-   void setAttributes(unsigned attr)
+   //! Set font style
+   void setFontStyle(unsigned style)
    {
       flush();
 
-      console.setAttributes(attr);
+      // Convert Z-code font style to a ConsoleIf font style. Might be a 1-1
+      // mapping of bits, but copying each bit is more robust
+      ConsoleIf::FontStyle style = 0;
+      if (uarg[0] & (1<<0)) style |= ConsoleIf::FONT_STYLE_REVERSE;
+      if (uarg[0] & (1<<1)) style |= ConsoleIf::FONT_STYLE_BOLD;
+      if (uarg[0] & (1<<2)) style |= ConsoleIf::FONT_STYLE_ITALIC;
+      if (uarg[0] & (1<<3)) style |= ConsoleIf::FONT_STYLE_FIXED;
+
+      console.setFontStyle(style);
    }
 
    //! Set colours
@@ -237,9 +245,9 @@ public:
       }
 
       // Identify message source
-      console.setAttributes(A_REVERSE);
+      console.setFontStyle(ConsoleIf::FONT_STYLE_REVERSE);
       writeRaw("ZIF");
-      console.setAttributes(0);
+      console.setFontStyle(ConsoleIf::FONT_STYLE_NORMAL);
 
       switch(level)
       {
@@ -261,7 +269,6 @@ public:
    }
 
 private:
-   static const unsigned A_REVERSE             = 1 << 1;
    static const unsigned MAX_WORD_LENGTH       = 16;
    static const unsigned PRINTER_NEWLINE_LIMIT = 3;
 
