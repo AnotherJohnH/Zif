@@ -131,17 +131,17 @@ public:
    }
 
    //! Change the font style
-   virtual void setFontStyle(FontStyle style) override
+   virtual void setFontStyle(FontStyle style_bit_mask) override
    {
       if(!screen_enable) return;
 
       // Convert ConsoleIf font style to curses attributes. Might be a 1-1
       // mapping of bits, but copying each bit is more robust
       unsigned curses_attr = 0;
-      if(style & FONT_STYLE_REVERSE) curses_attr |= TRM::A_REVERSE;
-      if(style & FONT_STYLE_BOLD)    curses_attr |= TRM::A_BOLD;
-      if(style & FONT_STYLE_ITALIC)  curses_attr |= TRM::A_ITALIC;
-      if(style & FONT_STYLE_FIXED)   curses_attr |= TRM::A_FIXED;
+      if(style_bit_mask & FONT_STYLE_REVERSE) curses_attr |= TRM::A_REVERSE;
+      if(style_bit_mask & FONT_STYLE_BOLD)    curses_attr |= TRM::A_BOLD;
+      if(style_bit_mask & FONT_STYLE_ITALIC)  curses_attr |= TRM::A_ITALIC;
+      if(style_bit_mask & FONT_STYLE_FIXED)   curses_attr |= TRM::A_FIXED;
 
       curses.attrset(curses_attr);
    }

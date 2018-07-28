@@ -81,7 +81,7 @@ public:
    virtual bool setFont(unsigned font_idx) = 0;
 
    //! Set font style
-   virtual void setFontStyle(FontStyle style) = 0;
+   virtual void setFontStyle(FontStyle style_bit_mask) = 0;
 
    //! Set background colour
    virtual void setBackgroundColour(Colour colour) = 0;
