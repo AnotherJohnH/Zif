@@ -178,9 +178,9 @@ public:
       curses.move(line, col);
    }
 
-   //! Read ZSCII character.
-   //! Returns false on timeout
-   virtual bool read(uint16_t& zscii, unsigned timeout_100ms) override
+   //! Read character.
+   //! \returns false on timeout
+   virtual bool read(uint8_t& data, unsigned timeout_100ms) override
    {
       int ch;
 
@@ -202,34 +202,27 @@ public:
          }
       }
 
-      zscii = ch;
-
       scroll           = 0;
       only_white_space = true;
+
+      data = ch;
 
       return ch != 0;
    }
 
-   //! Write ZSCII character
-   virtual void write(uint16_t zscii) override
+   //! Write character
+   virtual void write(uint8_t ch) override
    {
       if(!screen_enable) return;
 
-      if(zscii >= 128)
-      {
-         curses.addch('?');
-      }
-      else
-      {
-         curses.addch(zscii);
-      }
+      curses.addch(ch);
 
-      if(!isspace(zscii))
+      if(!isspace(ch))
       {
          only_white_space = false;
       }
 
-      if((zscii == '\n') && !isInputFileOpen())
+      if((ch == '\n') && !isInputFileOpen())
       {
          scroll++;
          if(scroll == (curses.lines - 1))

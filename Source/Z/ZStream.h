@@ -151,15 +151,18 @@ public:
    {
       flushOutputBuffer();
 
-      bool ok = console.read(zscii, timeout);
+      uint8_t ch;
+      bool ok = console.read(ch, timeout);
       if(ok)
       {
          // Echo input to enabled output streams
-         if(console_enable)                       console.write(zscii);
-         if(printer_enable && printer_echo_input) print(zscii);
-         if(snooper_enable)                       snooper.write(zscii);
+         if(console_enable)                       console.write(ch);
+         if(printer_enable && printer_echo_input) print(ch);
+         if(snooper_enable)                       snooper.write(ch);
 
-         if(zscii == '\n') buffer_col = 1;
+         if(ch == '\n') buffer_col = 1;
+
+         zscii = ch;
       }
 
       return ok;
@@ -252,8 +255,8 @@ public:
       // TODO wait for keypress on any exit
       if(level == ERROR)
       {
-         uint16_t zscii;
-         console.read(zscii, 0);
+         uint8_t ch;
+         console.read(ch, 0);
       }
    }
 
@@ -262,18 +265,21 @@ private:
    static const unsigned MAX_WORD_LENGTH       = 16;
    static const unsigned PRINTER_NEWLINE_LIMIT = 3;
 
-   //! Unbuffered write of an output character
+   //! Unbuffered write of a ZSCII character
    void send(uint16_t zscii)
    {
-      if(zscii == '\0') return;
+      if(zscii == '\0' || zscii > 255) return;
 
-      if(zscii == '\n')
+      // TODO do we need to filter for just the defined ZSCII output chars
+
+      uint8_t ch = uint8_t(zscii);
+      if(ch == '\n')
          buffer_col = 1;
       else
          buffer_col++;
 
-      if(console_enable) console.write(zscii);
-      if(printer_enable) print(zscii);
+      if(console_enable) console.write(ch);
+      if(printer_enable) print(ch);
    }
 
    //! Flush any output that has been buffered

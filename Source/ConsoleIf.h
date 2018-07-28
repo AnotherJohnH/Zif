@@ -61,33 +61,33 @@ public:
    //! Return console attribute
    virtual unsigned getAttr(Attr attr) const = 0;
 
-   //! Get current position of cursor
+   //! Get current cursor position
    virtual void getCursorPos(unsigned& line, unsigned& col) = 0;
-
-   //! Clear the console
-   virtual void clear() = 0;
 
    //! Select the current font
    virtual bool setFont(unsigned font_idx) = 0;
 
-   //! Set (curses format) attributes
+   //! Set attributes
    virtual void setAttributes(unsigned attr) = 0;
 
    //! Set foreground and background colours
    virtual void setColours(signed fg, signed bg) = 0;
 
-   //! Move cursor
+   //! Move the cursor
    virtual void moveCursor(unsigned line, unsigned col) = 0;
-
-   //! Read ZSCII character.
-   //! Returns false on timeout
-   virtual bool read(uint16_t& zscii, unsigned timeout_100ms) = 0;
-
-   //! Write ZSCII character
-   virtual void write(uint16_t zscii) = 0;
 
    //! Wait for any key press
    virtual void waitForKey() = 0;
+
+   //! Read character.
+   //! Returns false on timeout
+   virtual bool read(uint8_t& ch, unsigned timeout_100ms) = 0;
+
+   //! Clear the console
+   virtual void clear() = 0;
+
+   //! Write character
+   virtual void write(uint8_t ch) = 0;
 
 protected:
    bool extended_colours{false};
