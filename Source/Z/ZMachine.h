@@ -198,7 +198,7 @@ private:
       case 1: /* throw return value away */ break;
       case 2: ZState::push(value);          break;
 
-      default: ZState::error(ERR_BAD_CALL_TYPE);
+      default: ZState::error(Error::BAD_CALL_TYPE);
       }
    }
 
@@ -218,9 +218,9 @@ private:
 
    void showStatus() { TODO_WARN("show_status"); }
 
-   void ILLEGAL() { ZState::error(ERR_ILLEGAL_OP); }
+   void ILLEGAL() { ZState::error(Error::ILLEGAL_OP); }
 
-   void TODO_ERROR() { ZState::error(ERR_UNIMPLEMENTED_OP); }
+   void TODO_ERROR() { ZState::error(Error::UNIMPLEMENTED_OP); }
 
    void TODO_WARN(const char* op) { warning(op); }
 
@@ -407,7 +407,7 @@ private:
    {
       if(sarg[1] == 0)
       {
-         ZState::error(ERR_DIV_BY_ZERO);
+         ZState::error(Error::DIV_BY_ZERO);
          return;
       }
       varWrite(fetchByte(), sarg[0] / sarg[1]);
@@ -417,7 +417,7 @@ private:
    {
       if(sarg[1] == 0)
       {
-         ZState::error(ERR_DIV_BY_ZERO);
+         ZState::error(Error::DIV_BY_ZERO);
          return;
       }
       varWrite(fetchByte(), sarg[0] % sarg[1]);
@@ -611,7 +611,7 @@ private:
          bool set = number > 0;
          number   = abs(number);
          if(number > 4)
-            ZState::error(ERR_BAD_STREAM);
+            ZState::error(Error::BAD_STREAM);
          else
             stream.enableStream(abs(number), set);
       }
@@ -1320,7 +1320,7 @@ public:
       info("quit");
 
       Error exit_code = ZState::getExitCode();
-      if(exit_code != NO_ERROR)
+      if(isError(exit_code))
       {
          error("PC=%06x OP=%02X %02X : %s",
                inst_addr,

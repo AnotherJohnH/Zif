@@ -24,48 +24,55 @@
 #define ERROR_H
 
 
-enum Error
+enum class Error
 {
-   NO_ERROR = 0,
+   NONE = 0,
 
-   ERR_UNIMPLEMENTED_OP,
-   ERR_ILLEGAL_OP,
-   ERR_STACK_EMPTY,
-   ERR_STACK_UNDERFLOW,
-   ERR_STACK_OVERFLOW,
-   ERR_BAD_FRAME_PTR,
-   ERR_BAD_PC,
-   ERR_BAD_ADDRESS,
-   ERR_BAD_STREAM,
-   ERR_BAD_CALL_TYPE,
-   ERR_DIV_BY_ZERO,
-   ERR_BAD_CONFIG,
-   ERR_BAD_VERSION
+   UNIMPLEMENTED_OP,
+   ILLEGAL_OP,
+   STACK_EMPTY,
+   STACK_UNDERFLOW,
+   STACK_OVERFLOW,
+   BAD_FRAME_PTR,
+   BAD_PC,
+   BAD_ADDRESS,
+   BAD_STREAM,
+   BAD_CALL_TYPE,
+   DIV_BY_ZERO,
+   BAD_CONFIG,
+   BAD_VERSION
 };
 
+//! Check code for an error
+inline bool isError(Error code)
+{
+   return code != Error::NONE;
+}
 
+//! Convert error code into a string
 inline const char* errorString(Error code)
 {
+   // clang-format off
    switch(code)
    {
-   case ERR_UNIMPLEMENTED_OP: return "Unimplement op";
-   case ERR_ILLEGAL_OP:       return "Illegal op";
-   case ERR_STACK_EMPTY:      return "Stack empty";
-   case ERR_STACK_UNDERFLOW:  return "Stack underflow";
-   case ERR_STACK_OVERFLOW:   return "Stack overflow";
-   case ERR_BAD_FRAME_PTR:    return "Bad frame pointer";
-   case ERR_BAD_PC:           return "Bad PC";
-   case ERR_BAD_ADDRESS:      return "Bad address";
-   case ERR_BAD_STREAM:       return "Bad stream";
-   case ERR_BAD_CALL_TYPE:    return "Bad call type";
-   case ERR_DIV_BY_ZERO:      return "Division by zero";
-   case ERR_BAD_CONFIG:       return "Bad config";
-   case ERR_BAD_VERSION:      return "Bad Z version";
-
-   default: break;
+   case Error::NONE:             return "no error";
+   case Error::UNIMPLEMENTED_OP: return "Unimplement op";
+   case Error::ILLEGAL_OP:       return "Illegal op";
+   case Error::STACK_EMPTY:      return "Stack empty";
+   case Error::STACK_UNDERFLOW:  return "Stack underflow";
+   case Error::STACK_OVERFLOW:   return "Stack overflow";
+   case Error::BAD_FRAME_PTR:    return "Bad frame pointer";
+   case Error::BAD_PC:           return "Bad PC";
+   case Error::BAD_ADDRESS:      return "Bad address";
+   case Error::BAD_STREAM:       return "Bad stream";
+   case Error::BAD_CALL_TYPE:    return "Bad call type";
+   case Error::DIV_BY_ZERO:      return "Division by zero";
+   case Error::BAD_CONFIG:       return "Bad config";
+   case Error::BAD_VERSION:      return "Bad Z version";
    }
+   // clang-format on
 
-   return nullptr;
+   return "UNRECOGNISED ERROR CODE";
 }
 
 

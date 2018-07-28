@@ -59,7 +59,7 @@ public:
 private:
    // Terminal state
    mutable bool   do_quit{false};
-   mutable Error exit_code{NO_ERROR};
+   mutable Error exit_code{Error::NONE};
 
 public:
    //! Return whether the machine should stop
@@ -92,7 +92,7 @@ public:
           (game_end >= memory_limit) ||
           (global_base >= memory_limit))
       {
-         error(ERR_BAD_CONFIG);
+         error(Error::BAD_CONFIG);
       }
 
       memory.resize(memory_limit);
@@ -182,7 +182,7 @@ public:
    bool error(Error err_) const
    {
       // Only the first error is recorded
-      if(exit_code == NO_ERROR)
+      if(!isError(exit_code))
       {
          exit_code = err_;
          quit();
@@ -223,7 +223,7 @@ public:
    {
       if(stack.full())
       {
-         error(ERR_STACK_OVERFLOW);
+         error(Error::STACK_OVERFLOW);
          return;
       }
 
@@ -235,7 +235,7 @@ public:
    {
       if(stack.empty())
       {
-         error(ERR_STACK_UNDERFLOW);
+         error(Error::STACK_UNDERFLOW);
          return 0;
       }
 
@@ -250,7 +250,7 @@ public:
       if(stack.empty())
       {
          static uint16_t dummy;
-         error(ERR_STACK_EMPTY);
+         error(Error::STACK_EMPTY);
          return dummy;
       }
 
@@ -375,20 +375,20 @@ private:
    {
       // TODO maybe (pc >= game_start) && (pc < game_end)
       // if self-modifying code is excluded
-      return (pc >= game_start) && (pc < memory_limit) ? true : error(ERR_BAD_PC);
+      return (pc >= game_start) && (pc < memory_limit) ? true : error(Error::BAD_PC);
    }
 
    //! Range check frame pointer
    bool validateFramePtr(uint16_t offset = 0) const
    {
       return (frame_ptr > 0) && ((frame_ptr + offset) < stack.size()) ? true
-                                                                      : error(ERR_BAD_FRAME_PTR);
+                                                                      : error(Error::BAD_FRAME_PTR);
    }
 
    //! Range check address
    bool validateAddr(uint32_t addr) const
    {
-      return addr < memory_limit ? true : error(ERR_BAD_ADDRESS);
+      return addr < memory_limit ? true : error(Error::BAD_ADDRESS);
    }
 
    //! Save dynamic registers on the stack
