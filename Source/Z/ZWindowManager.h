@@ -43,30 +43,16 @@ private:
       Vec      pos;
       Vec      size;
       Vec      cursor;
-      uint16_t left_margin;
-      uint16_t right_margin;
-      uint16_t newline_handler;
-      uint16_t interrupt_countdown;
-      uint8_t  text_style;
-      uint16_t colour_data;
-      uint8_t  font_number;
-      uint8_t  font_size;
-      uint8_t  attr;
-      int16_t  line_count;
-
-      ZWindow()
-         : left_margin(0)
-         , right_margin(0)
-         , newline_handler(0)
-         , interrupt_countdown(0)
-         , text_style(0)
-         , colour_data(0)
-         , font_number(0)
-         , font_size(0)
-         , attr(0)
-         , line_count(0)
-      {
-      }
+      uint16_t left_margin{0};
+      uint16_t right_margin{0};
+      uint16_t newline_handler{0};
+      uint16_t interrupt_countdown{0};
+      uint8_t  text_style{0};
+      uint16_t colour_data{0};
+      uint8_t  font_number{0};
+      uint8_t  font_size{0};
+      uint8_t  attr{0};
+      int16_t  line_count{0};
    };
 
 public:
