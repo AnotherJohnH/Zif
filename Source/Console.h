@@ -25,7 +25,7 @@
 
 #include <cstdint>
 
-//! Console interface 
+//! Console interface
 class Console
 {
 public:
@@ -65,6 +65,7 @@ public:
    };
 
    using FontStyle = uint8_t;
+
    static const FontStyle FONT_STYLE_NORMAL  = 0;
    static const FontStyle FONT_STYLE_REVERSE = 1 << 0;
    static const FontStyle FONT_STYLE_BOLD    = 1 << 1;
@@ -97,7 +98,7 @@ public:
 
    //! Read character.
    //! Returns false on timeout
-   virtual bool read(uint8_t& ch, unsigned timeout_100ms) = 0;
+   virtual bool read(uint8_t& ch, unsigned timeout_ms) = 0;
 
    //! Clear the console
    virtual void clear() = 0;

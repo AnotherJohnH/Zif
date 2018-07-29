@@ -41,7 +41,7 @@ void ConsoleImpl::closeInputFile()
 }
 
 
-int ConsoleImpl::getInput(unsigned timeout_100ms)
+int ConsoleImpl::getInput(unsigned timeout_ms)
 {
    if(input_fp != nullptr)
    {
@@ -57,7 +57,7 @@ int ConsoleImpl::getInput(unsigned timeout_100ms)
       }
    }
 
-   curses.timeout(timeout_100ms * 100);
+   curses.timeout(timeout_ms);
 
    return curses.getch();
 }

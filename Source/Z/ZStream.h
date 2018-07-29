@@ -26,8 +26,8 @@
 #include <cassert>
 
 #include "Console.h"
-#include "Options.h"
 #include "Log.h"
+#include "Options.h"
 
 #include "ZMemory.h"
 
@@ -89,10 +89,10 @@ public:
       // Convert Z-code text style to a Console font style. Might be a 1-1
       // mapping of bits, but copying each bit is more robust
       Console::FontStyle font_style = 0;
-      if (text_style & (1<<0)) font_style |= Console::FONT_STYLE_REVERSE;
-      if (text_style & (1<<1)) font_style |= Console::FONT_STYLE_BOLD;
-      if (text_style & (1<<2)) font_style |= Console::FONT_STYLE_ITALIC;
-      if (text_style & (1<<3)) font_style |= Console::FONT_STYLE_FIXED;
+      if(text_style & (1 << 0)) font_style |= Console::FONT_STYLE_REVERSE;
+      if(text_style & (1 << 1)) font_style |= Console::FONT_STYLE_BOLD;
+      if(text_style & (1 << 2)) font_style |= Console::FONT_STYLE_ITALIC;
+      if(text_style & (1 << 3)) font_style |= Console::FONT_STYLE_FIXED;
 
       console.setFontStyle(font_style);
    }
@@ -103,13 +103,13 @@ public:
       flush();
 
       Console::Colour fg_col;
-      if (convertCodeToConsoleColour(fg, fg_col))
+      if(convertCodeToConsoleColour(fg, fg_col))
       {
          console.setForegroundColour(fg_col);
       }
 
       Console::Colour bg_col;
-      if (convertCodeToConsoleColour(bg, bg_col))
+      if(convertCodeToConsoleColour(bg, bg_col))
       {
          console.setBackgroundColour(bg_col);
       }
@@ -166,12 +166,12 @@ public:
    }
 
    //! Read ZSCII character
-   bool readChar(uint16_t& zscii, unsigned timeout)
+   bool readChar(uint16_t& zscii, unsigned timeout_100ms)
    {
       flushOutputBuffer();
 
       uint8_t ch;
-      bool ok = console.read(ch, timeout);
+      bool    ok = console.read(ch, timeout_100ms * 100);
       if(ok)
       {
          // Echo input to enabled output streams
@@ -354,6 +354,7 @@ private:
    // Convert Z colour code to a console colour index
    bool convertCodeToConsoleColour(signed code, Console::Colour& colour)
    {
+      // clang-format off
       switch(code)
       {
       case 0: return false; // No change
@@ -380,6 +381,7 @@ private:
          default: break;
          }
       }
+      // clang-format on
 
       return false;
    }
