@@ -276,6 +276,9 @@ private:
       case MEDIUM_GREY: ext = true;  return 244;
       case DARK_GREY:   ext = true;  return 237;
       }
+
+      ext = false;
+      return 0;
    }
 
    static const unsigned COL_NRM_BASE = 0;
