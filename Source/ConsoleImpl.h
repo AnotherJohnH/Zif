@@ -281,10 +281,6 @@ private:
       return 0;
    }
 
-   static const unsigned COL_NRM_BASE = 0;
-   static const unsigned COL_DEFAULT  = 9;
-   static const unsigned COL_EXT_BASE = 0x100;
-
    TRM::Curses curses;
    unsigned    num_fonts_avail{1};
    bool        colours_avail{true};
