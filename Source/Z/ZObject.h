@@ -205,6 +205,7 @@ public:
    void setSibling(uint16_t obj, uint16_t sibling) { setObjLink(obj, 1, sibling); }
    void setChild(uint16_t obj, uint16_t child)     { setObjLink(obj, 2, child); }
 
+   //! Get address of property table
    uint32_t getPropTableAddress(uint16_t obj) const
    {
       uint32_t addr = getObjAddress(obj);
@@ -212,11 +213,13 @@ public:
                    : memory.readWord(addr + 12);
    }
 
+   //! Get property name
    uint32_t getName(uint16_t obj) const
    {
       return getPropTableAddress(obj) + 1;
    }
 
+   //! Get property address
    uint32_t getPropAddr(uint16_t obj, unsigned prop) const
    {
       if(obj == 0) return 0; // XXX seems this is ok!
@@ -225,6 +228,7 @@ public:
       return findProp(obj, prop, size);
    }
 
+   //! Get the nexy property
    uint32_t getPropNext(uint16_t obj, unsigned prop) const
    {
       if(obj == 0) return 0; // XXX seems this is ok!
@@ -277,6 +281,7 @@ public:
       return fetchPropInfo(addr, index);
    }
 
+   //! Get an object property
    uint16_t getProp(uint16_t obj, unsigned prop) const
    {
       if(obj == 0) return 0; // XXX seems this is ok!
@@ -292,6 +297,7 @@ public:
       return 0;
    }
 
+   //! Set an object property
    void setProp(uint16_t obj, unsigned prop, uint16_t value)
    {
       if(obj == 0) return; // XXX seems this is ok!
