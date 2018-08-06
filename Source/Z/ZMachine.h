@@ -154,8 +154,21 @@ private:
                 uint16_t        argc,
                 const uint16_t* argv)
    {
-      ZState::call(call_type,
-                   header->unpackAddr(packed_addr, /* routine */ true));
+      uint32_t target = header->unpackAddr(packed_addr, /* routine */ true);
+      if (target == 0)
+      {
+         // this is legal, just return false
+         switch(call_type)
+         {
+         case 0:  varWrite(fetchByte(), 0); break;
+         case 1:  /* throw return value away */ break;
+         case 2:  ZState::push(0); break;
+         default: ZState::error(Error::BAD_CALL_TYPE); break;
+         }
+         return;
+      }
+
+      ZState::call(call_type, target);
 
       uint8_t num_locals = fetchByte();
 
