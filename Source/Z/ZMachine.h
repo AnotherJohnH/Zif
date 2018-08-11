@@ -518,7 +518,8 @@ private:
       uint8_t max = memory[buffer++];
       uint8_t len = memory[buffer++];
 
-      uint16_t start = buffer;
+      uint16_t start  = buffer;
+      uint8_t  status = 0;
 
       for(; len < max; len++)
       {
@@ -526,7 +527,7 @@ private:
 
          if(!readChar(timeout, routine, ch))
          {
-            return;
+            break;
          }
 
          if(ch == '\b')
@@ -543,7 +544,7 @@ private:
          {
             memory[buffer]    = '\0';
             memory[start - 1] = len;
-            varWrite(fetchByte(), ch);
+            status = ch;
             break;
          }
          else
@@ -551,6 +552,8 @@ private:
             memory[buffer++] = ch;
          }
       }
+
+      varWrite(fetchByte(), status);
 
       if(parse != 0)
       {
