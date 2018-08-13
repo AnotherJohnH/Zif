@@ -51,7 +51,7 @@ private:
 public:
    ZifApp(int argc, const char* argv[])
       : TRM::Launcher(PROGRAM, DESCRIPTION, LINK, AUTHOR, VERSION, COPYRIGHT_YEAR,
-                      "[Z-file]", "zif")
+                      "[<story-file>]", "zif.cfg")
    {
       parseArgsAndStart(argc, argv);
    }
