@@ -93,6 +93,9 @@ public:
    //! Move the cursor
    virtual void moveCursor(unsigned line, unsigned col) = 0;
 
+   //! Erase from current cursor position to the end of the line
+   virtual void eraseLine() = 0;
+
    //! Wait for any key press
    virtual void waitForKey() = 0;
 

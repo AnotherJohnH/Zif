@@ -182,6 +182,13 @@ public:
       curses.move(line, col);
    }
 
+   virtual void eraseLine() override
+   {
+      if(!screen_enable) return;
+
+      curses.clrtoeol();
+   }
+
    //! Read character.
    //! \returns false on timeout
    virtual bool read(uint8_t& data, unsigned timeout_100ms) override

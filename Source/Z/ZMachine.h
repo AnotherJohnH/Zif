@@ -594,7 +594,7 @@ private:
    void opV_set_window()     { window_mgr.select(uarg[0]); }
    void opV_call_vs2()       { subCall(0, uarg[0], num_arg - 1, &uarg[1]); }
    void opV_erase_window()   { window_mgr.eraseWindow(uarg[0]); }
-   void opV_erase_line_v4()  { TODO_ERROR(); }
+   void opV_erase_line_v4()  { if (uarg[0] == 1) console.eraseLine(); }
    void opV_erase_line_v6()  { TODO_ERROR(); }
    void opV_set_cursor_v4()  { console.moveCursor(uarg[0], uarg[1]); }
    void opV_set_cursor_v6()  { TODO_WARN("set_cursor_v6"); }
