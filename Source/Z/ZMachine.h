@@ -59,7 +59,7 @@ private:
       OP_NONE        = 3
    };
 
-   Log            trace{"trace"};
+   Log            trace{"trace.log"};
    Options&       options;
    Console&       console;
    ZStream        stream;

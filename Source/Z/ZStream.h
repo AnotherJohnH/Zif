@@ -404,7 +404,7 @@ private:
    bool     printer_enable{false};
    bool     printer_echo_input{false};
    unsigned printer_newline_count{1};
-   Log      printer{"print"};
+   Log      printer{"print.log"};
 
    // Memory stream state
    bool     memory_enable{false};
@@ -415,7 +415,7 @@ private:
 
    // Input snooper stream state
    bool snooper_enable{false};
-   Log  snooper{"key"};
+   Log  snooper{"key.log"};
 
    MessageLevel message_filter{ERROR};
 };

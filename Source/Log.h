@@ -32,7 +32,7 @@ class Log
 {
 public:
    Log(const char* name_)
-      : file(nullptr, name_, "log")
+      : file(nullptr, name_)
    {
    }
 
