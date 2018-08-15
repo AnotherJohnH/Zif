@@ -784,7 +784,7 @@ private:
 
    void opE_print_unicode() { TODO_WARN("print_unicode"); }
 
-   void opE_check_unicode() { TODO_ERROR(); }
+   void opE_check_unicode() { TODO_WARN("check_unicode"); varWrite(fetchByte(), 0); }
 
    void opE_draw_picture() { TODO_WARN("draw_picture"); }
 
