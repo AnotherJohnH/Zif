@@ -69,13 +69,16 @@ public:
       for(uint32_t i=0; i<num_entries; i++)
       {
          if (!file.read(id, 4)) return false;
-         printf("%c%c%c%c\n", id[0], id[1], id[2], id[3]);
 
          if (!file.read(&size, 4)) return false;
          // uint32_t num_resources = size;
  
          if (!file.read(&size, 4)) return false;
-         exec = size;
+
+         if (strncmp(id, "Exec", 4) == 0)
+         {
+            exec = size;
+         }
       }
 
       return true;
