@@ -20,9 +20,9 @@
 // SOFTWARE.
 //------------------------------------------------------------------------------
 
-#include "Z/ZMachine.h"
 #include "ConsoleImpl.h"
 #include "Options.h"
+#include "Z/ZMachine.h"
 
 #include "TRM/Launcher.h"
 
@@ -43,7 +43,7 @@ private:
    virtual int startTerminalLauncher(const char* story) override
    {
       ConsoleImpl console(term, options);
-      ZMachine machine(console, options);
+      ZMachine    machine(console, options);
 
       return machine.play(story, options.restore) ? 0 : 1;
    }

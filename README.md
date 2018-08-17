@@ -17,9 +17,9 @@ This project is just for the fun of writing code and the learning that brings.
 [![Build Status](https://travis-ci.org/AnotherJohnH/Zif.svg?branch=master)](https://travis-ci.org/AnotherJohnH/Zif)
 
 The application is currently beta quality. It has been built and seen to run on various platforms.
-Almost all Z-code storys, .z# and .zblrb, downloaded from the interactive fiction archive start
-to run as expected. Although further testing is necessary, initial indications are that there is
-enough functionality in place to play many of the available games.
+Almost all Z-code files, .z# and .zblorb, downloaded from the interactive fiction archive, start
+to run as expected. (785/789) Although further testing is necessary, initial indications are that
+there is enough functionality in place to play many of the available games.
 
 |Target|Build|Run|
 |---|---|---|

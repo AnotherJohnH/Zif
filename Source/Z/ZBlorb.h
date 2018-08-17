@@ -56,7 +56,7 @@ private:
 
       bool match(PLT::File& file, const char* expected_id)
       {
-         if (!read(file)) return false;
+         if(!read(file)) return false;
          return ident.is(expected_id);
       }
    };
@@ -85,28 +85,28 @@ private:
       if(!file.openForRead()) return false;
 
       // Confirm IFF file format
-      if (!header.match(file, "FORM")) return false;
+      if(!header.match(file, "FORM")) return false;
 
       // Confirm FORM type is IFRS
       Ident type;
-      if (!file.read(&type, sizeof(type))) return false;
-      if (!type.is("IFRS")) return false;
+      if(!file.read(&type, sizeof(type))) return false;
+      if(!type.is("IFRS")) return false;
 
       // Confirm first chunk type is a resource index
-      if (!header.match(file, "RIdx")) return false;
+      if(!header.match(file, "RIdx")) return false;
 
       STB::Big32 num_entries;
-      if (!file.read(&num_entries, 4)) return false;
+      if(!file.read(&num_entries, 4)) return false;
 
-      for(uint32_t i=0; i<num_entries; i++)
+      for(uint32_t i = 0; i < num_entries; i++)
       {
          RIdxEntry entry;
-         if (!entry.read(file)) return false;
+         if(!entry.read(file)) return false;
 
-         if (entry.type.is(resource_type) && (entry.index == index))
+         if(entry.type.is(resource_type) && (entry.index == index))
          {
             file.seek(entry.offset);
-            if (!header.read(file)) return false;
+            if(!header.read(file)) return false;
             offset = entry.offset + sizeof(ChunkHeader);
             return true;
          }
@@ -122,7 +122,7 @@ public:
    bool findExecChunk(const char* filename, const char* type, uint32_t& offset)
    {
       ChunkHeader header;
-      if (!findResource(filename, "Exec", 0, header, offset)) return false;
+      if(!findResource(filename, "Exec", 0, header, offset)) return false;
 
       return header.ident.is(type);
    }
@@ -134,10 +134,18 @@ public:
                       bool&       is_png_not_jpeg)
    {
       ChunkHeader header;
-      if (!findResource(filename, "Pict", 0, header, offset)) return false;
+      if(!findResource(filename, "Pict", 0, header, offset)) return false;
 
-           if (header.ident.is("PNG ")) { is_png_not_jpeg = true;  return true; }
-      else if (header.ident.is("JPEG")) { is_png_not_jpeg = false; return true; }
+      if(header.ident.is("PNG "))
+      {
+         is_png_not_jpeg = true;
+         return true;
+      }
+      else if(header.ident.is("JPEG"))
+      {
+         is_png_not_jpeg = false;
+         return true;
+      }
 
       return false;
    }
@@ -146,7 +154,7 @@ public:
    bool findSndChunk(const char* filename, uint32_t index, uint32_t& offset)
    {
       ChunkHeader header;
-      if (!findResource(filename, "Snd ", 0, header, offset)) return false;
+      if(!findResource(filename, "Snd ", 0, header, offset)) return false;
 
       return true;
    }

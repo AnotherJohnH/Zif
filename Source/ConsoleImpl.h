@@ -154,7 +154,7 @@ public:
       bool     ext;
       unsigned curses_colour = convertColourToCurses(colour, ext);
 
-      if (ext)
+      if(ext)
          curses.extfgcolour(curses_colour);
       else
          curses.fgcolour(curses_colour);
@@ -168,7 +168,7 @@ public:
       bool     ext;
       unsigned curses_colour = convertColourToCurses(colour, ext);
 
-      if (ext)
+      if(ext)
          curses.extbgcolour(curses_colour);
       else
          curses.bgcolour(curses_colour);
