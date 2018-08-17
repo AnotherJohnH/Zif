@@ -33,42 +33,58 @@
 class ZBlorb
 {
 private:
+   //! IFF 4-char ident
+   struct Ident
+   {
+      char value[4];
+
+      bool is(const char* expected) const
+      {
+         return strncmp(value, expected, sizeof(value)) == 0;
+      }
+   };
+
+   //! IFF chunk header
    struct ChunkHeader
    {
-      char       id[4];
+      Ident      ident;
       STB::Big32 size;
 
       bool match(PLT::File& file, const char* expected_id)
       {
          if (!file.read(this, sizeof(ChunkHeader))) return false;
-         return strncmp(id, expected_id, 4) == 0;
+         return ident.is(expected_id);
       }
    };
 
+   //! Resource index entry
    struct RIdxEntry
    {
-      char       id[4];
+      Ident      type;
       STB::Big32 index;
       STB::Big32 offset;
+
+      bool read(PLT::File& file)
+      {
+         return file.read(this, sizeof(RIdxEntry));
+      }
    };
 
-public:
-   ZBlorb() = default;
-
-   bool init(const char* filename)
+   //! Find a chunk of the given type a chunk
+   bool findChunk(PLT::File&  file,
+                  const char* chunk_type,
+                  unsigned    index,
+                  uint32_t&   offset)
    {
-      PLT::File file(nullptr, filename);
-      if(!file.openForRead()) return false;
-
       ChunkHeader header;
 
       // Confirm IFF file format
       if (!header.match(file, "FORM")) return false;
 
       // Confirm FORM type is IFRS
-      char type[4];
-      if (!file.read(type, 4)) return false;
-      if (strncmp(type, "IFRS", 4) != 0) return false;
+      Ident type;
+      if (!file.read(&type, sizeof(type))) return false;
+      if (!type.is("IFRS")) return false;
 
       // Confirm first chunk type is a resource index
       if (!header.match(file, "RIdx")) return false;
@@ -79,31 +95,53 @@ public:
       for(uint32_t i=0; i<num_entries; i++)
       {
          RIdxEntry entry;
-         if (!file.read(&entry, sizeof(entry))) return false;
+         if (!entry.read(file)) return false;
 
-              if (strncmp(entry.id, "Exec", 4) == 0) { exec = entry.offset; }
-         else if (strncmp(entry.id, "Pict", 4) == 0) { pict = entry.offset; }
-         else if (strncmp(entry.id, "Snd ", 4) == 0) { snd  = entry.offset; }
+         if (entry.type.is(chunk_type) && (entry.index == index))
+         {
+            offset = entry.offset;
+            return true;
+         }
       }
 
-      if (exec == 0) return false;
+      return false;
+   }
 
-      file.seek(exec);
-      if (!header.match(file, "ZCOD")) return false;
-      exec += sizeof(ChunkHeader);
+public:
+   ZBlorb() = default;
+
+   //! Find an Exec chunk of the given type
+   bool findExecChunk(const char* filename, const char* type, uint32_t& offset)
+   {
+      PLT::File file(nullptr, filename);
+      if(!file.openForRead()) return false;
+
+      if (!findChunk(file, "Exec", 0, offset)) return false;
+
+      file.seek(offset);
+
+      ChunkHeader header;
+      if (!header.match(file, type)) return false;
+      offset += sizeof(ChunkHeader);
 
       return true;
    }
 
-   uint32_t execOffset()
+   //! Find a Pict chunk of the given type
+   bool findPictChunk(const char* filename, uint32_t index, uint32_t& offset)
    {
-       return exec;
+      PLT::File file(nullptr, filename);
+      if(!file.openForRead()) return false;
+      return findChunk(file, "Pict", index, offset);
    }
 
-private:
-   uint32_t exec{0};
-   uint32_t pict{0};
-   uint32_t snd{0};
+   //! Find a Snd chunk of the given type
+   bool findSndChunk(const char* filename, uint32_t index, uint32_t& offset)
+   {
+      PLT::File file(nullptr, filename);
+      if(!file.openForRead()) return false;
+      return findChunk(file, "Snd ", index, offset);
+   }
 };
 
 #endif

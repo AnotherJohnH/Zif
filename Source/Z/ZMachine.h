@@ -1287,9 +1287,7 @@ public:
 
       if (strstr(story, ".zblorb"))
       {
-          if (!zblorb.init(filename)) return false;
-
-          file_offset = zblorb.execOffset();
+          if (!zblorb.findExecChunk(filename, "ZCOD", file_offset)) return false;
       }
       else
       {
