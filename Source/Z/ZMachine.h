@@ -33,6 +33,7 @@
 
 #include "ZConfig.h"
 #include "ZHeader.h"
+#include "ZBlorb.h"
 #include "ZObject.h"
 #include "ZParser.h"
 #include "ZState.h"
@@ -67,9 +68,11 @@ private:
    ZObject        object;
    ZText          text;
    ZParser        parser;
+   ZBlorb         zblorb{};
    ZHeader*       header{};
    const char*    filename{};
    const char*    story{};
+   unsigned       file_offset{0};
    uint32_t       inst_addr;
    unsigned       num_arg;
    union
@@ -1168,7 +1171,7 @@ private:
       // TODO the header should be reset (only bits 0 and 1 from Flags 2
       //      shoud be preserved)
 
-      if(!ZState::reset(filename, header->getEntryPoint(), header->checksum))
+      if(!ZState::reset(filename, file_offset, header->getEntryPoint(), header->checksum))
       {
          error("Failed to read story z-file \"%s\"", filename);
       }
@@ -1193,6 +1196,8 @@ private:
          error("Failed to open story z-file \"%s\"", filename);
          return false;
       }
+
+      file.seek(file_offset);
 
       // Read header
       if(!memory.load(file, 0, sizeof(ZHeader)))
@@ -1278,6 +1283,17 @@ public:
       else
       {
          story = story + 1;
+      }
+
+      if (strstr(story, ".zblorb"))
+      {
+          if (!zblorb.init(filename)) return false;
+
+          file_offset = zblorb.offsetOf("ZCOD");
+      }
+      else
+      {
+          file_offset = 0;
       }
 
       if(!loadHeader()) return false;

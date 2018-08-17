@@ -100,7 +100,7 @@ public:
 
    //! Reset the dynamic state to the initial conditions.
    //  This includes loading the body of the game file
-   bool reset(const char* filename, uint32_t pc_, uint16_t header_checksum)
+   bool reset(const char* filename, unsigned offset, uint32_t pc_, uint16_t header_checksum)
    {
       do_quit = false;
 
@@ -119,7 +119,7 @@ public:
       }
 
       // skip the header
-      file.seek(game_start);
+      file.seek(offset + game_start);
 
       if(!memory.load(file, game_start, game_end))
       {
