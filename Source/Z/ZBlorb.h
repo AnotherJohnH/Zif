@@ -32,6 +32,26 @@
 
 class ZBlorb
 {
+private:
+   struct ChunkHeader
+   {
+      char       id[4];
+      STB::Big32 size;
+
+      bool match(PLT::File& file, const char* expected_id)
+      {
+         if (!file.read(this, sizeof(ChunkHeader))) return false;
+         return strncmp(id, expected_id, 4) == 0;
+      }
+   };
+
+   struct RIdxEntry
+   {
+      char       id[4];
+      STB::Big32 index;
+      STB::Big32 offset;
+   };
+
 public:
    ZBlorb() = default;
 
@@ -40,58 +60,50 @@ public:
       PLT::File file(nullptr, filename);
       if(!file.openForRead()) return false;
 
-      char       id[4];
-      STB::Big32 size;
+      ChunkHeader header;
 
-      // Confirm FORM format
-      if (!file.read(id, 4)) return false;
-      if (strncmp(id, "FORM", 4) != 0) return false;
-
-      // Read FORM size
-      if (!file.read(&size, 4)) return false;
-      form_size = size;
+      // Confirm IFF file format
+      if (!header.match(file, "FORM")) return false;
 
       // Confirm FORM type is IFRS
-      if (!file.read(id, 4)) return false;
-      if (strncmp(id, "IFRS", 4) != 0) return false;
+      char type[4];
+      if (!file.read(type, 4)) return false;
+      if (strncmp(type, "IFRS", 4) != 0) return false;
 
       // Confirm first chunk type is a resource index
-      if (!file.read(id, 4)) return false;
-      if (strncmp(id, "RIdx", 4) != 0) return false;
+      if (!header.match(file, "RIdx")) return false;
 
-      // Read resource index size
-      if (!file.read(&size, 4)) return false;
-      // uint32_t chunk_length = size;
-
-      if (!file.read(&size, 4)) return false;
-      uint32_t num_entries = size;
+      STB::Big32 num_entries;
+      if (!file.read(&num_entries, 4)) return false;
 
       for(uint32_t i=0; i<num_entries; i++)
       {
-         if (!file.read(id, 4)) return false;
+         RIdxEntry entry;
+         if (!file.read(&entry, sizeof(entry))) return false;
 
-         if (!file.read(&size, 4)) return false;
-         // uint32_t num_resources = size;
- 
-         if (!file.read(&size, 4)) return false;
-
-         if (strncmp(id, "Exec", 4) == 0)
-         {
-            exec = size;
-         }
+              if (strncmp(entry.id, "Exec", 4) == 0) { exec = entry.offset; }
+         else if (strncmp(entry.id, "Pict", 4) == 0) { pict = entry.offset; }
+         else if (strncmp(entry.id, "Snd ", 4) == 0) { snd  = entry.offset; }
       }
+
+      if (exec == 0) return false;
+
+      file.seek(exec);
+      if (!header.match(file, "ZCOD")) return false;
+      exec += sizeof(ChunkHeader);
 
       return true;
    }
 
-   uint32_t offsetOf(const char* chunk)
+   uint32_t execOffset()
    {
-       return exec + 4 + 4;
+       return exec;
    }
 
 private:
-   uint32_t form_size{0};
    uint32_t exec{0};
+   uint32_t pict{0};
+   uint32_t snd{0};
 };
 
 #endif

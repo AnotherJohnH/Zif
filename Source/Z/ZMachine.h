@@ -1289,7 +1289,7 @@ public:
       {
           if (!zblorb.init(filename)) return false;
 
-          file_offset = zblorb.offsetOf("ZCOD");
+          file_offset = zblorb.execOffset();
       }
       else
       {
