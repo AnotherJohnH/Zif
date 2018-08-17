@@ -24,7 +24,6 @@
 #define ZBLORB_H
 
 #include <cstdint>
-#include <cstdio>
 #include <cstring>
 
 #include "PLT/File.h"
@@ -50,9 +49,14 @@ private:
       Ident      ident;
       STB::Big32 size;
 
+      bool read(PLT::File& file)
+      {
+         return file.read(this, sizeof(ChunkHeader));
+      }
+
       bool match(PLT::File& file, const char* expected_id)
       {
-         if (!file.read(this, sizeof(ChunkHeader))) return false;
+         if (!read(file)) return false;
          return ident.is(expected_id);
       }
    };
@@ -71,12 +75,14 @@ private:
    };
 
    //! Find a chunk of the given type a chunk
-   bool findChunk(PLT::File&  file,
-                  const char* chunk_type,
-                  unsigned    index,
-                  uint32_t&   offset)
+   bool findResource(const char*  filename,
+                     const char*  resource_type,
+                     unsigned     index,
+                     ChunkHeader& header,
+                     uint32_t&    offset)
    {
-      ChunkHeader header;
+      PLT::File file(nullptr, filename);
+      if(!file.openForRead()) return false;
 
       // Confirm IFF file format
       if (!header.match(file, "FORM")) return false;
@@ -97,9 +103,11 @@ private:
          RIdxEntry entry;
          if (!entry.read(file)) return false;
 
-         if (entry.type.is(chunk_type) && (entry.index == index))
+         if (entry.type.is(resource_type) && (entry.index == index))
          {
-            offset = entry.offset;
+            file.seek(entry.offset);
+            if (!header.read(file)) return false;
+            offset = entry.offset + sizeof(ChunkHeader);
             return true;
          }
       }
@@ -113,34 +121,34 @@ public:
    //! Find an Exec chunk of the given type
    bool findExecChunk(const char* filename, const char* type, uint32_t& offset)
    {
-      PLT::File file(nullptr, filename);
-      if(!file.openForRead()) return false;
-
-      if (!findChunk(file, "Exec", 0, offset)) return false;
-
-      file.seek(offset);
-
       ChunkHeader header;
-      if (!header.match(file, type)) return false;
-      offset += sizeof(ChunkHeader);
+      if (!findResource(filename, "Exec", 0, header, offset)) return false;
 
-      return true;
+      return header.ident.is(type);
    }
 
-   //! Find a Pict chunk of the given type
-   bool findPictChunk(const char* filename, uint32_t index, uint32_t& offset)
+   //! Find a Pict chunk for the given index
+   bool findPictChunk(const char* filename,
+                      uint32_t    index,
+                      uint32_t&   offset,
+                      bool&       is_png_not_jpeg)
    {
-      PLT::File file(nullptr, filename);
-      if(!file.openForRead()) return false;
-      return findChunk(file, "Pict", index, offset);
+      ChunkHeader header;
+      if (!findResource(filename, "Pict", 0, header, offset)) return false;
+
+           if (header.ident.is("PNG ")) { is_png_not_jpeg = true;  return true; }
+      else if (header.ident.is("JPEG")) { is_png_not_jpeg = false; return true; }
+
+      return false;
    }
 
    //! Find a Snd chunk of the given type
    bool findSndChunk(const char* filename, uint32_t index, uint32_t& offset)
    {
-      PLT::File file(nullptr, filename);
-      if(!file.openForRead()) return false;
-      return findChunk(file, "Snd ", index, offset);
+      ChunkHeader header;
+      if (!findResource(filename, "Snd ", 0, header, offset)) return false;
+
+      return true;
    }
 };
 
