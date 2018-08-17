@@ -41,15 +41,15 @@ public:
       if(!file.openForRead()) return false;
 
       char       id[4];
-      STB::Big32 length;
+      STB::Big32 size;
 
       // Confirm FORM format
       if (!file.read(id, 4)) return false;
       if (strncmp(id, "FORM", 4) != 0) return false;
 
       // Read FORM size
-      if (!file.read(&length, 4)) return false;
-      form_size = length;
+      if (!file.read(&size, 4)) return false;
+      form_size = size;
 
       // Confirm FORM type is IFRS
       if (!file.read(id, 4)) return false;
@@ -60,24 +60,35 @@ public:
       if (strncmp(id, "RIdx", 4) != 0) return false;
 
       // Read resource index size
-      if (!file.read(&length, 4)) return false;
-      uint32_t chunk_length = length;
-      uint32_t num_entries = (chunk_length - 4) / 12;
+      if (!file.read(&size, 4)) return false;
+      // uint32_t chunk_length = size;
+
+      if (!file.read(&size, 4)) return false;
+      uint32_t num_entries = size;
 
       for(uint32_t i=0; i<num_entries; i++)
       {
+         if (!file.read(id, 4)) return false;
+         printf("%c%c%c%c\n", id[0], id[1], id[2], id[3]);
+
+         if (!file.read(&size, 4)) return false;
+         // uint32_t num_resources = size;
+ 
+         if (!file.read(&size, 4)) return false;
+         exec = size;
       }
 
-      return false;
+      return true;
    }
 
-   unsigned offsetOf(const char* chunk)
+   uint32_t offsetOf(const char* chunk)
    {
-       return 0;
+       return exec + 4 + 4;
    }
 
 private:
    uint32_t form_size{0};
+   uint32_t exec{0};
 };
 
 #endif
