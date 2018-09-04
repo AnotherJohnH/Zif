@@ -785,9 +785,24 @@ private:
       if(!ZState::restore(options.save_dir, story)) varWrite(fetchByte(), 0);
    }
 
-   void opE_print_unicode() { TODO_WARN("print_unicode"); }
+   void opE_print_unicode()
+   {
+      uint16_t ch = uarg[0];
+      if (ch <= 126)
+      {
+         stream.writeChar(uarg[0]);
+      }
+      else
+      {
+         TODO_WARN("print_unicode");
+      }
+   }
 
-   void opE_check_unicode() { TODO_WARN("check_unicode"); varWrite(fetchByte(), 0); }
+   void opE_check_unicode()
+   {
+      uint16_t ch = uarg[0];
+      varWrite(fetchByte(), ch <= 126);
+   }
 
    void opE_draw_picture() { TODO_WARN("draw_picture"); }
 
