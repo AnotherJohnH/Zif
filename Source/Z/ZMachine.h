@@ -1302,7 +1302,11 @@ public:
 
       if (strstr(story, ".zblorb"))
       {
-          if (!zblorb.findExecChunk(filename, "ZCOD", file_offset)) return false;
+          if (!zblorb.findExecChunk(filename, "ZCOD", file_offset))
+          {
+             warning("ZCOD section not found in zblorb file");
+             file_offset = 0;
+          }
       }
       else
       {
