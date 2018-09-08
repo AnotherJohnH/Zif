@@ -197,23 +197,16 @@ public:
    //! Fetch an instruction byte
    uint8_t fetchByte()
    {
-      uint8_t byte = 0;
-      if(validatePC())
-      {
-         byte = memory[pc++];
-      }
-      return byte;
+      assert(validatePC());
+      return memory[pc++];
    }
 
    //! Fetch an instruction word
    uint16_t fetchWord()
    {
-      uint16_t word = 0;
-      if(validatePC())
-      {
-         word = memory.readWord(pc);
-         pc += 2;
-      }
+      assert(validatePC());
+      uint16_t word = memory.readWord(pc);
+      pc += 2;
       return word;
    }
 
