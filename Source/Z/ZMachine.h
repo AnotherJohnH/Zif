@@ -1232,45 +1232,56 @@ private:
       return true;
    }
 
-   void printTrace()
+   void disassemble(char* text)
    {
-      static unsigned tick = 0;
+      // XXX this is all a bit unsafe and nasty - probably should
+      // bite the bullet and alow dynamic allocation
 
-      inst_addr      = ZState::getPC();
       uint8_t opcode = memory[inst_addr];
 
-      trace.printf("%4d %06X: %02X ", tick++, inst_addr, opcode);
+      sprintf(text, "%06X: %02X ", inst_addr, opcode);
+      text += strlen(text);
 
       if(opcode < 0x80)
       {
-         trace.printf("2OP:%02X", opcode & 0x1F);
+         sprintf(text, "   2OP:%02X", opcode & 0x1F);
       }
       else if(opcode < 0xB0)
       {
-         trace.printf("1OP:%1X", opcode & 0xF);
+         sprintf(text, "   1OP:%1X", opcode & 0xF);
       }
       else if(opcode < 0xC0)
       {
          if((opcode & 0xF) == 0xE)
          {
             uint8_t ext_opcode = memory[inst_addr + 1];
-            trace.printf("EXT:%02X", ext_opcode & 0x1F);
+            sprintf(text, "%02X EXT:%02X", ext_opcode, ext_opcode & 0x1F);
          }
          else
          {
-            trace.printf("0OP:%1X", opcode & 0xF);
+            sprintf(text, "   0OP:%1X", opcode & 0xF);
          }
       }
       else if(opcode < 0xE0)
       {
-         trace.printf("2OP:%02X", opcode & 0x1F);
+         sprintf(text, "   2OP:%02X", opcode & 0x1F);
       }
       else
       {
-         trace.printf("VAR:%02X", opcode & 0x1F);
+         sprintf(text, "   VAR:%02X", opcode & 0x1F);
       }
+   }
 
-      trace.printf("\n");
+   void printTrace()
+   {
+      static unsigned tick = 0;
+
+      inst_addr = ZState::getPC();
+
+      char text[128];
+      disassemble(text);
+
+      trace.printf("%4d %s\n", tick++, text);
    }
 
 public:
@@ -1361,11 +1372,9 @@ public:
       Error exit_code = ZState::getExitCode();
       if(isError(exit_code))
       {
-         error("PC=%06x OP=%02X %02X : %s",
-               inst_addr,
-               memory[inst_addr],
-               memory[inst_addr+1],
-               errorString(exit_code));
+         char text[128];
+         disassemble(text);
+         error("PC=%s : %s", text, errorString(exit_code));
          return false;
       }
 
