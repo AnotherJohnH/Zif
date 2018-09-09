@@ -68,6 +68,8 @@ public:
 
    uint16_t getWindowProp(unsigned index_, unsigned prop_)
    {
+      // TODO validate index and prop
+
       switch(prop_)
       {
       case  0: return window[index_].pos.y;
@@ -88,6 +90,34 @@ public:
       case 15: return window[index_].line_count;
 
       default: return 0;
+      }
+   }
+
+   void setWindowProp(unsigned index_, unsigned prop_, unsigned value)
+   {
+      // TODO validate index and prop
+      // TODO side effects
+
+      switch(prop_)
+      {
+      case  0: window[index_].pos.y = value; break;
+      case  1: window[index_].pos.x = value; break;
+      case  2: window[index_].size.y = value; break;
+      case  3: window[index_].size.x = value; break;
+      case  4: window[index_].cursor.y = value; break;
+      case  5: window[index_].cursor.x = value; break;
+      case  6: window[index_].left_margin = value; break;
+      case  7: window[index_].right_margin = value; break;
+      case  8: window[index_].newline_handler = value; break;
+      case  9: window[index_].interrupt_countdown = value; break;
+      case 10: window[index_].text_style = value; break;
+      case 11: window[index_].colour_data = value; break;
+      case 12: window[index_].font_number = value; break;
+      case 13: window[index_].font_size = value; break;
+      case 14: window[index_].attr = value; break;
+      case 15: window[index_].line_count = value; break;
+
+      default: break;
       }
    }
 

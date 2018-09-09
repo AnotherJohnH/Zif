@@ -926,7 +926,14 @@ private:
 
    void opE_push_stack() { TODO_ERROR("push_stack unimplemented"); }
 
-   void opE_put_wind_prop() { TODO_ERROR("put_wind_prop unimplemented"); }
+   void opE_put_wind_prop()
+   {
+      uint16_t wind  = uarg[0];
+      uint16_t prop  = uarg[1];
+      uint16_t value = uarg[2];
+
+      window_mgr.setWindowProp(wind, prop, value);
+   }
 
    void opE_print_form() { TODO_ERROR("print_form unimplemented"); }
 
