@@ -187,7 +187,7 @@ struct ZHeader
    {
       if(version <= 3)
       {
-         if(config.status_line)      flags1 |= 1 << 4;
+         if(!config.status_line)     flags1 |= 1 << 4;
          if(config.screen_splitting) flags1 |= 1 << 5;
          if(config.var_pitch_font)   flags1 |= 1 << 6;
       }

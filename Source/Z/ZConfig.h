@@ -30,7 +30,7 @@ struct ZConfig
 {
    uint8_t  interp_major_version{0};
    uint8_t  interp_minor_version{0};
-   bool     status_line{false};      //!< Status line available
+   bool     status_line{true};       //!< Status line available
    bool     screen_splitting{false}; //!< Screen splitting available
    bool     var_pitch_font{false};   //!< variable pitch font the default
    bool     pictures{false};         //!< picture display available
