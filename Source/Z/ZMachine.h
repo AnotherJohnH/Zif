@@ -896,7 +896,9 @@ private:
       }
       else
       {
-         TODO_WARN("op print_unicode unimplemented");
+         char temp[128];
+         sprintf(temp, "op print_unicode unimplemented for 0x%X", ch);
+         TODO_WARN(temp);
       }
    }
 
