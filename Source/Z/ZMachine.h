@@ -620,8 +620,8 @@ private:
       console.getCursorPos(row, col);
 
       uint16_t array = uarg[0];
-      memory.writeWord(array, row);
-      memory.writeWord(array, col);
+      memory.writeWord(array + 0, row);
+      memory.writeWord(array + 2, col);
    }
 
    void opV_set_text_style() { stream.setFontStyle(uarg[0]); }
@@ -830,23 +830,31 @@ private:
 
    void opE_picture_data()
    {
-      TODO_ERROR("op picture_data unimplemented");
+      TODO_WARN("op picture_data unimplemented");
 
       uint16_t pict_no = uarg[0];
       uint16_t array   = uarg[1];
+      bool     valid{false};
+      uint16_t value1{0};
+      uint16_t value2{0};
 
       if (pict_no == 0)
       {
-         memory.writeWord(array,     0); // TODO number of available pictures
-         memory.writeWord(array + 1, 0); // TODO picture file release number
+         value1 = 0; // TODO number of available pictures
+         value2 = 0; // TODO picture file release number
       }
       // TODO
       // else if (isValidPictur(pict_no))
       // {
-      //    memory.writeWord(array,     height);
-      //    memory.writeWord(array + 1, width);
-      //    branch(true);
+      //    value1 = height;
+      //    value2 = width;
+      //    valid  = true;
       // }
+
+      memory.writeWord(array + 0, value1);
+      memory.writeWord(array + 2, value2);
+
+      branch(valid);
    }
 
    void opE_erase_picture() { TODO_WARN("op erase_picture unimplemented"); }
