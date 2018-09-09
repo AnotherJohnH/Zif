@@ -292,8 +292,8 @@ private:
 
       uint16_t loc  = varRead(16+0);
       uint32_t name = object.getName(loc);
-      console.moveCursor(1, 1);
-      --loc_size;
+      console.moveCursor(1, 2);
+      loc_size -= 2;
       text.print([this, &loc_size](uint16_t ch)
                  {
                     if (loc_size > 1)
