@@ -889,23 +889,74 @@ private:
 
    void opE_print_unicode()
    {
-      uint16_t ch = uarg[0];
-      if (ch <= 126)
+      uint16_t code = uarg[0];
+
+      if ((code >= 0x20) && (code <= 0x7E))
       {
-         stream.writeChar(uarg[0]);
+         stream.writeChar(code);
       }
       else
       {
-         char temp[128];
-         sprintf(temp, "op print_unicode unimplemented for 0x%X", ch);
-         TODO_WARN(temp);
+         switch(code)
+         {
+         case 0x00A9: // Copyright
+            stream.writeChar('(');
+            stream.writeChar('C');
+            stream.writeChar(')');
+            break;
+
+         case 0x0219: // Latin small s with comma below
+            stream.writeChar('s');
+            break;
+
+         case 0x2014: // Em dash
+            stream.writeChar('-');
+            break;
+
+         case 0x2026: // Horizontal ellipses
+            stream.writeChar('.');
+            stream.writeChar('.');
+            stream.writeChar('.');
+            break;
+
+         case 0x2212: // Minus sign
+            stream.writeChar('-');
+            break;
+
+         default:
+            char temp[128];
+            sprintf(temp, "unsupported unicode 0x%X", code);
+            TODO_WARN(temp);
+            code = '?';
+            break;
+         }
       }
    }
 
    void opE_check_unicode()
    {
-      uint16_t ch = uarg[0];
-      varWrite(fetchByte(), ch <= 126);
+      uint16_t code = uarg[0];
+      uint16_t bit_mask = 0;
+
+      if ((code >= 0x20) && (code <= 0x7E))
+      {
+         bit_mask = 0b11;
+      }
+      else
+      {
+         switch(code)
+         {
+         case 0x00A9: // Copyright
+         case 0x0219: // Latin small s with comma below
+         case 0x2014: // Em Dash
+         case 0x2026: // Horizontal ellipses
+         case 0x2212: // Minus sign
+            bit_mask = 0b01;
+            break;
+         }
+      }
+
+      varWrite(fetchByte(), bit_mask);
    }
 
    void opE_draw_picture() { TODO_WARN("op draw_picture unimplemented"); }
