@@ -1051,13 +1051,47 @@ private:
 
    void opE_scroll_window() { TODO_WARN("scroll_window unimplemented"); }
 
-   void opE_pop_stack() { TODO_ERROR("pop_stack unimplemented"); }
+   void opE_pop_stack()
+   {
+      uint16_t items = uarg[0];
+
+      if (num_arg == 1)
+      {
+         uint16_t stack = uarg[1];
+         uint16_t size  = memory.readWord(stack);
+
+         size += items;
+
+         memory.writeWord(stack, size);
+      }
+      else
+      {
+         for(uint16_t i=0; i<items; i++)
+         {
+            (void) pop();
+         }
+      }
+   }
 
    void opE_read_mouse() { TODO_ERROR("read_mouse unimplemented"); }
 
    void opE_mouse_window() { TODO_WARN("mouse_window unimplemented"); }
 
-   void opE_push_stack() { TODO_ERROR("push_stack unimplemented"); }
+   void opE_push_stack()
+   {
+      uint16_t value = uarg[0];
+      uint16_t stack = uarg[1];
+      uint16_t size  = memory.readWord(stack);
+
+      if (size != 0)
+      {
+         memory.writeWord(stack + 2*size, value);
+         --size;
+         memory.writeWord(stack, size);
+      }
+
+      branch(size != 0);
+   }
 
    void opE_put_wind_prop()
    {
