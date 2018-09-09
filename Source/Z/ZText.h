@@ -24,6 +24,7 @@
 #define ZTEXT_H
 
 #include <cstdint>
+#include <functional>
 
 #include "ZMemory.h"
 #include "ZStream.h"
@@ -33,6 +34,9 @@
 //! Decompressor for text
 class ZText
 {
+public:
+   using Writer = std::function<void(uint16_t)>;
+
 private:
    enum State : uint8_t
    {
@@ -46,7 +50,6 @@ private:
    };
 
    // Linkage
-   ZStream&       stream;
    const ZMemory& memory;
 
    // Configuration
@@ -59,13 +62,13 @@ private:
    uint8_t next_a;
    uint8_t ascii;
 
-   void decodeAbbr(unsigned index)
+   void decodeAbbr(Writer writer, unsigned index)
    {
       uint32_t entry = memory.readWord(abbr + index * 2) * 2;
 
       state = DECODE_ABBR;
 
-      for(; decode(memory.readWord(entry)); entry += 2)
+      for(; decode(writer, memory.readWord(entry)); entry += 2)
       {
       }
    }
@@ -78,7 +81,7 @@ private:
       ascii  = 0;
    }
 
-   void decodeZChar(uint8_t code)
+   void decodeZChar(Writer writer, uint8_t code)
    {
       // Alphabet table (v1) [3.5.4]
       static const char* alphabet_v1 = "abcdefghijklmnopqrstuvwxyz"    // A0
@@ -95,7 +98,7 @@ private:
       case ABBR_1:
       case ABBR_2:
       case ABBR_3:
-         decodeAbbr((state - ABBR_1) * 32 + code);
+         decodeAbbr(writer, (state - ABBR_1) * 32 + code);
          a     = next_a;
          state = NORMAL;
          return;
@@ -106,7 +109,7 @@ private:
          return;
 
       case ASCII_LOWER:
-         stream.writeChar((ascii << 5) | code);
+         writer((ascii << 5) | code);
          state = NORMAL;
          return;
 
@@ -119,14 +122,14 @@ private:
       {
       case 0:
          // Z char 0 is a space [3.5.1]
-         stream.writeChar(' ');
+         writer(' ');
          return;
 
       case 1:
          if(version == 1)
          {
             // Z char 1 is a new line (v1) [3.5.2]
-            stream.writeChar('\n');
+            writer('\n');
          }
          else if(state == NORMAL)
          {
@@ -188,7 +191,7 @@ private:
             }
             else if((code == 7) && (version != 1))
             {
-               stream.writeChar('\n');
+               writer('\n');
                break;
             }
          }
@@ -204,7 +207,7 @@ private:
             {
             }
 
-            stream.writeChar(table[(a * 26) + code - 6]);
+            writer(table[(a * 26) + code - 6]);
          }
          break;
       }
@@ -213,21 +216,20 @@ private:
    }
 
    //! Decode text packed into a 16bit word
-   bool decode(uint16_t word)
+   bool decode(Writer writer, uint16_t word)
    {
       bool cont = (word & (1 << 15)) == 0;
 
-      decodeZChar((word >> 10) & 0x1F);
-      decodeZChar((word >>  5) & 0x1F);
-      decodeZChar((word >>  0) & 0x1F);
+      decodeZChar(writer, (word >> 10) & 0x1F);
+      decodeZChar(writer, (word >>  5) & 0x1F);
+      decodeZChar(writer, (word >>  0) & 0x1F);
 
       return cont;
    }
 
 public:
-   ZText(ZStream& stream_, ZMemory& memory_)
-      : stream(stream_)
-      , memory(memory_)
+   ZText(ZMemory& memory_)
+      : memory(memory_)
    {
    }
 
@@ -239,11 +241,11 @@ public:
    }
 
    //! Write packed text starting at the given address
-   uint32_t print(uint32_t addr)
+   uint32_t print(Writer writer, uint32_t addr)
    {
       resetDecoder();
 
-      while(decode(memory.readWord(addr)))
+      while(decode(writer, memory.readWord(addr)))
       {
           addr += 2;
       }
@@ -252,13 +254,13 @@ public:
    }
 
    //! Write raw text starting at the given address
-   void printTable(uint32_t addr, unsigned width, unsigned height, unsigned skip)
+   void printTable(Writer writer, uint32_t addr, unsigned width, unsigned height, unsigned skip)
    {
       for(unsigned line = 0; line < height; line++)
       {
          for(unsigned col = 0; col < width; col++)
          {
-            stream.writeChar(memory[addr++]);
+            writer(memory[addr++]);
          }
 
          addr += skip;

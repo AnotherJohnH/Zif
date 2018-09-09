@@ -118,6 +118,12 @@ private:
 
    unsigned version() const { return header->version; }
 
+   //! Check for v3 time games
+   bool isTimeGame() const
+   {
+      return (header->version == 3) &&
+             ((header->flags1 & (1<<1)) != 0);
+   }
 
    //! Conditional branch (4.7)
    void branch(bool cond)
@@ -232,7 +238,81 @@ private:
       return true;
    }
 
-   void showStatus() { TODO_WARN("show_status"); }
+   void writeStatus(const char* s)
+   {
+      while(*s)
+      {
+         console.write(*s++);
+      }
+   }
+
+   void showStatus()
+   {
+      unsigned row, col;
+      console.getCursorPos(row, col);
+
+      // Inverse video header bar
+      console.setFontStyle(Console::FONT_STYLE_REVERSE);
+      console.moveCursor(1, 1);
+      unsigned num_cols = console.getAttr(Console::COLS);
+      for(unsigned i=0; i<num_cols; i++)
+      {
+         console.write(' ');
+      }
+
+      unsigned loc_size = num_cols;
+
+      if (isTimeGame())
+      {
+         uint16_t hours = varRead(16+1);
+         uint16_t mins  = varRead(16+2);
+
+         char temp[128]; // TODO this is naff and not safe
+         sprintf(temp, "Time : %02u:%02u", hours, mins);
+         loc_size = num_cols - 15;
+         console.moveCursor(1, loc_size);
+         writeStatus(temp);
+      }
+      else
+      {
+         int16_t  score = varRead(16+1);
+         uint16_t moves = varRead(16+2);
+
+         char temp[128]; // TODO this is naff and not safe
+
+         sprintf(temp, "Score: %d", score);
+         loc_size = num_cols - 26;
+         console.moveCursor(1, loc_size);
+         writeStatus(temp);
+
+         sprintf(temp, "Moves: %u", moves);
+         console.moveCursor(1, num_cols - 13);
+         writeStatus(temp);
+      }
+
+      uint16_t loc  = varRead(16+0);
+      uint32_t name = object.getName(loc);
+      console.moveCursor(1, 1);
+      --loc_size;
+      text.print([this, &loc_size](uint16_t ch)
+                 {
+                    if (loc_size > 1)
+                    {
+                       console.write(ch);
+                       --loc_size;
+                    }
+                 },
+                 name);
+
+      // Restore cursor and style
+      console.setFontStyle(0);
+      console.moveCursor(row, col);
+   }
+
+   uint32_t streamText(uint32_t addr)
+   {
+      return text.print([this](uint16_t ch){ stream.writeChar(ch); }, addr);
+   }
 
    void ILLEGAL() { ZState::error(Error::ILLEGAL_OP); }
 
@@ -249,7 +329,7 @@ private:
    void op0_rfalse() { subRet(0); }
 
    //! print - Print the literal Z-encoded string
-   void op0_print() { ZState::jump(text.print(ZState::getPC())); }
+   void op0_print() { ZState::jump(streamText(ZState::getPC())); }
 
    //! print_ret - Print the literal Z-encoded string, a new-line then return true
    void op0_print_ret()
@@ -340,19 +420,19 @@ private:
 
    void op1_dec()           { varWrite(uarg[0], varRead(uarg[0]) - 1); }
 
-   void op1_print_addr()    { text.print(uarg[0]); }
+   void op1_print_addr()    { streamText(uarg[0]); }
 
    void op1_call_1s()       { subCall(0, uarg[0], 0, 0); }
 
    void op1_remove_obj()    { object.remove(uarg[0]); }
 
-   void op1_print_obj()     { text.print(object.getName(uarg[0])); }
+   void op1_print_obj()     { streamText(object.getName(uarg[0])); }
 
    void op1_ret()           { subRet(uarg[0]); }
 
    void op1_jump()          { ZState::branch(sarg[0] - 2); }
 
-   void op1_print_paddr()   { text.print(header->unpackAddr(uarg[0], /* routine */false)); }
+   void op1_print_paddr()   { streamText(header->unpackAddr(uarg[0], /* routine */false)); }
 
    void op1_load()          { varWrite(fetchByte(), varRead(uarg[0], true)); }
 
@@ -732,7 +812,7 @@ private:
       uint16_t height = num_arg >= 3 ? uarg[2] : 1;
       int16_t  skip   = num_arg == 4 ? uarg[3] : 0;
 
-      text.printTable(addr, width, height, skip);
+      text.printTable([this](uint16_t ch){ stream.writeChar(ch); }, addr, width, height, skip);
    }
 
    void opV_check_arg_count() { branch(uarg[0] <= ZState::getNumFrameArgs()); }
@@ -1369,7 +1449,7 @@ public:
       , stream(console, options_, memory)
       , window_mgr(console, options_, stream)
       , object(memory)
-      , text(stream, memory)
+      , text(memory)
    {
    }
 
@@ -1427,6 +1507,14 @@ public:
 
       start(restore_save);
 
+      if (version() <= 3)
+      {
+         // Add some blank lines to avoid loosing the first line of text
+         // under the status header
+         console.write('\n');
+         console.write('\n');
+      }
+
       if(options.trace)
       {
          while(!isQuitRequested())
@@ -1442,6 +1530,8 @@ public:
             fetchDecodeExecute();
          }
       }
+
+      if (version() <= 3) showStatus();
 
       console.waitForKey();
 
