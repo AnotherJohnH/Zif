@@ -1556,7 +1556,8 @@ public:
 
       initDecoder();
 
-      info("Version : z%d\n", header->version);
+      info("Version  : z%d",  header->version);
+      info("Checksum : %04X", header->checksum);
 
       start(restore_save);
 
