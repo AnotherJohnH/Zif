@@ -1402,9 +1402,17 @@ private:
          error("Failed to read story z-file \"%s\"", filename);
       }
 
-      if(!isChecksumOk())
+      if((version() >= 3) && !isChecksumOk())
       {
-         warning("checksum fail");
+         if (version() == 3)
+         {
+            // Some v3 games do not have a checksum
+            info("Checksum fail");
+         }
+         else
+         {
+            warning("Checksum fail");
+         }
       }
 
       if (restore_save)
