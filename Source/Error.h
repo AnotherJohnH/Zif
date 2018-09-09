@@ -28,7 +28,6 @@ enum class Error
 {
    NONE = 0,
 
-   UNIMPLEMENTED_OP,
    ILLEGAL_OP,
    STACK_EMPTY,
    STACK_UNDERFLOW,
@@ -56,7 +55,6 @@ inline const char* errorString(Error code)
    switch(code)
    {
    case Error::NONE:             return "no error";
-   case Error::UNIMPLEMENTED_OP: return "Unimplement op";
    case Error::ILLEGAL_OP:       return "Illegal op";
    case Error::STACK_EMPTY:      return "Stack empty";
    case Error::STACK_UNDERFLOW:  return "Stack underflow";

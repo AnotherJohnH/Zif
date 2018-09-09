@@ -236,8 +236,7 @@ private:
 
    void ILLEGAL() { ZState::error(Error::ILLEGAL_OP); }
 
-   void TODO_ERROR() { ZState::error(Error::UNIMPLEMENTED_OP); }
-
+   void TODO_ERROR(const char* op) { error(op); }
    void TODO_WARN(const char* op) { warning(op); }
 
    //============================================================================
@@ -597,11 +596,34 @@ private:
    void opV_set_window()     { window_mgr.select(uarg[0]); }
    void opV_call_vs2()       { subCall(0, uarg[0], num_arg - 1, &uarg[1]); }
    void opV_erase_window()   { window_mgr.eraseWindow(uarg[0]); }
-   void opV_erase_line_v4()  { if (uarg[0] == 1) console.eraseLine(); }
-   void opV_erase_line_v6()  { TODO_ERROR(); }
+
+   void opV_erase_line_v4()
+   {
+      if (uarg[0] == 1)
+         console.eraseLine();
+   }
+
+   void opV_erase_line_v6()
+   {
+      if (uarg[0] == 1)
+         console.eraseLine();
+      else
+         TODO_WARN("v6 op erase_line pixels unimplemented");
+   }
+
    void opV_set_cursor_v4()  { console.moveCursor(uarg[0], uarg[1]); }
-   void opV_set_cursor_v6()  { TODO_WARN("set_cursor_v6"); }
-   void opV_get_cursor()     { TODO_ERROR(); }
+   void opV_set_cursor_v6()  { TODO_WARN("op set_cursor_v6 unimplemented"); }
+
+   void opV_get_cursor()
+   {
+      unsigned row, col;
+      console.getCursorPos(row, col);
+
+      uint16_t array = uarg[0];
+      memory.writeWord(array, row);
+      memory.writeWord(array, col);
+   }
+
    void opV_set_text_style() { stream.setFontStyle(uarg[0]); }
    void opV_buffer_mode()    { stream.setBuffering(uarg[0] != 0); }
 
@@ -627,9 +649,9 @@ private:
       }
    }
 
-   void opV_input_stream() { TODO_ERROR(); }
+   void opV_input_stream() { TODO_ERROR("op input_stream unimplemented"); }
 
-   void opV_sound_effect() { TODO_WARN("sound_effect"); }
+   void opV_sound_effect() { TODO_WARN("op sound_effect unimplemeneted"); }
 
    void opV_read_char()
    {
@@ -681,7 +703,7 @@ private:
       parser.tokenise(memory, parse, text + 1, dict, flag);
    }
 
-   void opV_encode_text() { TODO_ERROR(); }
+   void opV_encode_text() { TODO_ERROR("op encode_text unimplemeneted"); }
 
    void opV_copy_table()
    {
@@ -794,7 +816,7 @@ private:
       }
       else
       {
-         TODO_WARN("print_unicode");
+         TODO_WARN("op print_unicode unimplemented");
       }
    }
 
@@ -804,7 +826,32 @@ private:
       varWrite(fetchByte(), ch <= 126);
    }
 
-   void opE_draw_picture() { TODO_WARN("draw_picture"); }
+   void opE_draw_picture() { TODO_WARN("op draw_picture unimplemented"); }
+
+   void opE_picture_data()
+   {
+      TODO_ERROR("op picture_data unimplemented");
+
+      uint16_t pict_no = uarg[0];
+      uint16_t array   = uarg[1];
+
+      if (pict_no == 0)
+      {
+         memory.writeWord(array,     0); // TODO number of available pictures
+         memory.writeWord(array + 1, 0); // TODO picture file release number
+      }
+      // TODO
+      // else if (isValidPictur(pict_no))
+      // {
+      //    memory.writeWord(array,     height);
+      //    memory.writeWord(array + 1, width);
+      //    branch(true);
+      // }
+   }
+
+   void opE_erase_picture() { TODO_WARN("op erase_picture unimplemented"); }
+
+   void opE_set_margins() { TODO_WARN("op set_margins unimplemented"); }
 
    //! EXT:4
    //  set_font font
@@ -861,7 +908,23 @@ private:
       varWrite(fetchByte(), window_mgr.getWindowProp(wind, prop));
    }
 
-   void opE_mouse_window() { TODO_WARN("mouse_window"); }
+   void opE_scroll_window() { TODO_WARN("scroll_window unimplemented"); }
+
+   void opE_pop_stack() { TODO_ERROR("pop_stack unimplemented"); }
+
+   void opE_read_mouse() { TODO_ERROR("read_mouse unimplemented"); }
+
+   void opE_mouse_window() { TODO_WARN("mouse_window unimplemented"); }
+
+   void opE_push_stack() { TODO_ERROR("push_stack unimplemented"); }
+
+   void opE_put_wind_prop() { TODO_ERROR("put_wind_prop unimplemented"); }
+
+   void opE_print_form() { TODO_ERROR("print_form unimplemented"); }
+
+   void opE_make_menu() { TODO_ERROR("make_menu unimplemented"); }
+
+   void opE_picture_table() { TODO_WARN("picture_table unimplemented"); }
 
    void initDecoder()
    {
@@ -1017,23 +1080,23 @@ private:
       if(version() < 6) return;
 
       opE[0x05] = &ZMachine::opE_draw_picture;
-      opE[0x06] = &ZMachine::TODO_ERROR;
-      opE[0x07] = &ZMachine::TODO_ERROR;
-      opE[0x08] = &ZMachine::TODO_ERROR;
+      opE[0x06] = &ZMachine::opE_picture_data;
+      opE[0x07] = &ZMachine::opE_erase_picture;
+      opE[0x08] = &ZMachine::opE_set_margins;
 
       opE[0x10] = &ZMachine::opE_move_window;
       opE[0x11] = &ZMachine::opE_window_size;
       opE[0x12] = &ZMachine::opE_window_style;
       opE[0x13] = &ZMachine::opE_get_wind_prop;
-      opE[0x14] = &ZMachine::TODO_ERROR;
-      opE[0x15] = &ZMachine::TODO_ERROR;
-      opE[0x16] = &ZMachine::TODO_ERROR;
+      opE[0x14] = &ZMachine::opE_scroll_window;
+      opE[0x15] = &ZMachine::opE_pop_stack;
+      opE[0x16] = &ZMachine::opE_read_mouse;
       opE[0x17] = &ZMachine::opE_mouse_window;
-      opE[0x18] = &ZMachine::TODO_ERROR;
-      opE[0x19] = &ZMachine::TODO_ERROR;
-      opE[0x1A] = &ZMachine::TODO_ERROR;
-      opE[0x1B] = &ZMachine::TODO_ERROR;
-      opE[0x1C] = &ZMachine::TODO_ERROR;
+      opE[0x18] = &ZMachine::opE_push_stack;
+      opE[0x19] = &ZMachine::opE_put_wind_prop;
+      opE[0x1A] = &ZMachine::opE_print_form;
+      opE[0x1B] = &ZMachine::opE_make_menu;
+      opE[0x1C] = &ZMachine::opE_picture_table;
    }
 
    //============================================================================
