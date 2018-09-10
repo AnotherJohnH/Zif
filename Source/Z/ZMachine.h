@@ -1111,7 +1111,18 @@ private:
       text.printForm([this](uint16_t ch){ stream.writeChar(ch); }, formatted_table);
    }
 
-   void opE_make_menu() { TODO_ERROR("make_menu unimplemented"); }
+   void opE_make_menu()
+   {
+      uint16_t number = uarg[0];
+      uint16_t table  = uarg[1];
+
+      branch(false);
+
+      (void) number;
+      (void) table;
+
+      TODO_ERROR("make_menu unimplemented");
+   }
 
    void opE_picture_table() { TODO_WARN("picture_table unimplemented"); }
 
