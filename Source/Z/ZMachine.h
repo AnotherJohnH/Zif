@@ -1104,7 +1104,12 @@ private:
       window_mgr.setWindowProp(wind, prop, value);
    }
 
-   void opE_print_form() { TODO_ERROR("print_form unimplemented"); }
+   void opE_print_form()
+   {
+      uint16_t formatted_table = uarg[0];
+
+      text.printForm([this](uint16_t ch){ stream.writeChar(ch); }, formatted_table);
+   }
 
    void opE_make_menu() { TODO_ERROR("make_menu unimplemented"); }
 

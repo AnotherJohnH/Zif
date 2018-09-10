@@ -266,6 +266,22 @@ public:
          addr += skip;
       }
    }
+
+   //! Write raw text starting at the given address
+   void printForm(Writer writer, uint32_t addr)
+   {
+      while(true)
+      {
+         uint16_t length = memory.readWord(addr);
+         if (length == 0) break;
+         addr += 2;
+
+         for(uint16_t i=0; i<length; i++)
+         {
+            writer(memory[addr++]);
+         }
+      }
+   }
 };
 
 #endif
