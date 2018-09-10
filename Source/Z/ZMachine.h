@@ -720,12 +720,14 @@ private:
       }
       else
       {
-         bool set = number > 0;
-         number   = abs(number);
-         if(number > 4)
+         int16_t stream_idx = abs(number);
+
+         if(stream_idx > 4)
             ZState::error(Error::BAD_STREAM);
-         else
-            stream.enableStream(abs(number), set);
+         else if(number > 0)
+            stream.enableStream(stream_idx, true);
+         else if(number < 0)
+            stream.enableStream(stream_idx, false);
       }
    }
 
