@@ -32,6 +32,7 @@
 #include "Log.h"
 
 #include "ZConfig.h"
+#include "ZDisassembler.h"
 #include "ZHeader.h"
 #include "ZBlorb.h"
 #include "ZObject.h"
@@ -52,15 +53,8 @@ private:
 
    static const unsigned MAX_OPERANDS = 8;
 
-   enum OperandType : uint8_t
-   {
-      OP_LARGE_CONST = 0,
-      OP_SMALL_CONST = 1,
-      OP_VARIABLE    = 2,
-      OP_NONE        = 3
-   };
-
    Log            trace{"trace.log"};
+   ZDisassembler  dis;
    Options&       options;
    Console&       console;
    ZStream        stream;
@@ -1303,7 +1297,7 @@ private:
 
    void clearOperands() { num_arg = 0; }
 
-   void fetchOperand(OperandType type)
+   void fetchOperand(ZOperandType type)
    {
       uint16_t operand;
 
@@ -1341,7 +1335,7 @@ private:
       // Unpack the type of the operands
       for(unsigned i = 0; i < n; ++i)
       {
-         OperandType type = OperandType(op_types >> 14);
+         ZOperandType type = ZOperandType(op_types >> 14);
 
          if(type == OP_NONE) return;
 
@@ -1356,7 +1350,7 @@ private:
 
    void doOp1(uint8_t op_code)
    {
-      fetchOperand(OperandType((op_code >> 4) & 3));
+      fetchOperand(ZOperandType((op_code >> 4) & 3));
 
       (this->*op1[op_code & 0xF])();
    }
@@ -1503,46 +1497,6 @@ private:
       return true;
    }
 
-   void disassemble(char* text)
-   {
-      // XXX this is all a bit unsafe and nasty - probably should
-      // bite the bullet and alow dynamic allocation
-
-      uint8_t opcode = memory[inst_addr];
-
-      sprintf(text, "%06X: %02X ", inst_addr, opcode);
-      text += strlen(text);
-
-      if(opcode < 0x80)
-      {
-         sprintf(text, "   2OP:%02X", opcode & 0x1F);
-      }
-      else if(opcode < 0xB0)
-      {
-         sprintf(text, "   1OP:%1X", opcode & 0xF);
-      }
-      else if(opcode < 0xC0)
-      {
-         if((opcode & 0xF) == 0xE)
-         {
-            uint8_t ext_opcode = memory[inst_addr + 1];
-            sprintf(text, "%02X EXT:%02X", ext_opcode, ext_opcode & 0x1F);
-         }
-         else
-         {
-            sprintf(text, "   0OP:%1X", opcode & 0xF);
-         }
-      }
-      else if(opcode < 0xE0)
-      {
-         sprintf(text, "   2OP:%02X", opcode & 0x1F);
-      }
-      else
-      {
-         sprintf(text, "   VAR:%02X", opcode & 0x1F);
-      }
-   }
-
    void printTrace()
    {
       static unsigned tick = 0;
@@ -1550,9 +1504,9 @@ private:
       inst_addr = ZState::getPC();
 
       char text[128];
-      disassemble(text);
+      dis.disassemble(inst_addr, &memory[inst_addr], text);
 
-      trace.printf("%4d %s\n", tick++, text);
+      trace.printf("%6d  %s\n", tick++, text);
    }
 
 public:
@@ -1655,7 +1609,7 @@ public:
       if(isError(exit_code))
       {
          char text[128];
-         disassemble(text);
+         dis.disassemble(inst_addr, &memory[inst_addr], text);
          error("PC=%s : %s", text, errorString(exit_code));
          return false;
       }
