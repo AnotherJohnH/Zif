@@ -286,9 +286,21 @@ private:
    //! Unbuffered write of a ZSCII character
    void send(uint16_t zscii)
    {
-      if(zscii == '\0' || zscii > 255) return;
+      if((zscii < ' ') || (zscii > 0x7E))
+      {
+         // Filter undefined output codes
+         switch(zscii)
+         {
+         case '\0': case '\t': case '\n': break;
 
-      // TODO do we need to filter for just the defined ZSCII output chars
+         case 0x11: zscii = ' '; break; // v6 sentence space
+
+         default:
+            // "extra" characters
+            if((zscii >= 155) && (zscii <=251)) break;
+            return;
+         }
+      }
 
       uint8_t ch = uint8_t(zscii);
       if(ch == '\n')
