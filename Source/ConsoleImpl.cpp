@@ -63,13 +63,26 @@ int ConsoleImpl::getInput(unsigned timeout_ms)
 
    int ch = curses.getch();
 
-   // Some PLT to ZSCII conversions
+   // Some PLT::KeyCOde to ZSCII conversions
    switch(ch)
    {
    case PLT::UP:    return 0x81;
    case PLT::DOWN:  return 0x82;
    case PLT::LEFT:  return 0x83;
    case PLT::RIGHT: return 0x84;
+
+   case PLT::F1:    return 0x85;
+   case PLT::F2:    return 0x86;
+   case PLT::F3:    return 0x87;
+   case PLT::F4:    return 0x88;
+   case PLT::F5:    return 0x89;
+   case PLT::F6:    return 0x8A;
+   case PLT::F7:    return 0x8B;
+   case PLT::F8:    return 0x8C;
+   case PLT::F9:    return 0x8D;
+   case PLT::F10:   return 0x8E;
+   case PLT::F11:   return 0x8F;
+   case PLT::F12:   return 0x90;
    }
 
    return ch;
