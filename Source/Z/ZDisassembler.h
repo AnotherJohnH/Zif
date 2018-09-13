@@ -173,40 +173,55 @@ private:
 public:
    unsigned disassemble(uint16_t inst_addr, const uint8_t* code, char* text)
    {
+      uint8_t  opcode = *code;
+      char     inst[128];
       unsigned n = 1;
 
-      uint8_t opcode = *code;
-      
-      sprintf(text, "%06X  %02X ", inst_addr, opcode);
-      text += strlen(text);
-      
       if(opcode < 0x80)
       {
-         n = disOp2(code, text);
+         n = disOp2(code, inst);
       }
       else if(opcode < 0xB0)
       {
-         n = disOp1(code, text);
+         n = disOp1(code, inst);
       }
       else if(opcode < 0xC0)
       {
          if((opcode & 0xF) == 0xE)
          {
-            n = disOpE(code, text);
+            n = disOpE(code, inst);
          }
          else
          {
-            n = disOp0(code, text);
+            n = disOp0(code, inst);
          }
       }
       else if(opcode < 0xE0)
       {
-         n = disOp2_var(code, text);
+         n = disOp2_var(code, inst);
       }
       else
       {
-         n = disOpV(code, text);
+         n = disOpV(code, inst);
       }
+
+      sprintf(text, "%06X  ", inst_addr);
+      text += strlen(text);
+
+      for(unsigned i=0; i<10; i++)
+      {
+         if (i < n)
+         {
+            sprintf(text, "%02X ", code[i]);
+         }
+         else
+         {
+            strcpy(text, "   ");
+         }
+         text += strlen(text);
+      }
+
+      strcpy(text, inst);
 
       return n;
    }
