@@ -291,13 +291,16 @@ private:
          // Filter undefined output codes
          switch(zscii)
          {
-         case '\0': case '\t': case '\n': break;
-
+         case '\0': return;
+         case '\t': break;
+         case '\n': break;
+         case '\r': zscii = '\n'; break;
          case 0x11: zscii = ' '; break; // v6 sentence space
 
          default:
             // "extra" characters
             if((zscii >= 155) && (zscii <=251)) break;
+            printf("<%02x>", zscii);
             return;
          }
       }
