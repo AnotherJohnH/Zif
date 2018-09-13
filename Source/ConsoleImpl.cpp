@@ -24,6 +24,8 @@
 
 #include "ConsoleImpl.h"
 
+#include "PLT/KeyCode.h"
+
 static FILE* input_fp = nullptr;
 
 bool ConsoleImpl::openInputFile(const char* filename)
@@ -59,5 +61,16 @@ int ConsoleImpl::getInput(unsigned timeout_ms)
 
    curses.timeout(timeout_ms);
 
-   return curses.getch();
+   int ch = curses.getch();
+
+   // Some PLT to ZSCII conversions
+   switch(ch)
+   {
+   case PLT::UP:    return 0x81;
+   case PLT::DOWN:  return 0x82;
+   case PLT::LEFT:  return 0x83;
+   case PLT::RIGHT: return 0x84;
+   }
+
+   return ch;
 }

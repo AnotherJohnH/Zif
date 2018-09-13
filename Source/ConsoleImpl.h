@@ -207,7 +207,7 @@ public:
             ch = '\b';
             break;
          }
-         else if(ch < 0x7F)
+         else if(ch < 0xFF)
          {
             break;
          }
