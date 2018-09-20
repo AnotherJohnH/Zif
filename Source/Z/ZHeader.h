@@ -57,10 +57,11 @@ struct ZHeader
    STB::Big16 screen_width;
    STB::Big16 screen_height;
 
-   // TODO these are swapped v5 V v6?
+private:
    uint8_t font_height;
    uint8_t font_width;
 
+public:
    STB::Big16 routines;
    STB::Big16 static_strings;
    uint8_t    background_colour;
@@ -76,6 +77,10 @@ struct ZHeader
 
    //! Check for supported versions
    bool isVersionValid() const { return (version >= 1) && (version <= 8); }
+
+   unsigned getFontHeight() const { return version != 6 ? font_height : font_width; }
+
+   unsigned getFontWidth() const { return version != 6 ? font_width : font_height; }
 
    //! Return size of story (bytes)
    uint32_t getStorySize() const
