@@ -24,7 +24,7 @@ there is enough functionality in place to play many of the available games.
 |Target|Build|Run|
 |---|---|---|
 |Linux|OK|OK|
-|macOS|OK|OK|
+|macOS|OK|OK - macOS 10.14 has issues with SDL v2.0.8 see Platform|
 |Kindle3|OK|OK|
 |Android|OK|Only using third party terminal e.g. --term|
 |Emscripten|OK|Not working, only simple command line options --help etc.|
