@@ -869,7 +869,7 @@ private:
 
       uint8_t ret = fetchByte();
       varWrite(ret, 2);
-      varWrite(ret, ZState::save(options.save_dir, story) ? 1 : 0);
+      varWrite(ret, ZState::save(options.save_dir, name) ? 1 : 0);
    }
 
    void opE_restore_undo()
@@ -880,7 +880,7 @@ private:
       char name[12];
       sprintf(name, "undo_%x", undo_index);
 
-      if(!ZState::restore(options.save_dir, story)) varWrite(fetchByte(), 0);
+      if(!ZState::restore(options.save_dir, name)) varWrite(fetchByte(), 0);
    }
 
    void opE_print_unicode()
