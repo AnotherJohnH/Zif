@@ -25,7 +25,6 @@
 
 #include <cassert>
 #include <cstdint>
-#include <cstdio>
 
 #include "STB/Endian.h"
 
@@ -163,28 +162,6 @@ public:
    {
       return version == 6 ? unpackAddr(init_pc, /* routine */ true) + 1
                           : uint32_t(init_pc);
-   }
-
-   //!
-   void print() const
-   {
-      printf("Version : %d\n", version);
-      printf("Flags1  : %02X\n", flags1);
-      printf("Flags2  : %02X\n", flags2);
-      printf("Length  : 0x%04X\n", (uint16_t)length);
-      printf("\n");
-      printf("Dynamic Memory : 0x0040-0x%04X\n", (uint16_t)stat - 1);
-      printf("Static Memory  : 0x%04X-0x%04X\n", (uint16_t)stat,
-                                                  getStorySize() > 0xFFFF ? 0xFFFF
-                                                                          : getStorySize());
-      printf("High Memory    : 0x%04X-0x%05X\n", (uint16_t)himem, getStorySize());
-      printf("\n");
-      printf("Objects : 0x%04X\n", (uint16_t)obj);
-      printf("Globals : 0x%04X\n", (uint16_t)glob);
-      printf("Abbr    : 0x%04X\n", (uint16_t)abbr);
-      printf("Dict    : 0x%04X\n", (uint16_t)dict);
-      printf("Init PC : 0x%04X\n", (uint16_t)init_pc);
-      printf("\n");
    }
 
    //!
