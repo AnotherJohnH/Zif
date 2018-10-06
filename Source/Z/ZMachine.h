@@ -27,6 +27,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
+#include <string>
 
 #include "Options.h"
 #include "Log.h"
@@ -83,6 +84,11 @@ private:
    OpPtr op2[0x20];
    OpPtr opV[0x20];
    OpPtr opE[0x20];
+
+   // string used in multiple places, (possibly overly cautious of
+   // of dynamic memory allocation) but use of this string keeps
+   // allocations to a minimum
+   std::string work_str;
 
    void info(const char* format, ...)
    {
@@ -232,11 +238,11 @@ private:
       return true;
    }
 
-   void writeStatus(const char* s)
+   void writeStatus(const std::string& str)
    {
-      while(*s)
+      for(const auto& ch : str)
       {
-         console.write(*s++);
+         console.write(ch);
       }
    }
 
@@ -261,27 +267,33 @@ private:
          uint16_t hours = varRead(16+1);
          uint16_t mins  = varRead(16+2);
 
-         char temp[128]; // TODO this is naff and not safe
-         sprintf(temp, "Time : %02u:%02u", hours, mins);
+         work_str = "Time : ";
+         if (hours<10) work_str += '0';
+         work_str += std::to_string(hours);
+         work_str += ':';
+         if (mins<10) work_str += '0';
+         work_str += std::to_string(mins);
+
          loc_size = num_cols - 15;
          console.moveCursor(1, loc_size);
-         writeStatus(temp);
+         writeStatus(work_str);
       }
       else
       {
          int16_t  score = varRead(16+1);
-         uint16_t moves = varRead(16+2);
+         work_str = "Score : ";
+         work_str += std::to_string(score);
 
-         char temp[128]; // TODO this is naff and not safe
-
-         sprintf(temp, "Score: %d", score);
          loc_size = num_cols - 26;
          console.moveCursor(1, loc_size);
-         writeStatus(temp);
+         writeStatus(work_str);
 
-         sprintf(temp, "Moves: %u", moves);
+         uint16_t moves = varRead(16+2);
+         work_str = "Moves: ";
+         work_str += std::to_string(moves);
+
          console.moveCursor(1, num_cols - 13);
-         writeStatus(temp);
+         writeStatus(work_str);
       }
 
       uint16_t loc  = varRead(16+0);
@@ -862,14 +874,15 @@ private:
 
    void opE_save_undo()
    {
-      char name[12];
-      sprintf(name, "undo_%x", undo_index);
+      std::string& filename = work_str;
+      filename = "undo_";
+      filename += std::to_string(undo_index);
 
       undo_index = (undo_index + 1) % options.undo;
 
       uint8_t ret = fetchByte();
       varWrite(ret, 2);
-      varWrite(ret, ZState::save(options.save_dir, name) ? 1 : 0);
+      varWrite(ret, ZState::save(options.save_dir, filename.c_str()) ? 1 : 0);
    }
 
    void opE_restore_undo()
@@ -877,10 +890,11 @@ private:
       undo_index = undo_index == 0 ? options.undo - 1
                                    : undo_index - 1;
 
-      char name[12];
-      sprintf(name, "undo_%x", undo_index);
+      std::string& filename = work_str;
+      filename = "undo_";
+      filename += std::to_string(undo_index);
 
-      if(!ZState::restore(options.save_dir, name)) varWrite(fetchByte(), 0);
+      if(!ZState::restore(options.save_dir, filename.c_str())) varWrite(fetchByte(), 0);
    }
 
    void opE_print_unicode()
@@ -920,9 +934,9 @@ private:
             break;
 
          default:
-            char temp[128];
-            sprintf(temp, "unsupported unicode 0x%X", code);
-            TODO_WARN(temp);
+            work_str = "unsupported unicode ";
+            work_str += std::to_string(code);
+            TODO_WARN(work_str.c_str());
             code = '?';
             break;
          }
