@@ -25,6 +25,7 @@
 
 #include <cctype>
 #include <cstdint>
+#include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <string>
@@ -41,10 +42,6 @@
 #include "ZState.h"
 #include "ZText.h"
 #include "ZWindowManager.h"
-
-
-#define TRACE if (1) ; else trace.printf
-
 
 //! Z machine implementation
 class ZMachine : public ZState
@@ -143,8 +140,6 @@ private:
          offset = int16_t(offset << 2) >> 2;
       }
 
-      TRACE(" B%c %04X", branch_if_true ? 'T' : 'F', offset & 0xFFFF);
-
       if(cond == branch_if_true)
       {
          if((offset == 0) || (offset == 1))
@@ -202,9 +197,6 @@ private:
 
          ZState::push(value);
       }
-
-      TRACE("   // call %06x args=%d locals=%d",
-            ZState::getPC(), argc, num_locals - argc);
    }
 
    //! Return from a sub-routine
@@ -1326,7 +1318,6 @@ private:
       default: assert(!"bad operand type"); return;
       }
 
-      TRACE(" (%X)", operand);
       uarg[num_arg++] = operand;
 
       assert(num_arg <= 8);
@@ -1339,14 +1330,12 @@ private:
       if(n == 4)
       {
          op_types = fetchByte() << 8;
-         TRACE(" t%02X", op_types >> 8);
       }
       else
       {
          assert(n == 8);
 
          op_types = fetchWord();
-         TRACE(" t%04X", op_types);
       }
 
       // Unpack the type of the operands
@@ -1518,7 +1507,14 @@ private:
    {
       (void) dis.disassemble(dis_text, ZState::getPC(), &memory[inst_addr]);
 
-      trace.printf("%6d  %s\n", dis_op_count++, dis_text.c_str());
+      // TODO avoid sprintf
+      std::string fmt_op_count = "NNNNNN";
+      sprintf(&fmt_op_count.front(), "%6d", dis_op_count++);
+
+      trace.write(fmt_op_count);
+      trace.write("  ");
+      trace.write(dis_text);
+      trace.write('\n');
    }
 
 public:

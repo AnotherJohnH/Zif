@@ -1,5 +1,5 @@
 //------------------------------------------------------------------------------
-// Copyright (c) 2016 John D. Haughton
+// Copyright (c) 2016-2018 John D. Haughton
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -23,17 +23,21 @@
 #ifndef LOG_H
 #define LOG_H
 
-#include <cstdarg>
-
-#include "PLT/File.h"
+#include <cstdio>
+#include <string>
 
 //! Log file
 class Log
 {
 public:
-   Log(const char* name_)
-      : file(nullptr, name_)
+   Log(const std::string& filename_)
+      : filename(filename_)
    {
+   }
+
+   ~Log()
+   {
+      if (fp != nullptr) ::fclose(fp);
    }
 
    //! write a single character to the log
@@ -41,28 +45,27 @@ public:
    {
       ensureOpen();
 
-      file.write(&ch, 1);
+      ::fputc(ch, fp);
    }
 
-   //! Formatted write to the log
-   void printf(const char* format, ...)
+   //! write a string to the log
+   void write(const std::string& str)
    {
       ensureOpen();
 
-      va_list ap;
-      va_start(ap, format);
-      file.vprintf(format, ap);
-      va_end(ap);
-
-      file.flush();
+      for(const auto& ch : str)
+      {
+         ::fputc(ch, fp);
+      }
    }
 
 private:
-   PLT::File file;
+   std::string filename;
+   FILE*       fp{nullptr};
 
    void ensureOpen()
    {
-      if(!file.isOpen()) file.openForWrite();
+      if(fp == nullptr) fp = ::fopen(filename.c_str(), "w");
    }
 };
 
