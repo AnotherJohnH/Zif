@@ -117,8 +117,6 @@ private:
 
       assert(index != 0);
 
-      // printf("\ngetPropInfo %d %04X %d\n", index, addr, size);
-
       return size;
    }
 

@@ -126,8 +126,6 @@ private:
 
    int compare(ZMemory& memory, uint32_t entry_addr, ZWord& zword)
    {
-      // printf("%04X: %04X %04X\n", entry_addr, memory.readWord(entry_addr), zword[0]);
-
       for(unsigned i = 0; i < zword.size(); i++)
       {
          if(memory.readWord(entry_addr + i * 2) != zword[i]) return -1;
