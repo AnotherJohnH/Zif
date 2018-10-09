@@ -63,7 +63,7 @@ private:
    {
       if (index == 0)
       {
-         text += "[SP]";
+         text += " [SP]";
       }
       else if (index < 16)
       {
@@ -131,6 +131,7 @@ private:
    {
       text = "1OP-";
       fmtHex(text, code[0] & 0xF, 1);
+      text += "  ";
       return 1 + fmtOp(text, (code[0] >> 4) & 3, code + 1);
    }
 
@@ -138,6 +139,7 @@ private:
    {
       text = "2OP-";
       fmtHex(text, code[0] & 0x1F, 2);
+      text += " ";
       fmtOp(text, (code[0] >> 6) & 1 ? OP_VARIABLE : OP_SMALL_CONST, code + 1);
       fmtOp(text, (code[0] >> 6) & 1 ? OP_VARIABLE : OP_SMALL_CONST, code + 2);
       return 3;
@@ -147,6 +149,7 @@ private:
    {
       text = "2OP-";
       fmtHex(text, code[0] & 0x1F, 2);
+      text += " ";
       return 1 + fmtOperands(text, 4, code + 1);
    }
 
@@ -154,6 +157,7 @@ private:
    {
       text = "VAR-";
       fmtHex(text, code[0] & 0x1F, 2);
+      text += " ";
       return 1 + fmtOperands(text,
                              ((code[0] == 0xEC) || (code[0] == 0xFA)) ? 8 : 4,
                              code + 1);
@@ -163,6 +167,7 @@ private:
    {
       text = "EXT-";
       fmtHex(text, code[1] & 0x1F, 2);
+      text += " ";
       return 2 + fmtOperands(text, 4, code + 2);
    }
 
