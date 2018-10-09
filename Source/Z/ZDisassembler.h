@@ -1,5 +1,5 @@
 //------------------------------------------------------------------------------
-// Copyright (c) 2016-2017 John D. Haughton
+// Copyright (c) 2016-2018 John D. Haughton
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
 
 #include <cstdint>
 #include <cstdio>
+#include <string>
 
 enum ZOperandType : uint8_t
 {
@@ -35,45 +36,64 @@ enum ZOperandType : uint8_t
 };
 
 
-//!
-// XXX this is all a bit unsafe and nasty - probably should
-// bite the bullet and alow dynamic allocation
+//! Disassemble a Z op
 class ZDisassembler
 {
 private:
+   // Local strings to avoid repeated dynamic allocation
+   std::string inst{};
+
+   // Not entirely sure why I needed to write this!
+   template <typename TYPE>
+   static void fmtHex(std::string& text, TYPE value, size_t digits = sizeof(TYPE) * 2)
+   {
+      for(size_t n = digits - 1; true; n--)
+      {
+         TYPE digit = (value >> (n * 4)) & 0xF;
+
+         text += digit > 9 ? 'A' + digit - 10
+                           : '0' + digit;
+
+         if (n == 0) break;
+      }
+   }
+
    //! Disassemble a variable operand
-   void disVar(uint8_t index, char* text)
+   void fmtVar(std::string& text, uint8_t index)
    {
       if (index == 0)
       {
-         strcpy(text, " [SP]");
+         text += "[SP]";
       }
       else if (index < 16)
       {
-         sprintf(text, " [FP+%u]", index);
+         text += " [FP+";
+         text += std::to_string(index);
+         text += "]";
       }
       else
       {
-         sprintf(text, " G%u", index - 16);
+         text += " G";
+         text += std::to_string(index - 16);
       }
    }
 
    //! Disassemble an operand
-   unsigned disOp(unsigned op, const uint8_t* code, char* text)
+   unsigned fmtOp(std::string& text, unsigned op_type, const uint8_t* code)
    {
-      switch(op)
+      switch(op_type)
       {
-      case OP_LARGE_CONST: sprintf(text, " #0x%02X%02X", code[0], code[1]); return 2;
-      case OP_SMALL_CONST: sprintf(text, " #0x%02X",     code[0]);          return 1;
-      case OP_VARIABLE:    disVar(code[0], text);                           return 1;
-      case OP_NONE: break;
+      case OP_LARGE_CONST: text += " #0x"; fmtHex(text, code[0]); fmtHex(text, code[1]); return 2;
+      case OP_SMALL_CONST: text += " #0x"; fmtHex(text, code[0]); return 1;
+      case OP_VARIABLE:    fmtVar(text, code[0]); return 1;
+      case OP_NONE:        return 0;
       }
 
       return 0;
    }
 
    //! Disassemble a variable number of operands
-   unsigned disOperands(unsigned n, const uint8_t* code, char* text)
+   unsigned fmtOperands(std::string& text, unsigned n, const uint8_t* code)
    {
       unsigned bytes    = 1;
       uint16_t op_types = (*code++) << 8;
@@ -90,10 +110,9 @@ private:
          ZOperandType type = ZOperandType(op_types >> 14);
          if(type == OP_NONE) break;
 
-         unsigned n = disOp(type, code, text);
+         unsigned n = fmtOp(text, type, code);
          bytes += n;
          code  += n;
-         text  += strlen(text);
 
          op_types <<= 2;
       }
@@ -101,127 +120,104 @@ private:
       return bytes;
    }
 
-   unsigned disOp0(const uint8_t* code, char* text)
+   unsigned disOp0(std::string& text, const uint8_t* code)
    {
-      uint8_t opcode = code[0];
-
-      sprintf(text, "0OP-%1X", opcode & 0xF);
-
+      text = "0OP-";
+      fmtHex(text, code[0] & 0xF, 1);
       return 1;
    }
 
-   unsigned disOp1(const uint8_t* code, char* text)
+   unsigned disOp1(std::string& text, const uint8_t* code)
    {
-      uint8_t opcode = code[0];
-
-      sprintf(text, "1OP-%1X  ", opcode & 0xF);
-      text += strlen(text);
-
-      return 1 + disOp((opcode >> 4) & 3, code + 1, text);
+      text = "1OP-";
+      fmtHex(text, code[0] & 0xF, 1);
+      return 1 + fmtOp(text, (code[0] >> 4) & 3, code + 1);
    }
 
-   unsigned disOp2(const uint8_t* code, char* text)
+   unsigned disOp2(std::string& text, const uint8_t* code)
    {
-      uint8_t opcode = code[0];
-
-      sprintf(text, "2OP-%02X ", opcode & 0x1F);
-      text += strlen(text);
-
-      disOp((opcode >> 6) & 1 ? OP_VARIABLE : OP_SMALL_CONST, code + 1, text);
-      text += strlen(text);
-
-      disOp((opcode >> 6) & 1 ? OP_VARIABLE : OP_SMALL_CONST, code + 2, text);
-
+      text = "2OP-";
+      fmtHex(text, code[0] & 0x1F, 2);
+      fmtOp(text, (code[0] >> 6) & 1 ? OP_VARIABLE : OP_SMALL_CONST, code + 1);
+      fmtOp(text, (code[0] >> 6) & 1 ? OP_VARIABLE : OP_SMALL_CONST, code + 2);
       return 3;
    }
 
-   unsigned disOp2_var(const uint8_t* code, char* text)
+   unsigned disOp2_var(std::string& text, const uint8_t* code)
    {
-      uint8_t opcode = code[0];
-
-      sprintf(text, "2OP-%02X ", opcode & 0x1F);
-      text += strlen(text);
-
-      return 1 + disOperands(4, code + 1, text);
+      text = "2OP-";
+      fmtHex(text, code[0] & 0x1F, 2);
+      return 1 + fmtOperands(text, 4, code + 1);
    }
 
-   unsigned disOpV(const uint8_t* code, char* text)
+   unsigned disOpV(std::string& text, const uint8_t* code)
    {
-      uint8_t opcode = code[0];
-
-      sprintf(text, "VAR-%02X ", opcode & 0x1F);
-      text += strlen(text);
-
-      if((opcode == 0xEC) || (opcode == 0xFA))
-      {
-         return 1 + disOperands(8, code + 1, text);
-      }
-
-      return 1 + disOperands(4, code + 1, text);
+      text = "VAR-";
+      fmtHex(text, code[0] & 0x1F, 2);
+      return 1 + fmtOperands(text,
+                             ((code[0] == 0xEC) || (code[0] == 0xFA)) ? 8 : 4,
+                             code + 1);
    }
 
-   unsigned disOpE(const uint8_t* code, char* text)
+   unsigned disOpE(std::string& text, const uint8_t* code)
    {
-      uint8_t opcode = code[1];
-
-      sprintf(text, "EXT-%02X ", opcode & 0x1F);
-      text += strlen(text);
-
-      return 2 + disOperands(4, code + 2, text);
+      text = "EXT-";
+      fmtHex(text, code[1] & 0x1F, 2);
+      return 2 + fmtOperands(text, 4, code + 2);
    }
 
 public:
-   unsigned disassemble(uint16_t inst_addr, const uint8_t* code, char* text)
+   unsigned disassemble(std::string& text, uint16_t inst_addr, const uint8_t* code)
    {
-      uint8_t  opcode = *code;
-      char     inst[128];
-      unsigned n = 1;
+      unsigned n = 0;
 
+      uint8_t opcode = *code;
       if(opcode < 0x80)
       {
-         n = disOp2(code, inst);
+         n = disOp2(inst, code);
       }
       else if(opcode < 0xB0)
       {
-         n = disOp1(code, inst);
+         n = disOp1(inst, code);
       }
       else if(opcode < 0xC0)
       {
          if((opcode & 0xF) == 0xE)
          {
-            n = disOpE(code, inst);
+            n = disOpE(inst, code);
          }
          else
          {
-            n = disOp0(code, inst);
+            n = disOp0(inst, code);
          }
       }
       else if(opcode < 0xE0)
       {
-         n = disOp2_var(code, inst);
+         n = disOp2_var(inst, code);
       }
       else
       {
-         n = disOpV(code, inst);
+         n = disOpV(inst, code);
       }
 
-      sprintf(text, "%06X  ", inst_addr);
-      text += strlen(text);
+      text = "";
+      fmtHex(text, inst_addr, 6);
+      text += "  ";
 
       for(unsigned i=0; i<10; i++)
       {
          if (i < n)
          {
-            sprintf(text, "%02X ", code[i]);
+            fmtHex(text, code[i], 2);
+            text += " ";
          }
          else
          {
-            strcpy(text, "   ");
+            text += "   ";
          }
-         text += strlen(text);
       }
 
-      strcpy(text, inst);
+      text += inst;
 
       return n;
    }

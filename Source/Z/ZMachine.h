@@ -78,6 +78,9 @@ private:
 
    unsigned undo_index{0};
 
+   std::string  dis_text{};
+   unsigned     dis_op_count{0};
+
    // Op-code decoders
    OpPtr op0[0x10];
    OpPtr op1[0x10];
@@ -1513,14 +1516,9 @@ private:
 
    void printTrace()
    {
-      static unsigned tick = 0;
+      (void) dis.disassemble(dis_text, ZState::getPC(), &memory[inst_addr]);
 
-      inst_addr = ZState::getPC();
-
-      char text[128];
-      dis.disassemble(inst_addr, &memory[inst_addr], text);
-
-      trace.printf("%6d  %s\n", tick++, text);
+      trace.printf("%6d  %s\n", dis_op_count++, dis_text.c_str());
    }
 
 public:
@@ -1622,9 +1620,8 @@ public:
       Error exit_code = ZState::getExitCode();
       if(isError(exit_code))
       {
-         char text[128];
-         dis.disassemble(inst_addr, &memory[inst_addr], text);
-         error("PC=%s : %s", text, errorString(exit_code));
+         (void) dis.disassemble(dis_text, inst_addr, &memory[inst_addr]);
+         error("PC=%s : %s", dis_text.c_str(), errorString(exit_code));
          return false;
       }
 
