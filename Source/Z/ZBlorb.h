@@ -23,92 +23,53 @@
 #ifndef ZBLORB_H
 #define ZBLORB_H
 
-#include <cstdint>
-#include <cstring>
-
-#include "PLT/File.h"
-#include "STB/Endian.h"
+#include "STB/IFF.h"
 
 class ZBlorb
 {
 private:
-   //! IFF 4-char ident
-   struct Ident
-   {
-      char value[4];
-
-      bool is(const char* expected) const
-      {
-         return strncmp(value, expected, sizeof(value)) == 0;
-      }
-   };
-
-   //! IFF chunk header
-   struct ChunkHeader
-   {
-      Ident      ident;
-      STB::Big32 size;
-
-      bool read(PLT::File& file)
-      {
-         return file.read(this, sizeof(ChunkHeader));
-      }
-
-      bool match(PLT::File& file, const char* expected_id)
-      {
-         if(!read(file)) return false;
-         return ident.is(expected_id);
-      }
-   };
-
    //! Resource index entry
-   struct RIdxEntry
+   struct RIdx
    {
-      Ident      type;
-      STB::Big32 index;
-      STB::Big32 offset;
-
-      bool read(PLT::File& file)
+      struct Entry
       {
-         return file.read(this, sizeof(RIdxEntry));
-      }
+         STB::IFF::Ident  type;
+         STB::IFF::UInt32 index;
+         STB::IFF::UInt32 offset;
+      };
+
+      STB::IFF::UInt32 num_entries;
+      Entry            entry[0];
    };
 
-   //! Find a chunk of the given type a chunk
-   bool findResource(const char*  filename,
-                     const char*  resource_type,
-                     unsigned     index,
-                     ChunkHeader& header,
-                     uint32_t&    offset)
+   bool findResource(const char*      filename,
+                     const char*      resource_type,
+                     unsigned         index,
+                     STB::IFF::Ident& type,
+                     uint32_t&        offset)
    {
-      PLT::File file(nullptr, filename);
-      if(!file.openForRead()) return false;
+      STB::IFF::Document doc;
 
-      // Confirm IFF file format
-      if(!header.match(file, "FORM")) return false;
+      doc.read(filename);
 
-      // Confirm FORM type is IFRS
-      Ident type;
-      if(!file.read(&type, sizeof(type))) return false;
-      if(!type.is("IFRS")) return false;
-
-      // Confirm first chunk type is a resource index
-      if(!header.match(file, "RIdx")) return false;
-
-      STB::Big32 num_entries;
-      if(!file.read(&num_entries, 4)) return false;
-
-      for(uint32_t i = 0; i < num_entries; i++)
+      if (doc.isDocType("FORM") && doc.isFileType("IFRS"))
       {
-         RIdxEntry entry;
-         if(!entry.read(file)) return false;
+         const RIdx* ridx = doc.load<RIdx>("RIdx");
+         if (ridx == nullptr) return false;
 
-         if(entry.type.is(resource_type) && (entry.index == index))
+         for(uint32_t i = 0; i<ridx->num_entries; i++)
          {
-            file.seek(entry.offset);
-            if(!header.read(file)) return false;
-            offset = entry.offset + sizeof(ChunkHeader);
-            return true;
+            if((ridx->entry[i].type == resource_type) &&
+               (ridx->entry[i].index == index))
+            {
+               STB::IFF::Chunk* ch = doc.findChunk(ridx->entry[i].offset);
+               if (ch != nullptr)
+               {
+                  type   = ch->getType();
+                  offset = ridx->entry[i].offset + 8;
+                  return true;
+               }
+            }
          }
       }
 
@@ -121,10 +82,8 @@ public:
    //! Find an Exec chunk of the given type
    bool findExecChunk(const char* filename, const char* type, uint32_t& offset)
    {
-      ChunkHeader header;
-      if(!findResource(filename, "Exec", 0, header, offset)) return false;
-
-      return header.ident.is(type);
+      STB::IFF::Ident ident;
+      return findResource(filename, "Exec", 0, ident, offset) && (ident == type);
    }
 
    //! Find a Pict chunk for the given index
@@ -133,15 +92,15 @@ public:
                       uint32_t&   offset,
                       bool&       is_png_not_jpeg)
    {
-      ChunkHeader header;
-      if(!findResource(filename, "Pict", 0, header, offset)) return false;
+      STB::IFF::Ident ident;
+      if(!findResource(filename, "Pict", 0, ident, offset)) return false;
 
-      if(header.ident.is("PNG "))
+      if(ident == "PNG ")
       {
          is_png_not_jpeg = true;
          return true;
       }
-      else if(header.ident.is("JPEG"))
+      else if(ident == "JPEG")
       {
          is_png_not_jpeg = false;
          return true;
@@ -153,10 +112,8 @@ public:
    //! Find a Snd chunk of the given type
    bool findSndChunk(const char* filename, uint32_t index, uint32_t& offset)
    {
-      ChunkHeader header;
-      if(!findResource(filename, "Snd ", 0, header, offset)) return false;
-
-      return true;
+      STB::IFF::Ident ident;
+      return findResource(filename, "Snd ", 0, ident, offset);
    }
 };
 
