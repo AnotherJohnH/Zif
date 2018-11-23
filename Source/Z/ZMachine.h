@@ -315,6 +315,24 @@ private:
       return text.print([this](uint16_t ch){ stream.writeChar(ch); }, addr);
    }
 
+   bool save(const char* filename)
+   {
+      return ZState::save(options.save_dir,
+                          filename,
+                          header->release,
+                          header->serial,
+                          header->checksum);
+   }
+
+   bool restore(const char* filename)
+   {
+      return ZState::restore(options.save_dir,
+                             filename,
+                             header->release,
+                             header->serial,
+                             header->checksum);
+   }
+
    void ILLEGAL() { ZState::error(Error::ILLEGAL_OP); }
 
    void TODO_ERROR(const char* op) { error(op); }
@@ -344,23 +362,23 @@ private:
    void op0_nop() {}
 
    //! v1 save ?(label)
-   void op0_save_v1() { branch(ZState::save(options.save_dir, story)); }
+   void op0_save_v1() { branch(save(story)); }
 
    //! v4 save -> (result)
    void op0_save_v4()
    {
       uint8_t ret = fetchByte();
       varWrite(ret, 2);
-      varWrite(ret, ZState::save(options.save_dir, story) ? 1 : 0);
+      varWrite(ret, save(story) ? 1 : 0);
    }
 
    //! v1 restore ?(label)
-   void op0_restore_v1() { branch(ZState::restore(options.save_dir, story)); }
+   void op0_restore_v1() { branch(restore(story)); }
 
    //! v4 restore -> (result)
    void op0_restore_v4()
    {
-      if(!ZState::restore(options.save_dir, story)) varWrite(fetchByte(), 0);
+      if(!restore(story)) varWrite(fetchByte(), 0);
    }
 
    //! restart
@@ -835,7 +853,7 @@ private:
 
       uint8_t ret = fetchByte();
       varWrite(ret, 2);
-      varWrite(ret, ZState::save(options.save_dir, story) ? 1 : 0);
+      varWrite(ret, save(story) ? 1 : 0);
    }
 
    void opE_restore_table()
@@ -848,7 +866,7 @@ private:
       (void)bytes;
       (void)name; // TODO use supplied parameters
 
-      if(!ZState::restore(options.save_dir, story)) varWrite(fetchByte(), 0);
+      if(!restore(story)) varWrite(fetchByte(), 0);
    }
 
    void opE_log_shift()
@@ -877,7 +895,7 @@ private:
 
       uint8_t ret = fetchByte();
       varWrite(ret, 2);
-      varWrite(ret, ZState::save(options.save_dir, filename.c_str()) ? 1 : 0);
+      varWrite(ret, save(filename.c_str()) ? 1 : 0);
    }
 
    void opE_restore_undo()
@@ -889,7 +907,7 @@ private:
       filename = "undo_";
       filename += std::to_string(undo_index);
 
-      if(!ZState::restore(options.save_dir, filename.c_str())) varWrite(fetchByte(), 0);
+      if(!restore(filename.c_str())) varWrite(fetchByte(), 0);
    }
 
    void opE_print_unicode()
@@ -1469,7 +1487,7 @@ private:
 
       if (restore_save)
       {
-         ZState::restore(options.save_dir, story);
+         restore(story);
       }
    }
 

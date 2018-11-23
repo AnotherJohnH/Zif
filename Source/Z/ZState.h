@@ -134,7 +134,11 @@ public:
    }
 
    //! Save the dynamic state to a file
-   bool save(const char* path, const char* name)
+   bool save(const char*    path,
+             const char*    name,
+             uint16_t       release,
+             const uint8_t* serial,
+             uint16_t       checksum)
    {
       bool ok = false;
 
@@ -155,7 +159,11 @@ public:
    }
 
    //! Restore the dynamic state from a save file
-   bool restore(const char* path, const char* name)
+   bool restore(const char*    path,
+                const char*    name,
+                uint16_t       release,
+                const uint8_t* serial,
+                uint16_t       checksum)
    {
       bool ok = false;
 

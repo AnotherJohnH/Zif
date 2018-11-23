@@ -44,7 +44,8 @@ struct ZHeader
    STB::Big16 glob;                // $0C: Byte address of globals
    STB::Big16 stat;                // $0E: Byte address of static memory
    uint8_t    flags2;              // $10: Flags 2
-   uint8_t    pad1[7];
+   uint8_t    pad1;
+   uint8_t    serial[6];           // $12: Serial number
    STB::Big16 abbr;                // $18: Byte address of abbreviations table
    STB::Big16 length;              // $1A: Length of file
    STB::Big16 checksum;            // $1C: Checksum
