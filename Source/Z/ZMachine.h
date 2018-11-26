@@ -1564,9 +1564,16 @@ public:
 
       if (strstr(story, ".zblorb"))
       {
-          if (!zblorb.findExecChunk(filename, "ZCOD", file_offset))
+          std::string type;
+
+          if (!zblorb.findResource(filename,
+                                   ZBlorb::Resource::EXEC, /* index */ 0,
+                                   type, file_offset) ||
+              (type != "ZCOD"))
           {
-             warning("ZCOD section not found in zblorb file");
+             warning("ZCOD chunk not found in zblorb file");
+
+             // Try treating file a raw Z file
              file_offset = 0;
           }
       }

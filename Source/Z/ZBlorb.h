@@ -42,20 +42,38 @@ private:
       Entry            entry[0];
    };
 
-   bool findResource(const char*      filename,
-                     const char*      resource_type,
-                     unsigned         index,
-                     STB::IFF::Ident& type,
-                     uint32_t&        offset)
+public:
+   enum class Resource
+   {
+      EXEC,
+      PICT,
+      SND
+   };
+
+   ZBlorb() = default;
+
+   bool findResource(const std::string& filename,
+                     Resource           resource,
+                     unsigned           index,
+                     std::string&       type,
+                     uint32_t&          offset)
    {
       STB::IFF::Document doc;
-
       doc.read(filename);
 
       if (doc.isDocType("FORM") && doc.isFileType("IFRS"))
       {
          const RIdx* ridx = doc.load<RIdx>("RIdx");
          if (ridx == nullptr) return false;
+
+         const char* resource_type;
+
+         switch(resource)
+         {
+         case Resource::EXEC: resource_type = "Exec"; break;
+         case Resource::PICT: resource_type = "Pict"; break;
+         case Resource::SND:  resource_type = "Snd "; break;
+         }
 
          for(uint32_t i = 0; i<ridx->num_entries; i++)
          {
@@ -65,7 +83,7 @@ private:
                STB::IFF::Chunk* ch = doc.findChunk(ridx->entry[i].offset);
                if (ch != nullptr)
                {
-                  type   = ch->getType();
+                  ch->getType().get(type);
                   offset = ridx->entry[i].offset + 8;
                   return true;
                }
@@ -74,46 +92,6 @@ private:
       }
 
       return false;
-   }
-
-public:
-   ZBlorb() = default;
-
-   //! Find an Exec chunk of the given type
-   bool findExecChunk(const char* filename, const char* type, uint32_t& offset)
-   {
-      STB::IFF::Ident ident;
-      return findResource(filename, "Exec", 0, ident, offset) && (ident == type);
-   }
-
-   //! Find a Pict chunk for the given index
-   bool findPictChunk(const char* filename,
-                      uint32_t    index,
-                      uint32_t&   offset,
-                      bool&       is_png_not_jpeg)
-   {
-      STB::IFF::Ident ident;
-      if(!findResource(filename, "Pict", 0, ident, offset)) return false;
-
-      if(ident == "PNG ")
-      {
-         is_png_not_jpeg = true;
-         return true;
-      }
-      else if(ident == "JPEG")
-      {
-         is_png_not_jpeg = false;
-         return true;
-      }
-
-      return false;
-   }
-
-   //! Find a Snd chunk of the given type
-   bool findSndChunk(const char* filename, uint32_t index, uint32_t& offset)
-   {
-      STB::IFF::Ident ident;
-      return findResource(filename, "Snd ", 0, ident, offset);
    }
 };
 
