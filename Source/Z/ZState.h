@@ -29,16 +29,13 @@
 #include "Error.h"
 
 #include "ZMemory.h"
+#include "ZStack.h"
 
 
 //! Z machine state
 class ZState
 {
 private:
-   static const unsigned STACK_SIZE = 1024;
-
-   using Stack = STB::Stack<uint16_t, STACK_SIZE, uint16_t>;
-
    // Static configuration
    uint16_t initial_rand_seed{0};
    uint32_t game_start{0};
@@ -51,7 +48,7 @@ private:
    uint32_t rand_state{1};
    uint32_t pc{0};
    uint16_t frame_ptr{0};
-   Stack    stack;
+   ZStack   stack;
 
 public:
    ZMemory memory;
