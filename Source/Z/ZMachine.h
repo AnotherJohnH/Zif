@@ -318,20 +318,12 @@ private:
 
    bool save(const std::string& filename)
    {
-      return state.save((const char*)options.save_dir,
-                        filename,
-                        header->release,
-                        header->serial,
-                        header->checksum);
+      return state.save((const char*)options.save_dir, filename);
    }
 
    bool restore(const std::string& filename)
    {
-      return state.restore((const char*)options.save_dir,
-                           filename,
-                           header->release,
-                           header->serial,
-                           header->checksum);
+      return state.restore((const char*)options.save_dir, filename);
    }
 
    void ILLEGAL() { state.error(Error::ILLEGAL_OP); }
@@ -1468,7 +1460,7 @@ private:
       // TODO the header should be reset (only bits 0 and 1 from Flags 2
       //      shoud be preserved)
 
-      if(!state.reset(filename, file_offset, header->getEntryPoint(), header->checksum))
+      if(!state.reset(filename, file_offset, header->getEntryPoint()))
       {
          error("Failed to read story z-file \"%s\"", filename.c_str());
       }
@@ -1596,11 +1588,7 @@ public:
       parser.init(header->version);
       object.init(header->obj, header->version);
 
-      state.init(options.seed,
-                 sizeof(ZHeader),
-                 header->getStorySize(),
-                 header->glob,
-                 header->getMemoryLimit());
+      state.init(options.seed);
 
       initDecoder();
 

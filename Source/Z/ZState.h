@@ -28,6 +28,7 @@
 
 #include "Error.h"
 
+#include "ZHeader.h"
 #include "ZMemory.h"
 #include "ZStack.h"
 
@@ -36,9 +37,12 @@
 class ZState
 {
 private:
+   static const uint32_t GAME_START = sizeof(ZHeader);
+
+   const ZHeader* header{nullptr};
+
    // Static configuration
    uint16_t initial_rand_seed{0};
-   uint32_t game_start{0};
    uint32_t game_end{0};
    uint32_t global_base{0};
    uint32_t memory_limit{0};
@@ -49,7 +53,6 @@ private:
    uint32_t pc{0};
    uint16_t frame_ptr{0};
    ZStack   stack;
-
 public:
    ZMemory memory;
 
@@ -59,6 +62,8 @@ private:
    mutable Error exit_code{Error::NONE};
 
 public:
+   ZState() = default;
+
    //! Return whether the machine should stop
    bool isQuitRequested() const { return do_quit; }
 
@@ -72,20 +77,17 @@ public:
    uint16_t getFramePtr() const { return frame_ptr; }
 
    //! Initialise with the game configuration
-   void init(uint16_t initial_rand_seed_,
-             uint32_t game_start_,
-             uint32_t game_end_,
-             uint32_t global_base_,
-             uint32_t memory_limit_)
+   void init(uint16_t initial_rand_seed_)
    {
+      header = reinterpret_cast<const ZHeader*>(&memory[0]);
+
       initial_rand_seed = initial_rand_seed_;
 
-      game_start   = game_start_;
-      game_end     = game_end_;
-      global_base  = global_base_;
-      memory_limit = memory_limit_;
+      game_end     = header->getStorySize();
+      global_base  = header->glob;
+      memory_limit = header->getMemoryLimit();
 
-      if ((game_start >= game_end)   ||
+      if ((GAME_START >= game_end)   ||
           (game_end >= memory_limit) ||
           (global_base >= memory_limit))
       {
@@ -97,7 +99,7 @@ public:
 
    //! Reset the dynamic state to the initial conditions.
    //  This includes loading the body of the game file
-   bool reset(const std::string& filename, unsigned offset, uint32_t pc_, uint16_t header_checksum)
+   bool reset(const std::string& filename, unsigned offset, uint32_t pc_)
    {
       do_quit = false;
 
@@ -116,14 +118,14 @@ public:
       }
 
       // skip the header
-      file.seek(offset + game_start);
+      file.seek(offset + GAME_START);
 
-      if(!memory.load(file, game_start, game_end))
+      if(!memory.load(file, GAME_START, game_end))
       {
          return false;
       }
 
-      checksum_ok = memory.checksum(game_start, game_end) == header_checksum;
+      checksum_ok = memory.checksum(GAME_START, game_end) == header->checksum;
 
       memory.zero(game_end, memory_limit);
 
@@ -132,10 +134,7 @@ public:
 
    //! Save the dynamic state to a file
    bool save(const std::string& path,
-             const std::string& name,
-             uint16_t           release,
-             const uint8_t*     serial,
-             uint16_t           checksum)
+             const std::string& name)
    {
       bool ok = false;
 
@@ -144,7 +143,7 @@ public:
       PLT::File file(path.c_str(), name.c_str(), "sav");
       if(file.openForWrite())
       {
-         if(memory.save(file, game_start, memory_limit))
+         if(memory.save(file, GAME_START, memory_limit))
          {
             ok = file.write(&stack, sizeof(stack));
          }
@@ -157,17 +156,14 @@ public:
 
    //! Restore the dynamic state from a save file
    bool restore(const std::string& path,
-                const std::string& name,
-                uint16_t           release,
-                const uint8_t*     serial,
-                uint16_t           checksum)
+                const std::string& name)
    {
       bool ok = false;
 
       PLT::File file(path.c_str(), name.c_str(), "sav");
       if(file.openForRead())
       {
-         if(memory.load(file, game_start, memory_limit))
+         if(memory.load(file, GAME_START, memory_limit))
          {
             ok = file.read(&stack, sizeof(stack));
          }
@@ -371,9 +367,9 @@ private:
    //! Range check PC
    bool validatePC() const
    {
-      // TODO maybe (pc >= game_start) && (pc < game_end)
+      // TODO maybe (pc >= GAME_START) && (pc < game_end)
       // if self-modifying code is excluded
-      return (pc >= game_start) && (pc < memory_limit) ? true : error(Error::BAD_PC);
+      return (pc >= GAME_START) && (pc < memory_limit) ? true : error(Error::BAD_PC);
    }
 
    //! Range check frame pointer
