@@ -40,6 +40,7 @@ private:
    static const uint32_t GAME_START = sizeof(ZHeader);
 
    const ZHeader* header{nullptr};
+   std::string    save_dir{};
 
    // Static configuration
    uint16_t initial_rand_seed{0};
@@ -62,7 +63,10 @@ private:
    mutable Error exit_code{Error::NONE};
 
 public:
-   ZState() = default;
+   ZState(const std::string& save_dir_)
+      : save_dir(save_dir_)
+   {
+   }
 
    //! Return whether the machine should stop
    bool isQuitRequested() const { return do_quit; }
@@ -133,14 +137,13 @@ public:
    }
 
    //! Save the dynamic state to a file
-   bool save(const std::string& path,
-             const std::string& name)
+   bool save(const std::string& name)
    {
       bool ok = false;
 
       pushContext();
 
-      PLT::File file(path.c_str(), name.c_str(), "sav");
+      PLT::File file(save_dir.c_str(), name.c_str(), "sav");
       if(file.openForWrite())
       {
          if(memory.save(file, GAME_START, memory_limit))
@@ -155,12 +158,11 @@ public:
    }
 
    //! Restore the dynamic state from a save file
-   bool restore(const std::string& path,
-                const std::string& name)
+   bool restore(const std::string& name)
    {
       bool ok = false;
 
-      PLT::File file(path.c_str(), name.c_str(), "sav");
+      PLT::File file(save_dir.c_str(), name.c_str(), "sav");
       if(file.openForRead())
       {
          if(memory.load(file, GAME_START, memory_limit))

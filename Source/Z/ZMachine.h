@@ -316,16 +316,6 @@ private:
       return text.print([this](uint16_t ch){ stream.writeChar(ch); }, addr);
    }
 
-   bool save(const std::string& filename)
-   {
-      return state.save((const char*)options.save_dir, filename);
-   }
-
-   bool restore(const std::string& filename)
-   {
-      return state.restore((const char*)options.save_dir, filename);
-   }
-
    void ILLEGAL() { state.error(Error::ILLEGAL_OP); }
 
    void TODO_ERROR(const char* op) { error(op); }
@@ -355,23 +345,23 @@ private:
    void op0_nop() {}
 
    //! v1 save ?(label)
-   void op0_save_v1() { branch(save(story)); }
+   void op0_save_v1() { branch(state.save(story)); }
 
    //! v4 save -> (result)
    void op0_save_v4()
    {
       uint8_t ret = state.fetchByte();
       state.varWrite(ret, 2);
-      state.varWrite(ret, save(story) ? 1 : 0);
+      state.varWrite(ret, state.save(story) ? 1 : 0);
    }
 
    //! v1 restore ?(label)
-   void op0_restore_v1() { branch(restore(story)); }
+   void op0_restore_v1() { branch(state.restore(story)); }
 
    //! v4 restore -> (result)
    void op0_restore_v4()
    {
-      if(!restore(story)) state.varWrite(state.fetchByte(), 0);
+      if(!state.restore(story)) state.varWrite(state.fetchByte(), 0);
    }
 
    //! restart
@@ -846,7 +836,7 @@ private:
 
       uint8_t ret = state.fetchByte();
       state.varWrite(ret, 2);
-      state.varWrite(ret, save(story) ? 1 : 0);
+      state.varWrite(ret, state.save(story) ? 1 : 0);
    }
 
    void opE_restore_table()
@@ -859,7 +849,7 @@ private:
       (void)bytes;
       (void)name; // TODO use supplied parameters
 
-      if(!restore(story)) state.varWrite(state.fetchByte(), 0);
+      if(!state.restore(story)) state.varWrite(state.fetchByte(), 0);
    }
 
    void opE_log_shift()
@@ -888,7 +878,7 @@ private:
 
       uint8_t ret = state.fetchByte();
       state.varWrite(ret, 2);
-      state.varWrite(ret, save(filename) ? 1 : 0);
+      state.varWrite(ret, state.save(filename) ? 1 : 0);
    }
 
    void opE_restore_undo()
@@ -900,7 +890,7 @@ private:
       filename = "undo_";
       filename += std::to_string(undo_index);
 
-      if(!restore(filename)) state.varWrite(state.fetchByte(), 0);
+      if(!state.restore(filename)) state.varWrite(state.fetchByte(), 0);
    }
 
    void opE_print_unicode()
@@ -1480,7 +1470,7 @@ private:
 
       if (restore_save)
       {
-         restore(story);
+         state.restore(story);
       }
    }
 
@@ -1530,7 +1520,8 @@ private:
 
 public:
    ZMachine(Console& console_, Options& options_)
-      : options(options_)
+      : state((const char*)options_.save_dir)
+      , options(options_)
       , console(console_)
       , stream(console, options_, state.memory)
       , window_mgr(console, options_, stream)
