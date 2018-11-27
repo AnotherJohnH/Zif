@@ -66,7 +66,7 @@ public:
          const RIdx* ridx = doc.load<RIdx>("RIdx");
          if (ridx == nullptr) return false;
 
-         const char* resource_type;
+         const char* resource_type{};
 
          switch(resource)
          {
