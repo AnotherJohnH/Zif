@@ -62,8 +62,8 @@ private:
    ZParser        parser;
    ZBlorb         zblorb{};
    ZHeader*       header{};
-   const char*    filename{};
-   const char*    story{};
+   std::string    filename{};
+   std::string    story{};
    unsigned       file_offset{0};
    uint32_t       inst_addr;
    unsigned       num_arg;
@@ -315,7 +315,7 @@ private:
       return text.print([this](uint16_t ch){ stream.writeChar(ch); }, addr);
    }
 
-   bool save(const char* filename)
+   bool save(const std::string& filename)
    {
       return ZState::save(options.save_dir,
                           filename,
@@ -324,7 +324,7 @@ private:
                           header->checksum);
    }
 
-   bool restore(const char* filename)
+   bool restore(const std::string& filename)
    {
       return ZState::restore(options.save_dir,
                              filename,
@@ -895,7 +895,7 @@ private:
 
       uint8_t ret = fetchByte();
       varWrite(ret, 2);
-      varWrite(ret, save(filename.c_str()) ? 1 : 0);
+      varWrite(ret, save(filename) ? 1 : 0);
    }
 
    void opE_restore_undo()
@@ -907,7 +907,7 @@ private:
       filename = "undo_";
       filename += std::to_string(undo_index);
 
-      if(!restore(filename.c_str())) varWrite(fetchByte(), 0);
+      if(!restore(filename)) varWrite(fetchByte(), 0);
    }
 
    void opE_print_unicode()
@@ -1469,7 +1469,7 @@ private:
 
       if(!ZState::reset(filename, file_offset, header->getEntryPoint(), header->checksum))
       {
-         error("Failed to read story z-file \"%s\"", filename);
+         error("Failed to read story z-file \"%s\"", filename.c_str());
       }
 
       if((version() >= 3) && !isChecksumOk())
@@ -1493,11 +1493,11 @@ private:
 
    bool loadHeader()
    {
-      PLT::File file(nullptr, filename);
+      PLT::File file(nullptr, filename.c_str());
 
       if(!file.openForRead())
       {
-         error("Failed to open story z-file \"%s\"", filename);
+         error("Failed to open story z-file \"%s\"", filename.c_str());
          return false;
       }
 
@@ -1548,21 +1548,21 @@ public:
 
    //! Play a Z file.
    //! \return true if there were no errors
-   bool play(const char* filename_, bool restore_save = false)
+   bool play(const std::string& filename_, bool restore_save = false)
    {
       filename = filename_;
 
-      story = strrchr(filename, '/');
-      if (story == nullptr)
+      size_t slash = filename.rfind('/');
+      if (slash == std::string::npos)
       {
          story = filename;
       }
       else
       {
-         story = story + 1;
+         story = filename.substr(slash + 1);
       }
 
-      if (strstr(story, ".zblorb"))
+      if (story.find(".zblorb") != std::string::npos)
       {
           std::string type;
 

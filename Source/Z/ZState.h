@@ -97,7 +97,7 @@ public:
 
    //! Reset the dynamic state to the initial conditions.
    //  This includes loading the body of the game file
-   bool reset(const char* filename, unsigned offset, uint32_t pc_, uint16_t header_checksum)
+   bool reset(const std::string& filename, unsigned offset, uint32_t pc_, uint16_t header_checksum)
    {
       do_quit = false;
 
@@ -109,7 +109,7 @@ public:
 
       stack.clear();
 
-      PLT::File file(nullptr, filename);
+      PLT::File file(nullptr, filename.c_str());
       if(!file.openForRead())
       {
          return false;
@@ -131,17 +131,17 @@ public:
    }
 
    //! Save the dynamic state to a file
-   bool save(const char*    path,
-             const char*    name,
-             uint16_t       release,
-             const uint8_t* serial,
-             uint16_t       checksum)
+   bool save(const char*        path,
+             const std::string& name,
+             uint16_t           release,
+             const uint8_t*     serial,
+             uint16_t           checksum)
    {
       bool ok = false;
 
       pushContext();
 
-      PLT::File file(path, name, "sav");
+      PLT::File file(path, name.c_str(), "sav");
       if(file.openForWrite())
       {
          if(memory.save(file, game_start, memory_limit))
@@ -156,15 +156,15 @@ public:
    }
 
    //! Restore the dynamic state from a save file
-   bool restore(const char*    path,
-                const char*    name,
-                uint16_t       release,
-                const uint8_t* serial,
-                uint16_t       checksum)
+   bool restore(const char*        path,
+                const std::string& name,
+                uint16_t           release,
+                const uint8_t*     serial,
+                uint16_t           checksum)
    {
       bool ok = false;
 
-      PLT::File file(path, name, "sav");
+      PLT::File file(path, name.c_str(), "sav");
       if(file.openForRead())
       {
          if(memory.load(file, game_start, memory_limit))
