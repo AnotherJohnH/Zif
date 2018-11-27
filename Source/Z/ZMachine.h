@@ -44,13 +44,14 @@
 #include "ZWindowManager.h"
 
 //! Z machine implementation
-class ZMachine : public ZState
+class ZMachine
 {
 private:
    typedef void (ZMachine::*OpPtr)();
 
    static const unsigned MAX_OPERANDS = 8;
 
+   ZState         state;
    Log            trace{"trace.log"};
    ZDisassembler  dis;
    Options&       options;
@@ -113,7 +114,7 @@ private:
       stream.vmessage(ZStream::ERROR, format, ap);
       va_end(ap);
 
-      ZState::quit();
+      state.quit();
    }
 
    unsigned version() const { return header->version; }
@@ -128,14 +129,14 @@ private:
    //! Conditional branch (4.7)
    void branch(bool cond)
    {
-      uint8_t type           = ZState::fetchByte();
+      uint8_t type           = state.fetchByte();
       bool    branch_if_true = (type & (1 << 7)) != 0;
       bool    long_branch    = (type & (1 << 6)) == 0;
       int16_t offset         = type & 0x3F;
 
       if(long_branch)
       {
-         offset = (offset << 8) | fetchByte();
+         offset = (offset << 8) | state.fetchByte();
          // Sign extend
          offset = int16_t(offset << 2) >> 2;
       }
@@ -150,7 +151,7 @@ private:
          else
          {
             // branch (4.7.2)
-            ZState::branch(offset - 2);
+            state.branch(offset - 2);
          }
       }
    }
@@ -167,19 +168,19 @@ private:
          // this is legal, just return false
          switch(call_type)
          {
-         case 0:  varWrite(fetchByte(), 0); break;
+         case 0:  state.varWrite(state.fetchByte(), 0); break;
          case 1:  /* throw return value away */ break;
-         case 2:  ZState::push(0); break;
-         default: ZState::error(Error::BAD_CALL_TYPE); break;
+         case 2:  state.push(0); break;
+         default: state.error(Error::BAD_CALL_TYPE); break;
          }
          return;
       }
 
-      ZState::call(call_type, target);
+      state.call(call_type, target);
 
-      uint8_t num_locals = fetchByte();
+      uint8_t num_locals = state.fetchByte();
 
-      ZState::push(argc);
+      state.push(argc);
 
       for(unsigned i = 0; i < num_locals; ++i)
       {
@@ -187,7 +188,7 @@ private:
 
          if(version() <= 4)
          {
-            value = fetchWord();
+            value = state.fetchWord();
          }
 
          if(i < argc)
@@ -195,7 +196,7 @@ private:
             value = argv[i];
          }
 
-         ZState::push(value);
+         state.push(value);
       }
    }
 
@@ -204,18 +205,18 @@ private:
    {
       if(frame_ptr == 0xFFFF)
       {
-         frame_ptr = ZState::getFramePtr();
+         frame_ptr = state.getFramePtr();
       }
 
-      uint16_t call_type = ZState::returnFromFrame(frame_ptr);
+      uint16_t call_type = state.returnFromFrame(frame_ptr);
 
       switch(call_type)
       {
-      case 0: varWrite(fetchByte(), value); break;
+      case 0: state.varWrite(state.fetchByte(), value); break;
       case 1: /* throw return value away */ break;
-      case 2: ZState::push(value);          break;
+      case 2: state.push(value);            break;
 
-      default: ZState::error(Error::BAD_CALL_TYPE);
+      default: state.error(Error::BAD_CALL_TYPE);
       }
    }
 
@@ -259,8 +260,8 @@ private:
 
       if (isTimeGame())
       {
-         uint16_t hours = varRead(16+1);
-         uint16_t mins  = varRead(16+2);
+         uint16_t hours = state.varRead(16+1);
+         uint16_t mins  = state.varRead(16+2);
 
          work_str = "Time : ";
          if (hours<10) work_str += '0';
@@ -275,7 +276,7 @@ private:
       }
       else
       {
-         int16_t  score = varRead(16+1);
+         int16_t  score = state.varRead(16+1);
          work_str = "Score : ";
          work_str += std::to_string(score);
 
@@ -283,7 +284,7 @@ private:
          console.moveCursor(1, loc_size);
          writeStatus(work_str);
 
-         uint16_t moves = varRead(16+2);
+         uint16_t moves = state.varRead(16+2);
          work_str = "Moves: ";
          work_str += std::to_string(moves);
 
@@ -291,7 +292,7 @@ private:
          writeStatus(work_str);
       }
 
-      uint16_t loc  = varRead(16+0);
+      uint16_t loc  = state.varRead(16+0);
       uint32_t name = object.getName(loc);
       console.moveCursor(1, 2);
       loc_size -= 2;
@@ -317,23 +318,23 @@ private:
 
    bool save(const std::string& filename)
    {
-      return ZState::save(options.save_dir,
-                          filename,
-                          header->release,
-                          header->serial,
-                          header->checksum);
+      return state.save((const char*)options.save_dir,
+                        filename,
+                        header->release,
+                        header->serial,
+                        header->checksum);
    }
 
    bool restore(const std::string& filename)
    {
-      return ZState::restore(options.save_dir,
-                             filename,
-                             header->release,
-                             header->serial,
-                             header->checksum);
+      return state.restore((const char*)options.save_dir,
+                           filename,
+                           header->release,
+                           header->serial,
+                           header->checksum);
    }
 
-   void ILLEGAL() { ZState::error(Error::ILLEGAL_OP); }
+   void ILLEGAL() { state.error(Error::ILLEGAL_OP); }
 
    void TODO_ERROR(const char* op) { error(op); }
    void TODO_WARN(const char* op) { warning(op); }
@@ -348,7 +349,7 @@ private:
    void op0_rfalse() { subRet(0); }
 
    //! print - Print the literal Z-encoded string
-   void op0_print() { ZState::jump(streamText(ZState::getPC())); }
+   void op0_print() { state.jump(streamText(state.getPC())); }
 
    //! print_ret - Print the literal Z-encoded string, a new-line then return true
    void op0_print_ret()
@@ -367,9 +368,9 @@ private:
    //! v4 save -> (result)
    void op0_save_v4()
    {
-      uint8_t ret = fetchByte();
-      varWrite(ret, 2);
-      varWrite(ret, save(story) ? 1 : 0);
+      uint8_t ret = state.fetchByte();
+      state.varWrite(ret, 2);
+      state.varWrite(ret, save(story) ? 1 : 0);
    }
 
    //! v1 restore ?(label)
@@ -378,23 +379,23 @@ private:
    //! v4 restore -> (result)
    void op0_restore_v4()
    {
-      if(!restore(story)) varWrite(fetchByte(), 0);
+      if(!restore(story)) state.varWrite(state.fetchByte(), 0);
    }
 
    //! restart
    void op0_restart() { start(/* restore_save */false); }
 
    //! ret_popped
-   void op0_ret_popped() { subRet(ZState::pop()); }
+   void op0_ret_popped() { subRet(state.pop()); }
 
    //! pop
-   void op0_pop() { ZState::pop(); }
+   void op0_pop() { state.pop(); }
 
    //! catch -> (result)
-   void op0_catch() { varWrite(fetchByte(), ZState::getFramePtr()); }
+   void op0_catch() { state.varWrite(state.fetchByte(), state.getFramePtr()); }
 
    //! quit
-   void op0_quit() { ZState::quit(); }
+   void op0_quit() { state.quit(); }
 
    //! new_line
    void op0_new_line() { stream.writeChar('\n'); }
@@ -403,7 +404,7 @@ private:
    void op0_show_status() { showStatus(); }
 
    //! verify ?(label)
-   void op0_verify() { branch(isChecksumOk()); }
+   void op0_verify() { branch(state.isChecksumOk()); }
 
    //! piracy ?(label)
    void op0_piracy() { branch(true); }
@@ -416,28 +417,28 @@ private:
    void op1_get_sibling()
    {
       uint16_t obj = object.getSibling(uarg[0]);
-      varWrite(fetchByte(), obj);
+      state.varWrite(state.fetchByte(), obj);
       branch(obj != 0);
    }
 
    void op1_get_parent()
    {
       uint16_t obj = object.getParent(uarg[0]);
-      varWrite(fetchByte(), obj);
+      state.varWrite(state.fetchByte(), obj);
    }
 
    void op1_get_child()
    {
       uint16_t obj = object.getChild(uarg[0]);
-      varWrite(fetchByte(), obj);
+      state.varWrite(state.fetchByte(), obj);
       branch(obj != 0);
    }
 
-   void op1_get_prop_len()  { varWrite(fetchByte(), object.propSize(uarg[0])); }
+   void op1_get_prop_len()  { state.varWrite(state.fetchByte(), object.propSize(uarg[0])); }
 
-   void op1_inc()           { varWrite(uarg[0], varRead(uarg[0]) + 1); }
+   void op1_inc()           { state.varWrite(uarg[0], state.varRead(uarg[0]) + 1); }
 
-   void op1_dec()           { varWrite(uarg[0], varRead(uarg[0]) - 1); }
+   void op1_dec()           { state.varWrite(uarg[0], state.varRead(uarg[0]) - 1); }
 
    void op1_print_addr()    { streamText(uarg[0]); }
 
@@ -449,13 +450,13 @@ private:
 
    void op1_ret()           { subRet(uarg[0]); }
 
-   void op1_jump()          { ZState::branch(sarg[0] - 2); }
+   void op1_jump()          { state.branch(sarg[0] - 2); }
 
    void op1_print_paddr()   { streamText(header->unpackAddr(uarg[0], /* routine */false)); }
 
-   void op1_load()          { varWrite(fetchByte(), varRead(uarg[0], true)); }
+   void op1_load()          { state.varWrite(state.fetchByte(), state.varRead(uarg[0], true)); }
 
-   void op1_not()           { varWrite(uarg[0], ~uarg[0]); }
+   void op1_not()           { state.varWrite(uarg[0], ~uarg[0]); }
 
    void op1_call_1n()       { subCall(1, uarg[0], 0, 0); }
 
@@ -474,32 +475,32 @@ private:
 
    void op2_dec_chk()
    {
-      int16_t value = varRead(uarg[0]) - 1;
-      varWrite(uarg[0], value);
+      int16_t value = state.varRead(uarg[0]) - 1;
+      state.varWrite(uarg[0], value);
       branch(value < sarg[1]);
    }
 
    void op2_inc_chk()
    {
-      int16_t value = varRead(uarg[0]) + 1;
-      varWrite(uarg[0], value);
+      int16_t value = state.varRead(uarg[0]) + 1;
+      state.varWrite(uarg[0], value);
       branch(value > sarg[1]);
    }
 
    void op2_jin()           { branch(object.getParent(uarg[0]) == uarg[1]); }
    void op2_test_bitmap()   { branch((uarg[0] & uarg[1]) == uarg[1]); }
-   void op2_or()            { varWrite(fetchByte(), uarg[0] | uarg[1]); }
-   void op2_and()           { varWrite(fetchByte(), uarg[0] & uarg[1]); }
+   void op2_or()            { state.varWrite(state.fetchByte(), uarg[0] | uarg[1]); }
+   void op2_and()           { state.varWrite(state.fetchByte(), uarg[0] & uarg[1]); }
    void op2_test_attr()     { branch(object.getAttr(uarg[0], uarg[1])); }
    void op2_set_attr()      { object.setAttr(uarg[0], uarg[1], true); }
    void op2_clear_attr()    { object.setAttr(uarg[0], uarg[1], false); }
-   void op2_store()         { varWrite(uarg[0], uarg[1], true); }
+   void op2_store()         { state.varWrite(uarg[0], uarg[1], true); }
    void op2_insert_obj()    { object.insert(uarg[0], uarg[1]); }
 
    //! 2OP:15 0F loadw array word_index -> (result)
    void op2_loadw()
    {
-      varWrite(fetchByte(), memory.readWord(uarg[0]+2*uarg[1]));
+      state.varWrite(state.fetchByte(), state.memory.readWord(uarg[0]+2*uarg[1]));
    }
 
    //! 2OP:16 10 loadb array byte_index -> (result)
@@ -507,34 +508,34 @@ private:
    //  which must lie in static or dynamic memory)
    void op2_loadb()
    {
-      varWrite(fetchByte(), memory[uarg[0] + uarg[1]]);
+      state.varWrite(state.fetchByte(), state.memory[uarg[0] + uarg[1]]);
    }
 
-   void op2_get_prop()      { varWrite(fetchByte(), object.getProp(uarg[0], uarg[1])); }
-   void op2_get_prop_addr() { varWrite(fetchByte(), object.getPropAddr(uarg[0], uarg[1])); }
-   void op2_get_next_prop() { varWrite(fetchByte(), object.getPropNext(uarg[0], uarg[1])); }
-   void op2_add()           { varWrite(fetchByte(), sarg[0] + sarg[1]); }
-   void op2_sub()           { varWrite(fetchByte(), sarg[0] - sarg[1]); }
-   void op2_mul()           { varWrite(fetchByte(), sarg[0] * sarg[1]); }
+   void op2_get_prop()      { state.varWrite(state.fetchByte(), object.getProp(uarg[0], uarg[1])); }
+   void op2_get_prop_addr() { state.varWrite(state.fetchByte(), object.getPropAddr(uarg[0], uarg[1])); }
+   void op2_get_next_prop() { state.varWrite(state.fetchByte(), object.getPropNext(uarg[0], uarg[1])); }
+   void op2_add()           { state.varWrite(state.fetchByte(), sarg[0] + sarg[1]); }
+   void op2_sub()           { state.varWrite(state.fetchByte(), sarg[0] - sarg[1]); }
+   void op2_mul()           { state.varWrite(state.fetchByte(), sarg[0] * sarg[1]); }
 
    void op2_div()
    {
       if(sarg[1] == 0)
       {
-         ZState::error(Error::DIV_BY_ZERO);
+         state.error(Error::DIV_BY_ZERO);
          return;
       }
-      varWrite(fetchByte(), sarg[0] / sarg[1]);
+      state.varWrite(state.fetchByte(), sarg[0] / sarg[1]);
    }
 
    void op2_mod()
    {
       if(sarg[1] == 0)
       {
-         ZState::error(Error::DIV_BY_ZERO);
+         state.error(Error::DIV_BY_ZERO);
          return;
       }
-      varWrite(fetchByte(), sarg[0] % sarg[1]);
+      state.varWrite(state.fetchByte(), sarg[0] % sarg[1]);
    }
 
    void op2_call_2s()           { subCall(0, uarg[0], 1, &uarg[1]); }
@@ -547,17 +548,17 @@ private:
    void opV_call()
    {
       if (uarg[0] == 0)
-         varWrite(fetchByte(), 0);
+         state.varWrite(state.fetchByte(), 0);
       else
          subCall(0, uarg[0], num_arg-1, &uarg[1]);
    }
 
    void opV_call_vs()        { opV_call(); }
-   void opV_not()            { varWrite(fetchByte(), ~uarg[0]); }
+   void opV_not()            { state.varWrite(state.fetchByte(), ~uarg[0]); }
    void opV_call_vn()        { subCall(1, uarg[0], num_arg-1, &uarg[1]); }
    void opV_call_vn2()       { opV_call_vn(); }
-   void opV_storew()         { memory.writeWord(uarg[0] + 2*uarg[1], uarg[2]); }
-   void opV_storeb()         { memory[uarg[0] + uarg[1]] = uarg[2]; }
+   void opV_storew()         { state.memory.writeWord(uarg[0] + 2*uarg[1], uarg[2]); }
+   void opV_storeb()         { state.memory[uarg[0] + uarg[1]] = uarg[2]; }
    void opV_put_prop()       { object.setProp(uarg[0], uarg[1], uarg[2]); }
 
    //! V1 sread text parse
@@ -572,7 +573,7 @@ private:
 
       if(SHOW_STATUS) showStatus();
 
-      uint8_t  max   = memory[buffer++] - 1;
+      uint8_t  max   = state.memory[buffer++] - 1;
       uint16_t start = buffer;
 
       for(uint8_t len = 0; len < max; len++)
@@ -596,16 +597,16 @@ private:
          }
          else if(ch == '\n')
          {
-            memory[buffer] = '\0';
+            state.memory[buffer] = '\0';
             break;
          }
          else
          {
-            memory[buffer++] = tolower(ch);
+            state.memory[buffer++] = tolower(ch);
          }
       }
 
-      parser.tokenise(memory, parse, start, header->dict, false);
+      parser.tokenise(state.memory, parse, start, header->dict, false);
    }
 
    //! aread text parse timeout routine -> (result)
@@ -616,8 +617,8 @@ private:
       uint16_t timeout = num_arg >= 3 ? uarg[2] : 0;
       uint16_t routine = num_arg >= 4 ? uarg[3] : 0;
 
-      uint8_t max = memory[buffer++];
-      uint8_t len = memory[buffer++];
+      uint8_t max = state.memory[buffer++];
+      uint8_t len = state.memory[buffer++];
 
       uint16_t start  = buffer;
       uint8_t  status = 0;
@@ -643,33 +644,33 @@ private:
          }
          else if(ch == '\n')
          {
-            memory[buffer]    = '\0';
-            memory[start - 1] = len;
+            state.memory[buffer]    = '\0';
+            state.memory[start - 1] = len;
             status = ch;
             break;
          }
          else
          {
-            memory[buffer++] = ch;
+            state.memory[buffer++] = ch;
          }
       }
 
-      varWrite(fetchByte(), status);
+      state.varWrite(state.fetchByte(), status);
 
       if(parse != 0)
       {
-         parser.tokenise(memory, parse, start, header->dict, false);
+         parser.tokenise(state.memory, parse, start, header->dict, false);
       }
    }
 
    void opV_print_char()     { stream.writeChar(uarg[0]); }
    void opV_print_num()      { stream.writeNumber(sarg[0]); }
-   void opV_random()         { varWrite(fetchByte(), random(sarg[0])); }
-   void opV_push()           { ZState::push(uarg[0]); }
+   void opV_random()         { state.varWrite(state.fetchByte(), state.random(sarg[0])); }
+   void opV_push()           { state.push(uarg[0]); }
 
    void opV_pull_v1()
    {
-      varWrite(uarg[0], ZState::pop(), true);
+      state.varWrite(uarg[0], state.pop(), true);
    }
 
    void opV_pull_v6()
@@ -679,16 +680,16 @@ private:
       {
          // User stack
          uint16_t st  = uarg[0];
-         uint16_t ptr = memory.readWord(st);
-         memory.writeWord(st, ++ptr);
-         value = memory.readWord(ptr + 2 * ptr);
+         uint16_t ptr = state.memory.readWord(st);
+         state.memory.writeWord(st, ++ptr);
+         value = state.memory.readWord(ptr + 2 * ptr);
       }
       else
       {
-         value = ZState::pop();
+         value = state.pop();
       }
 
-      varWrite(fetchByte(), value, true);
+      state.varWrite(state.fetchByte(), value, true);
    }
 
    void opV_split_window()   { window_mgr.split(uarg[0]); }
@@ -719,8 +720,8 @@ private:
       console.getCursorPos(row, col);
 
       uint16_t array = uarg[0];
-      memory.writeWord(array + 0, row);
-      memory.writeWord(array + 2, col);
+      state.memory.writeWord(array + 0, row);
+      state.memory.writeWord(array + 2, col);
    }
 
    void opV_set_text_style() { stream.setFontStyle(uarg[0]); }
@@ -742,7 +743,7 @@ private:
          int16_t stream_idx = abs(number);
 
          if(stream_idx > 4)
-            ZState::error(Error::BAD_STREAM);
+            state.error(Error::BAD_STREAM);
          else if(number > 0)
             stream.enableStream(stream_idx, true);
          else if(number < 0)
@@ -763,7 +764,7 @@ private:
 
       if(readChar(timeout, routine, ch))
       {
-         varWrite(fetchByte(), ch);
+         state.varWrite(state.fetchByte(), ch);
       }
    }
 
@@ -777,8 +778,8 @@ private:
 
       for(uint16_t i = 0; i < len; ++i)
       {
-         uint16_t v = (form & 0x80) ? memory.readWord(table)
-                                    : memory[table];
+         uint16_t v = (form & 0x80) ? state.memory.readWord(table)
+                                    : state.memory[table];
 
          if(v == x)
          {
@@ -789,7 +790,7 @@ private:
          table += form & 0x7F;
       }
 
-      varWrite(fetchByte(), result);
+      state.varWrite(state.fetchByte(), result);
 
       branch(result != 0);
    }
@@ -801,7 +802,7 @@ private:
       uint16_t dict  = num_arg >= 3 ? uarg[2] : uint16_t(header->dict);
       bool     flag  = num_arg == 4 ? uarg[3] != 0 : false;
 
-      parser.tokenise(memory, parse, text + 1, dict, flag);
+      parser.tokenise(state.memory, parse, text + 1, dict, flag);
    }
 
    void opV_encode_text() { TODO_ERROR("op encode_text unimplemeneted"); }
@@ -814,15 +815,15 @@ private:
 
       if(to == 0)
       {
-         memory.zero(from, from + size);
+         state.memory.zero(from, from + size);
       }
       else if((size < 0) || (from > to))
       {
-         memory.copyForward(from, to, abs(size));
+         state.memory.copyForward(from, to, abs(size));
       }
       else
       {
-         memory.copyBackward(from, to, size);
+         state.memory.copyBackward(from, to, size);
       }
    }
 
@@ -836,7 +837,7 @@ private:
       text.printTable([this](uint16_t ch){ stream.writeChar(ch); }, addr, width, height, skip);
    }
 
-   void opV_check_arg_count() { branch(uarg[0] <= ZState::getNumFrameArgs()); }
+   void opV_check_arg_count() { branch(uarg[0] <= state.getNumFrameArgs()); }
 
    //============================================================================
    // Extended operand instructions
@@ -851,9 +852,9 @@ private:
       (void)bytes;
       (void)name; // TODO use supplied parameters
 
-      uint8_t ret = fetchByte();
-      varWrite(ret, 2);
-      varWrite(ret, save(story) ? 1 : 0);
+      uint8_t ret = state.fetchByte();
+      state.varWrite(ret, 2);
+      state.varWrite(ret, save(story) ? 1 : 0);
    }
 
    void opE_restore_table()
@@ -866,23 +867,23 @@ private:
       (void)bytes;
       (void)name; // TODO use supplied parameters
 
-      if(!restore(story)) varWrite(fetchByte(), 0);
+      if(!restore(story)) state.varWrite(state.fetchByte(), 0);
    }
 
    void opE_log_shift()
    {
       if(sarg[1] < 0)
-         varWrite(fetchByte(), uarg[0] >> -sarg[1]);
+         state.varWrite(state.fetchByte(), uarg[0] >> -sarg[1]);
       else
-         varWrite(fetchByte(), uarg[0] << sarg[1]);
+         state.varWrite(state.fetchByte(), uarg[0] << sarg[1]);
    }
 
    void opE_art_shift()
    {
       if(sarg[1] < 0)
-         varWrite(fetchByte(), sarg[0] >> -sarg[1]);
+         state.varWrite(state.fetchByte(), sarg[0] >> -sarg[1]);
       else
-         varWrite(fetchByte(), sarg[0] << sarg[1]);
+         state.varWrite(state.fetchByte(), sarg[0] << sarg[1]);
    }
 
    void opE_save_undo()
@@ -893,9 +894,9 @@ private:
 
       undo_index = (undo_index + 1) % options.undo;
 
-      uint8_t ret = fetchByte();
-      varWrite(ret, 2);
-      varWrite(ret, save(filename) ? 1 : 0);
+      uint8_t ret = state.fetchByte();
+      state.varWrite(ret, 2);
+      state.varWrite(ret, save(filename) ? 1 : 0);
    }
 
    void opE_restore_undo()
@@ -907,7 +908,7 @@ private:
       filename = "undo_";
       filename += std::to_string(undo_index);
 
-      if(!restore(filename)) varWrite(fetchByte(), 0);
+      if(!restore(filename)) state.varWrite(state.fetchByte(), 0);
    }
 
    void opE_print_unicode()
@@ -979,7 +980,7 @@ private:
          }
       }
 
-      varWrite(fetchByte(), bit_mask);
+      state.varWrite(state.fetchByte(), bit_mask);
    }
 
    void opE_draw_picture() { TODO_WARN("op draw_picture unimplemented"); }
@@ -1007,8 +1008,8 @@ private:
       //    valid  = true;
       // }
 
-      memory.writeWord(array + 0, value1);
-      memory.writeWord(array + 2, value2);
+      state.memory.writeWord(array + 0, value1);
+      state.memory.writeWord(array + 2, value2);
 
       branch(valid);
    }
@@ -1022,7 +1023,7 @@ private:
    void opE_set_font()
    {
       bool ok = stream.setFont(uarg[0]);
-      varWrite(fetchByte(), ok);
+      state.varWrite(state.fetchByte(), ok);
    }
 
    void opE_move_window()
@@ -1069,7 +1070,7 @@ private:
       uint16_t wind = uarg[0];
       uint16_t prop = uarg[1];
 
-      varWrite(fetchByte(), window_mgr.getWindowProp(wind, prop));
+      state.varWrite(state.fetchByte(), window_mgr.getWindowProp(wind, prop));
    }
 
    void opE_scroll_window() { TODO_WARN("scroll_window unimplemented"); }
@@ -1081,17 +1082,17 @@ private:
       if (num_arg == 1)
       {
          uint16_t stack = uarg[1];
-         uint16_t size  = memory.readWord(stack);
+         uint16_t size  = state.memory.readWord(stack);
 
          size += items;
 
-         memory.writeWord(stack, size);
+         state.memory.writeWord(stack, size);
       }
       else
       {
          for(uint16_t i=0; i<items; i++)
          {
-            (void) pop();
+            (void) state.pop();
          }
       }
    }
@@ -1104,13 +1105,13 @@ private:
    {
       uint16_t value = uarg[0];
       uint16_t stack = uarg[1];
-      uint16_t size  = memory.readWord(stack);
+      uint16_t size  = state.memory.readWord(stack);
 
       if (size != 0)
       {
-         memory.writeWord(stack + 2*size, value);
+         state.memory.writeWord(stack + 2*size, value);
          --size;
-         memory.writeWord(stack, size);
+         state.memory.writeWord(stack, size);
       }
 
       branch(size != 0);
@@ -1330,9 +1331,9 @@ private:
 
       switch(type)
       {
-      case OP_LARGE_CONST: operand = fetchWord();          break;
-      case OP_SMALL_CONST: operand = fetchByte();          break;
-      case OP_VARIABLE:    operand = varRead(fetchByte()); break;
+      case OP_LARGE_CONST: operand = state.fetchWord();          break;
+      case OP_SMALL_CONST: operand = state.fetchByte();          break;
+      case OP_VARIABLE:    operand = state.varRead(state.fetchByte()); break;
       default: assert(!"bad operand type"); return;
       }
 
@@ -1347,13 +1348,13 @@ private:
 
       if(n == 4)
       {
-         op_types = fetchByte() << 8;
+         op_types = state.fetchByte() << 8;
       }
       else
       {
          assert(n == 8);
 
-         op_types = fetchWord();
+         op_types = state.fetchWord();
       }
 
       // Unpack the type of the operands
@@ -1415,9 +1416,9 @@ private:
 
    void fetchDecodeExecute()
    {
-      inst_addr = ZState::getPC();
+      inst_addr = state.getPC();
 
-      uint8_t opcode = fetchByte();
+      uint8_t opcode = state.fetchByte();
 
       clearOperands();
 
@@ -1438,7 +1439,7 @@ private:
          if(opcode == 0xBE)
          {
             // 10111110
-            doOpE(fetchByte());
+            doOpE(state.fetchByte());
          }
          else
          {
@@ -1467,12 +1468,12 @@ private:
       // TODO the header should be reset (only bits 0 and 1 from Flags 2
       //      shoud be preserved)
 
-      if(!ZState::reset(filename, file_offset, header->getEntryPoint(), header->checksum))
+      if(!state.reset(filename, file_offset, header->getEntryPoint(), header->checksum))
       {
          error("Failed to read story z-file \"%s\"", filename.c_str());
       }
 
-      if((version() >= 3) && !isChecksumOk())
+      if((version() >= 3) && !state.isChecksumOk())
       {
          if (version() == 3)
          {
@@ -1504,13 +1505,13 @@ private:
       file.seek(file_offset);
 
       // Read header
-      if(!memory.load(file, 0, sizeof(ZHeader)))
+      if(!state.memory.load(file, 0, sizeof(ZHeader)))
       {
          error("Z-file header read failed");
          return false;
       }
 
-      header = reinterpret_cast<ZHeader*>(&memory[0]);
+      header = reinterpret_cast<ZHeader*>(&state.memory[0]);
 
       if(!header->isVersionValid())
       {
@@ -1523,7 +1524,7 @@ private:
 
    void printTrace()
    {
-      (void) dis.disassemble(dis_text, ZState::getPC(), &memory[inst_addr]);
+      (void) dis.disassemble(dis_text, state.getPC(), &state.memory[inst_addr]);
 
       // TODO avoid sprintf
       std::string fmt_op_count = "NNNNNN";
@@ -1539,10 +1540,10 @@ public:
    ZMachine(Console& console_, Options& options_)
       : options(options_)
       , console(console_)
-      , stream(console, options_, memory)
+      , stream(console, options_, state.memory)
       , window_mgr(console, options_, stream)
-      , object(memory)
-      , text(memory)
+      , object(state.memory)
+      , text(state.memory)
    {
    }
 
@@ -1595,11 +1596,11 @@ public:
       parser.init(header->version);
       object.init(header->obj, header->version);
 
-      ZState::init(options.seed,
-                   sizeof(ZHeader),
-                   header->getStorySize(),
-                   header->glob,
-                   header->getMemoryLimit());
+      state.init(options.seed,
+                 sizeof(ZHeader),
+                 header->getStorySize(),
+                 header->glob,
+                 header->getMemoryLimit());
 
       initDecoder();
 
@@ -1618,7 +1619,7 @@ public:
 
       if(options.trace)
       {
-         while(!isQuitRequested())
+         while(!state.isQuitRequested())
          {
             printTrace();
             fetchDecodeExecute();
@@ -1626,7 +1627,7 @@ public:
       }
       else
       {
-         while(!isQuitRequested())
+         while(!state.isQuitRequested())
          {
             fetchDecodeExecute();
          }
@@ -1638,10 +1639,10 @@ public:
 
       info("quit");
 
-      Error exit_code = ZState::getExitCode();
+      Error exit_code = state.getExitCode();
       if(isError(exit_code))
       {
-         (void) dis.disassemble(dis_text, inst_addr, &memory[inst_addr]);
+         (void) dis.disassemble(dis_text, inst_addr, &state.memory[inst_addr]);
          error("PC=%s : %s", dis_text.c_str(), errorString(exit_code));
          return false;
       }
