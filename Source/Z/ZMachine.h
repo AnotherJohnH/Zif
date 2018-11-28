@@ -36,10 +36,10 @@
 #include "ZConfig.h"
 #include "ZDisassembler.h"
 #include "ZHeader.h"
-#include "ZBlorb.h"
 #include "ZObject.h"
 #include "ZParser.h"
 #include "ZState.h"
+#include "ZStory.h"
 #include "ZText.h"
 #include "ZWindowManager.h"
 
@@ -51,6 +51,7 @@ private:
 
    static const unsigned MAX_OPERANDS = 8;
 
+   ZStory         story;
    ZState         state;
    Log            trace{"trace.log"};
    ZDisassembler  dis;
@@ -61,11 +62,7 @@ private:
    ZObject        object;
    ZText          text;
    ZParser        parser;
-   ZBlorb         zblorb{};
    ZHeader*       header{};
-   std::string    filename{};
-   std::string    story{};
-   unsigned       file_offset{0};
    uint32_t       inst_addr;
    unsigned       num_arg;
    union
@@ -345,23 +342,23 @@ private:
    void op0_nop() {}
 
    //! v1 save ?(label)
-   void op0_save_v1() { branch(state.save(story)); }
+   void op0_save_v1() { branch(state.save(story.getFilename())); }
 
    //! v4 save -> (result)
    void op0_save_v4()
    {
       uint8_t ret = state.fetchByte();
       state.varWrite(ret, 2);
-      state.varWrite(ret, state.save(story) ? 1 : 0);
+      state.varWrite(ret, state.save(story.getFilename()) ? 1 : 0);
    }
 
    //! v1 restore ?(label)
-   void op0_restore_v1() { branch(state.restore(story)); }
+   void op0_restore_v1() { branch(state.restore(story.getFilename())); }
 
    //! v4 restore -> (result)
    void op0_restore_v4()
    {
-      if(!state.restore(story)) state.varWrite(state.fetchByte(), 0);
+      if(!state.restore(story.getFilename())) state.varWrite(state.fetchByte(), 0);
    }
 
    //! restart
@@ -386,7 +383,7 @@ private:
    void op0_show_status() { showStatus(); }
 
    //! verify ?(label)
-   void op0_verify() { branch(state.isChecksumOk()); }
+   void op0_verify() { branch(story.isChecksumOk()); }
 
    //! piracy ?(label)
    void op0_piracy() { branch(true); }
@@ -836,7 +833,7 @@ private:
 
       uint8_t ret = state.fetchByte();
       state.varWrite(ret, 2);
-      state.varWrite(ret, state.save(story) ? 1 : 0);
+      state.varWrite(ret, state.save(story.getFilename()) ? 1 : 0);
    }
 
    void opE_restore_table()
@@ -849,7 +846,7 @@ private:
       (void)bytes;
       (void)name; // TODO use supplied parameters
 
-      if(!state.restore(story)) state.varWrite(state.fetchByte(), 0);
+      if(!state.restore(story.getFilename())) state.varWrite(state.fetchByte(), 0);
    }
 
    void opE_log_shift()
@@ -1447,15 +1444,9 @@ private:
    {
       console.clear();
 
-      // TODO the header should be reset (only bits 0 and 1 from Flags 2
-      //      shoud be preserved)
+      state.reset(story);
 
-      if(!state.reset(filename, file_offset, header->getEntryPoint()))
-      {
-         error("Failed to read story z-file \"%s\"", filename.c_str());
-      }
-
-      if((version() >= 3) && !state.isChecksumOk())
+      if((version() >= 3) && !story.isChecksumOk())
       {
          if (version() == 3)
          {
@@ -1470,38 +1461,8 @@ private:
 
       if (restore_save)
       {
-         state.restore(story);
+         state.restore(story.getFilename());
       }
-   }
-
-   bool loadHeader()
-   {
-      PLT::File file(nullptr, filename.c_str());
-
-      if(!file.openForRead())
-      {
-         error("Failed to open story z-file \"%s\"", filename.c_str());
-         return false;
-      }
-
-      file.seek(file_offset);
-
-      // Read header
-      if(!state.memory.load(file, 0, sizeof(ZHeader)))
-      {
-         error("Z-file header read failed");
-         return false;
-      }
-
-      header = reinterpret_cast<ZHeader*>(&state.memory[0]);
-
-      if(!header->isVersionValid())
-      {
-         error("Unexpected version %u", header->version);
-         return false;
-      }
-
-      return true;
    }
 
    void printTrace()
@@ -1532,41 +1493,18 @@ public:
 
    //! Play a Z file.
    //! \return true if there were no errors
-   bool play(const std::string& filename_, bool restore_save = false)
+   bool play(const std::string& filename, bool restore_save = false)
    {
-      filename = filename_;
-
-      size_t slash = filename.rfind('/');
-      if (slash == std::string::npos)
+      std::string err;
+      if (!story.load(filename, err))
       {
-         story = filename;
-      }
-      else
-      {
-         story = filename.substr(slash + 1);
+         error(err.c_str());
+         return false;
       }
 
-      if (story.find(".zblorb") != std::string::npos)
-      {
-          std::string type;
-
-          if (!zblorb.findResource(filename,
-                                   ZBlorb::Resource::EXEC, /* index */ 0,
-                                   type, file_offset) ||
-              (type != "ZCOD"))
-          {
-             warning("ZCOD chunk not found in zblorb file");
-
-             // Try treating file a raw Z file
-             file_offset = 0;
-          }
-      }
-      else
-      {
-          file_offset = 0;
-      }
-
-      if(!loadHeader()) return false;
+      header = reinterpret_cast<ZHeader*>(&state.memory[0]);
+      state.memory.resize(sizeof(ZHeader));
+      memcpy(&state.memory[0], story.getHeader(), sizeof(ZHeader));
 
       ZConfig config;
       config.interp_major_version = 1;

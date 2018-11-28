@@ -31,6 +31,7 @@
 #include "ZHeader.h"
 #include "ZMemory.h"
 #include "ZStack.h"
+#include "ZStory.h"
 
 
 //! Z machine state
@@ -49,7 +50,6 @@ private:
    uint32_t memory_limit{0};
 
    // Dynamic state
-   bool     checksum_ok{false};
    uint32_t rand_state{1};
    uint32_t pc{0};
    uint16_t frame_ptr{0};
@@ -70,9 +70,6 @@ public:
 
    //! Return whether the machine should stop
    bool isQuitRequested() const { return do_quit; }
-
-   //! Return whether the loaded checksum was valid
-   bool isChecksumOk() const { return checksum_ok; }
 
    //! Current value of the program counter
    uint32_t getPC() const { return pc; }
@@ -103,37 +100,25 @@ public:
 
    //! Reset the dynamic state to the initial conditions.
    //  This includes loading the body of the game file
-   bool reset(const std::string& filename, unsigned offset, uint32_t pc_)
+   void reset(ZStory& story)
    {
       do_quit = false;
 
       random(-(initial_rand_seed & 0x7FFF));
 
-      jump(pc_);
+      const ZHeader* header = story.getHeader();
+      jump(header->getEntryPoint());
 
       frame_ptr = 0;
 
       stack.clear();
 
-      PLT::File file(nullptr, filename.c_str());
-      if(!file.openForRead())
-      {
-         return false;
-      }
+      // TODO the header should be reset (only bits 0 and 1 from Flags 2
+      //      shoud be preserved)
 
-      // skip the header
-      file.seek(offset + GAME_START);
-
-      if(!memory.load(file, GAME_START, game_end))
-      {
-         return false;
-      }
-
-      checksum_ok = memory.checksum(GAME_START, game_end) == header->checksum;
+      memcpy(&memory[GAME_START], story.getGame(), story.getGameSize());
 
       memory.zero(game_end, memory_limit);
-
-      return true;
    }
 
    //! Save the dynamic state to a file
@@ -146,7 +131,7 @@ public:
       PLT::File file(save_dir.c_str(), name.c_str(), "sav");
       if(file.openForWrite())
       {
-         if(memory.save(file, GAME_START, memory_limit))
+         if(memory.save(file, GAME_START, memory.size()))
          {
             ok = file.write(&stack, sizeof(stack));
          }
@@ -390,7 +375,6 @@ private:
    //! Save dynamic registers on the stack
    void pushContext()
    {
-      push(checksum_ok);
       push32(rand_state);
       push32(pc);
       push(frame_ptr);
@@ -402,7 +386,6 @@ private:
       frame_ptr   = pop();
       pc          = pop32();
       rand_state  = pop32();
-      checksum_ok = pop();
 
       validateFramePtr();
       validatePC();

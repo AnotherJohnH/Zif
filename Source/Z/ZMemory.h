@@ -41,6 +41,9 @@ private:
 public:
    ZMemory() = default;
 
+   //! Get memory size
+   uint32_t size() const { return limit; }
+
    //! Set memory size limit (bytes)
    void resize(uint32_t limit_)
    {
