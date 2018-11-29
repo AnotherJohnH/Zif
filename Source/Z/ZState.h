@@ -30,9 +30,9 @@
 
 #include "ZHeader.h"
 #include "ZMemory.h"
+#include "ZQuetzal.h"
 #include "ZStack.h"
 #include "ZStory.h"
-
 
 //! Z machine state
 class ZState
@@ -44,10 +44,11 @@ private:
    std::string    save_dir{};
 
    // Static configuration
-   uint16_t initial_rand_seed{0};
-   uint32_t game_end{0};
-   uint32_t global_base{0};
-   uint32_t memory_limit{0};
+   const ZStory* story{nullptr};
+   uint16_t      initial_rand_seed{0};
+   uint32_t      game_end{0};
+   uint32_t      global_base{0};
+   uint32_t      memory_limit{0};
 
    // Dynamic state
    uint32_t rand_state{1};
@@ -78,12 +79,12 @@ public:
    uint16_t getFramePtr() const { return frame_ptr; }
 
    //! Initialise with the game configuration
-   void init(uint16_t initial_rand_seed_)
+   void init(const ZStory& story_, uint16_t initial_rand_seed_)
    {
-      header = reinterpret_cast<const ZHeader*>(&memory[0]);
-
+      story             = &story_;
       initial_rand_seed = initial_rand_seed_;
 
+      header       = story->getHeader();
       game_end     = header->getStorySize();
       global_base  = header->glob;
       memory_limit = header->getMemoryLimit();
@@ -100,13 +101,12 @@ public:
 
    //! Reset the dynamic state to the initial conditions.
    //  This includes loading the body of the game file
-   void reset(ZStory& story)
+   void reset()
    {
       do_quit = false;
 
       random(-(initial_rand_seed & 0x7FFF));
 
-      const ZHeader* header = story.getHeader();
       jump(header->getEntryPoint());
 
       frame_ptr = 0;
@@ -116,7 +116,7 @@ public:
       // TODO the header should be reset (only bits 0 and 1 from Flags 2
       //      shoud be preserved)
 
-      memcpy(&memory[GAME_START], story.getGame(), story.getGameSize());
+      memcpy(&memory[GAME_START], story->getGame(), story->getGameSize());
 
       memory.zero(game_end, memory_limit);
    }

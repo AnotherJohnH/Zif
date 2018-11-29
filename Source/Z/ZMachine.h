@@ -1444,7 +1444,7 @@ private:
    {
       console.clear();
 
-      state.reset(story);
+      state.reset();
 
       if((version() >= 3) && !story.isChecksumOk())
       {
@@ -1517,7 +1517,7 @@ public:
       parser.init(header->version);
       object.init(header->obj, header->version);
 
-      state.init(options.seed);
+      state.init(story, options.seed);
 
       initDecoder();
 
