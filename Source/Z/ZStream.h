@@ -129,7 +129,7 @@ public:
    //! Flush any output that has been buffered
    void flush()
    {
-      // TODO is the test required? flush else where in this module
+      // TODO is the test required? flush elsewhere in this module
       //      is not conditional
       if(buffer_enable) flushOutputBuffer();
    }
@@ -300,7 +300,6 @@ private:
          default:
             // "extra" characters
             if((zscii >= 155) && (zscii <=251)) break;
-            printf("<%02x>", zscii);
             return;
          }
       }
