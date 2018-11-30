@@ -26,9 +26,6 @@
 #include <cassert>
 #include <cstdint>
 
-#include "PLT/File.h"
-
-
 //! Z machine memory
 class ZMemory
 {
@@ -104,29 +101,6 @@ public:
       }
 
       return checksum;
-   }
-
-   //! Save a block of memory to an open file stream
-   bool save(PLT::File& file, uint32_t start, uint32_t end) const
-   {
-      assert((start < limit) && (end <= limit));
-
-      return file.write(&data[start], end - start);
-   }
-
-   //! Load a block of memory from an open file stream
-   bool load(PLT::File& file, uint32_t start, uint32_t end)
-   {
-      assert(start < end);
-
-      if (end > limit)
-      {
-         resize(end);
-      }
-
-      assert((start < limit) && (end <= limit));
-
-      return file.read(&data[start], end - start);
    }
 
    //! Zero a block of memory

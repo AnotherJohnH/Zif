@@ -23,7 +23,6 @@
 #ifndef ZSTATE_H
 #define ZSTATE_H
 
-#include "PLT/File.h"
 #include "STB/Stack.h"
 
 #include "Error.h"
@@ -40,8 +39,8 @@ class ZState
 private:
    static const uint32_t GAME_START = sizeof(ZHeader);
 
+   ZQuetzal       save_file;
    const ZHeader* header{nullptr};
-   std::string    save_dir{};
 
    // Static configuration
    const ZStory* story{nullptr};
@@ -65,7 +64,7 @@ private:
 
 public:
    ZState(const std::string& save_dir_)
-      : save_dir(save_dir_)
+      : save_file(save_dir_)
    {
    }
 
@@ -124,44 +123,25 @@ public:
    //! Save the dynamic state to a file
    bool save(const std::string& name)
    {
-      bool ok = false;
-
       pushContext();
-
-      PLT::File file(save_dir.c_str(), name.c_str(), "sav");
-      if(file.openForWrite())
-      {
-         if(memory.save(file, GAME_START, memory.size()))
-         {
-            ok = file.write(&stack, sizeof(stack));
-         }
-      }
-
+      save_file.encode(*story, pc, memory, stack);
       popContext();
 
-      return ok;
+      return save_file.write(name);
    }
 
    //! Restore the dynamic state from a save file
    bool restore(const std::string& name)
    {
-      bool ok = false;
-
-      PLT::File file(save_dir.c_str(), name.c_str(), "sav");
-      if(file.openForRead())
+      if (save_file.read(name) &&
+          save_file.decode(*story, pc, memory, stack))
       {
-         if(memory.load(file, GAME_START, memory_limit))
-         {
-            ok = file.read(&stack, sizeof(stack));
-         }
-      }
-
-      if(ok)
-      {
+         validatePC();
          popContext();
+         return true;
       }
 
-      return ok;
+      return false;
    }
 
    void quit() const { do_quit = true; }
@@ -376,7 +356,6 @@ private:
    void pushContext()
    {
       push32(rand_state);
-      push32(pc);
       push(frame_ptr);
    }
 
@@ -384,11 +363,9 @@ private:
    void popContext()
    {
       frame_ptr   = pop();
-      pc          = pop32();
       rand_state  = pop32();
 
       validateFramePtr();
-      validatePC();
    }
 
    void push32(uint32_t value)

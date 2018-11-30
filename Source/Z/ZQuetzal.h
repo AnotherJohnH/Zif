@@ -34,50 +34,69 @@
 class ZQuetzal
 {
 public:
-   ZQuetzal(const ZStory& story_)
-      : story(story_)
+   ZQuetzal(const std::string& save_dir_)
+      : save_dir(save_dir_)
    {
    }
 
-   //! Write machine state to a Quetzal file
-   bool write(const std::string& filename,
-              uint32_t           pc,
-              const ZMemory&     memory,
-              const ZStack&      stack)
+   //! Get error message for the last error
+   const std::string& getLastError() const { return error; }
+
+   //! Save the ZMachine state in this Quetzal object
+   void encode(const ZStory&  story,
+               uint32_t       pc,
+               const ZMemory& memory,
+               const ZStack&  stack)
    {
-      STB::IFF::Document doc{"FORM", "IFSZ"};
-
-      writeHeader(          doc, pc);
-      writeCompressedMemory(doc, memory);
-      writeStacks(          doc, stack);
-
-      return doc.write(filename);
+      encodeHeader(story, pc);
+      encodeMemory(story, memory);
+      encodeStacks(stack);
    }
 
-   //! Read machine state from a Quetzal file
-   bool read(const std::string& filename,
-             uint32_t&          pc,
-             ZMemory&           memory,
-             ZStack&            stack,
-             std::string        error)
+   //! Restore the ZMachine state from this Quetzal object
+   bool decode(const ZStory& story,
+               uint32_t&     pc,
+               ZMemory&      memory,
+               ZStack&       stack)
    {
-       STB::IFF::Document doc;
-       if (!doc.read(filename))
-       {
-          error = "Failed to open file '";
-          error += filename;
-          error += "'";
-       }
+      return decodeHeader(story, pc) &&
+             decodeMemory(story, memory) &&
+             decodeStacks(stack);
+   }
 
-       if (!doc.isDocType("FORM") || !doc.isFileType("IFSZ"))
-       {
-          error = "File is not an IFF FORM of type IFSZ";
-          return false;
-       }
+   //! Write Quetzal object to a file
+   bool write(const std::string& name)
+   {
+      path = save_dir;
+      path += '/';
+      path += name;
+      path += ".qzl";
 
-       return readHeader(doc, pc, error) &&
-              readMemory(doc, memory, error) &&
-              readStacks(doc, stack, error);
+      return doc.write(path);
+   }
+
+   //! Read Quetzal object from a file
+   bool read(const std::string& name)
+   {
+      path = save_dir;
+      path += '/';
+      path += name;
+      path += ".qzl";
+
+      if (!doc.read(path))
+      {
+         error = "Failed to open file '";
+         error += name;
+         error += "'";
+      }
+
+      if (!doc.isDocType("FORM") || !doc.isFileType("IFSZ"))
+      {
+         error = "File is not an IFF FORM of type IFSZ";
+         return false;
+      }
+
+      return true;
    }
 
 private:
@@ -89,13 +108,15 @@ private:
       uint8_t    initial_pc[3];
    };
 
-   const ZStory& story;
+   STB::IFF::Document doc{"FORM", "IFSZ"};
+   std::string        save_dir;
+   std::string        path;
+   std::string        error;
 
    //! Prepare IFhd chunk
-   void writeHeader(STB::IFF::Document& doc,
-                    uint32_t            pc)
+   void encodeHeader(const ZStory& story, uint32_t pc)
    {
-      STB::IFF::Chunk& ifhd_chunk = doc.addChunk("IFhd");
+      STB::IFF::Chunk* ifhd_chunk = doc.newChunk("IFhd", 13);
       const ZHeader*   header     = story.getHeader();
       IFhd             ifhd;
 
@@ -106,14 +127,13 @@ private:
       ifhd.initial_pc[1] = pc >> 8;
       ifhd.initial_pc[2] = pc;
 
-      ifhd_chunk.push(&ifhd, 13);
+      ifhd_chunk->push(&ifhd, 13);
    }
 
    //! Prepare CMem chunk
-   void writeCompressedMemory(STB::IFF::Document& doc,
-                              const ZMemory&      memory)
+   void encodeMemory(const ZStory&  story, const ZMemory& memory)
    {
-      STB::IFF::Chunk& cmem = doc.addChunk("CMem");
+      STB::IFF::Chunk* cmem = doc.newChunk("CMem");
 
       const uint8_t* ref = story.getGame() - sizeof(ZHeader);
       const uint8_t* mem = &memory[0];
@@ -134,40 +154,37 @@ private:
          {
             if (++run_length == 0)
             {
-               cmem.push(uint8_t(0x00));
-               cmem.push(uint8_t(0xFF));
+               cmem->push(uint8_t(0x00));
+               cmem->push(uint8_t(0xFF));
             }
          }
          else
          {
             if (run_length != 0)
             {
-               cmem.push(uint8_t(0x00));
-               cmem.push(uint8_t(run_length-1));
+               cmem->push(uint8_t(0x00));
+               cmem->push(uint8_t(run_length-1));
                run_length = 0;
             }
-            cmem.push(enc_byte);
+            cmem->push(enc_byte);
          }
       }
    }
 
    //! Prepare Stks chunk
-   void writeStacks(STB::IFF::Document& doc,
-                    const ZStack&       stack)
+   void encodeStacks(const ZStack& stack)
    {
       // Stacks (store as Big endian)
-      STB::IFF::Chunk& stks = doc.addChunk("Stks", stack.size());
+      STB::IFF::Chunk* stks = doc.newChunk("Stks", stack.size() * 2);
       for(uint16_t i=0; i<stack.size(); i++)
       {
          STB::Big16 word = stack[i];
-         stks.push(word);
+         stks->push(word);
       }
    }
 
-   //! Read and decode IFhd chunk
-   bool readHeader(STB::IFF::Document& doc,
-                   uint32_t&           pc,
-                   std::string         error)
+   //! Decode IFhd chunk
+   bool decodeHeader(const ZStory& story, uint32_t& pc)
    {
        const IFhd* ifhd = doc.load<IFhd>("IFhd");
        if (ifhd == nullptr)
@@ -196,9 +213,7 @@ private:
    }
 
    //! Read and decode CMem or UMem chunk
-   bool readMemory(STB::IFF::Document& doc,
-                   ZMemory&            memory,
-                   std::string         error)
+   bool decodeMemory(const ZStory& story, ZMemory& memory)
    {
       uint32_t size = 0;
       uint8_t* mem  = &memory[0];
@@ -216,13 +231,14 @@ private:
             {
                if (i == size)
                {
+                  printf("i=%x\n", i);
                   error = "Incomplete CMem chunk";
                   return false;
                }
                unsigned n = cmem[i++] + 1;
                for(unsigned j=0; j<n; j++)
                {
-                  if (!decodeByte(memory, ref, addr++, 0))
+                  if (!decodeByte(memory, ref, story.getGameSize(), addr++, 0))
                   {
                      error = "CMem chunk too big";
                      return false;
@@ -231,7 +247,7 @@ private:
             }
             else
             {
-               if (!decodeByte(memory, ref, addr++, byte))
+               if (!decodeByte(memory, ref, story.getGameSize(), addr++, byte))
                {
                   error = "CMem chunk too big";
                   return false;
@@ -254,14 +270,18 @@ private:
       return false;
    }
 
-   bool decodeByte(ZMemory& memory, const uint8_t* ref, uint32_t addr, uint8_t byte)
+   bool decodeByte(ZMemory&       memory,
+                   const uint8_t* ref,
+                   uint32_t       ref_size,
+                   uint32_t       addr,
+                   uint8_t        byte)
    {
       if (addr >= memory.size())
       {
          return false;
       }
 
-      if (addr < story.getGameSize())
+      if (addr < ref_size)
       {
          memory[addr] = ref[addr] ^ byte;
       }
@@ -274,9 +294,7 @@ private:
    }
 
    //! Read and decode Stks chunk
-   bool readStacks(STB::IFF::Document& doc,
-                   ZStack&             stack,
-                   std::string         error)
+   bool decodeStacks(ZStack& stack)
    {
        uint32_t stack_size = 0;
        const STB::Big16* word = doc.load<STB::Big16>("Stks", &stack_size);
