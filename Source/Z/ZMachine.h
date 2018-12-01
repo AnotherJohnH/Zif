@@ -24,6 +24,7 @@
 #define ZMACHINE_H
 
 #include <cctype>
+#include <cstdarg>
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
