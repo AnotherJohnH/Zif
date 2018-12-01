@@ -121,7 +121,7 @@ public:
 
       memcpy(&memory[GAME_START], story->getGame(), story->getGameSize());
 
-      memory.zero(story->getGameSize(), memory_limit);
+      memory.zero(game_end, memory_limit);
    }
 
    //! Save the dynamic state to a file
