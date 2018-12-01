@@ -34,10 +34,7 @@
 class ZQuetzal
 {
 public:
-   ZQuetzal(const std::string& save_dir_)
-      : save_dir(save_dir_)
-   {
-   }
+   ZQuetzal() = default;
 
    //! Get error message for the last error
    const std::string& getLastError() const { return error; }
@@ -65,9 +62,9 @@ public:
    }
 
    //! Write Quetzal object to a file
-   bool write(const std::string& name)
+   bool write(const std::string& dir, const std::string& name)
    {
-      path = save_dir;
+      path = dir;
       path += '/';
       path += name;
       path += ".qzl";
@@ -76,9 +73,9 @@ public:
    }
 
    //! Read Quetzal object from a file
-   bool read(const std::string& name)
+   bool read(const std::string& dir, const std::string& name)
    {
-      path = save_dir;
+      path = dir;
       path += '/';
       path += name;
       path += ".qzl";
@@ -109,9 +106,8 @@ private:
    };
 
    STB::IFF::Document doc{"FORM", "IFSZ"};
-   std::string        save_dir;
-   std::string        path;
-   std::string        error;
+   std::string        path{};
+   std::string        error{};
 
    //! Prepare IFhd chunk
    void encodeHeader(const ZStory& story, uint32_t pc)

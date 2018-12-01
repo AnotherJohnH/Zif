@@ -51,11 +51,11 @@ private:
 
    static const unsigned MAX_OPERANDS = 8;
 
-   ZStory         story;
+   Options&       options;
    ZState         state;
+   ZStory         story;
    Log            trace{"trace.log"};
    ZDisassembler  dis;
-   Options&       options;
    Console&       console;
    ZStream        stream;
    ZWindowManager window_mgr;
@@ -70,8 +70,6 @@ private:
       uint16_t uarg[MAX_OPERANDS];
       int16_t  sarg[MAX_OPERANDS];
    };
-
-   unsigned undo_index{0};
 
    std::string  dis_text{};
    unsigned     dis_op_count{0};
@@ -867,27 +865,17 @@ private:
 
    void opE_save_undo()
    {
-      std::string& filename = work_str;
-      filename = "undo_";
-      filename += std::to_string(undo_index);
-
-      undo_index = (undo_index + 1) % options.undo;
-
       uint8_t ret = state.fetchByte();
       state.varWrite(ret, 2);
-      state.varWrite(ret, state.save(filename) ? 1 : 0);
+      state.varWrite(ret, state.saveUndo() ? 1 : 0);
    }
 
    void opE_restore_undo()
    {
-      undo_index = undo_index == 0 ? options.undo - 1
-                                   : undo_index - 1;
-
-      std::string& filename = work_str;
-      filename = "undo_";
-      filename += std::to_string(undo_index);
-
-      if(!state.restore(filename)) state.varWrite(state.fetchByte(), 0);
+      if(!state.restoreUndo())
+      {
+         state.varWrite(state.fetchByte(), 0);
+      }
    }
 
    void opE_print_unicode()
@@ -1481,8 +1469,8 @@ private:
 
 public:
    ZMachine(Console& console_, Options& options_)
-      : state((const char*)options_.save_dir)
-      , options(options_)
+      : options(options_)
+      , state((const char*)options.save_dir, options.undo, options.seed)
       , console(console_)
       , stream(console, options_, state.memory)
       , window_mgr(console, options_, stream)
@@ -1502,7 +1490,6 @@ public:
          return false;
       }
 
-      header = reinterpret_cast<ZHeader*>(&state.memory[0]);
       state.memory.resize(sizeof(ZHeader));
       memcpy(&state.memory[0], story.getHeader(), sizeof(ZHeader));
 
@@ -1510,6 +1497,7 @@ public:
       config.interp_major_version = 1;
       config.interp_minor_version = 0;
 
+      header = reinterpret_cast<ZHeader*>(&state.memory[0]);
       header->init(console, config);
 
       stream.init(header->version);
@@ -1517,7 +1505,7 @@ public:
       parser.init(header->version);
       object.init(header->obj, header->version);
 
-      state.init(story, options.seed);
+      state.init(story);
 
       initDecoder();
 

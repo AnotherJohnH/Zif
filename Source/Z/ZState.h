@@ -39,23 +39,25 @@ class ZState
 private:
    static const uint32_t GAME_START = sizeof(ZHeader);
 
-   ZQuetzal       save_file;
-   const ZHeader* header{nullptr};
-
    // Static configuration
-   const ZStory* story{nullptr};
-   uint16_t      initial_rand_seed{0};
-   uint32_t      game_end{0};
-   uint32_t      global_base{0};
-   uint32_t      memory_limit{0};
+   std::string    save_dir;
+   const ZStory*  story{nullptr};
+   const ZHeader* header{nullptr};
+   uint16_t       initial_rand_seed{0};
+   uint32_t       game_end{0};
+   uint32_t       global_base{0};
+   uint32_t       memory_limit{0};
 
    // Dynamic state
-   uint32_t rand_state{1};
-   uint32_t pc{0};
-   uint16_t frame_ptr{0};
-   ZStack   stack;
+   ZQuetzal              save_file;
+   std::vector<ZQuetzal> undo;
+   unsigned              undo_index;
+   uint32_t              rand_state{1};
+   uint32_t              pc{0};
+   uint16_t              frame_ptr{0};
+   ZStack                stack;
 public:
-   ZMemory memory;
+   ZMemory               memory;
 
 private:
    // Terminal state
@@ -63,9 +65,13 @@ private:
    mutable Error exit_code{Error::NONE};
 
 public:
-   ZState(const std::string& save_dir_)
-      : save_file(save_dir_)
+   ZState(const std::string& save_dir_,
+          unsigned num_undo,
+          uint16_t initial_rand_seed_)
+      : save_dir(save_dir_)
+      , initial_rand_seed(initial_rand_seed_)
    {
+       undo.resize(num_undo);
    }
 
    //! Return whether the machine should stop
@@ -78,11 +84,9 @@ public:
    uint16_t getFramePtr() const { return frame_ptr; }
 
    //! Initialise with the game configuration
-   void init(const ZStory& story_, uint16_t initial_rand_seed_)
+   void init(const ZStory& story_)
    {
-      story             = &story_;
-      initial_rand_seed = initial_rand_seed_;
-
+      story        = &story_;
       header       = story->getHeader();
       game_end     = header->getStorySize();
       global_base  = header->glob;
@@ -117,7 +121,7 @@ public:
 
       memcpy(&memory[GAME_START], story->getGame(), story->getGameSize());
 
-      memory.zero(game_end, memory_limit);
+      memory.zero(story->getGameSize(), memory_limit);
    }
 
    //! Save the dynamic state to a file
@@ -127,13 +131,13 @@ public:
       save_file.encode(*story, pc, memory, stack);
       popContext();
 
-      return save_file.write(name);
+      return save_file.write(save_dir, name);
    }
 
    //! Restore the dynamic state from a save file
    bool restore(const std::string& name)
    {
-      if (save_file.read(name) &&
+      if (save_file.read(save_dir, name) &&
           save_file.decode(*story, pc, memory, stack))
       {
          validatePC();
@@ -142,6 +146,32 @@ public:
       }
 
       return false;
+   }
+
+   //! Save the dynamic state into the undo buffer
+   bool saveUndo()
+   {
+      if (undo.size() == 0) return false;
+
+      pushContext();
+      undo[undo_index].encode(*story, pc, memory, stack);
+      popContext();
+
+      undo_index = (undo_index + 1) % undo.size();
+
+      return true;
+   }
+
+   //! Restore the dynamic state from the undo buffer
+   bool restoreUndo()
+   {
+      undo_index = undo_index == 0 ? undo.size() - 1
+                                   : undo_index - 1;
+
+      undo[undo_index].decode(*story, pc, memory, stack);
+      popContext();
+
+      return true;
    }
 
    void quit() const { do_quit = true; }

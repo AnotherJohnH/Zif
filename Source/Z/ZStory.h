@@ -37,22 +37,28 @@ class ZStory
 public:
    ZStory() = default;
 
+   //! Return true if previous load() was successful
    bool isLoadedOk() const { return !image.empty(); }
 
+   //! Return true if previous load() was successful and checksum matches
    bool isChecksumOk() const { return checksum_ok; }
 
+   //! Return name of ZStory file from previous succesful load()
    const std::string& getFilename() const { return filename; }
 
+   //! Return pointer to initial state of Z header
    const ZHeader* getHeader() const
    {
       return reinterpret_cast<const ZHeader*>(image.data());
    }
 
+   //! Return pointer to initial state of Z story
    const uint8_t* getGame() const
    {
       return &image[GAME_START];
    }
 
+   //! Return size of story (bytes)
    size_t getGameSize() const { return image.size() - GAME_START; }
 
    bool load(const std::string& path, std::string& error)
