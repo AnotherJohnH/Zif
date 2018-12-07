@@ -51,7 +51,8 @@ private:
    // Dynamic state
    ZQuetzal              save_file;
    std::vector<ZQuetzal> undo;
-   unsigned              undo_index;
+   unsigned              undo_oldest{0};
+   unsigned              undo_next{0};
    uint32_t              rand_state{1};
    uint32_t              pc{0};
    uint16_t              frame_ptr{0};
@@ -154,10 +155,14 @@ public:
       if (undo.size() == 0) return false;
 
       pushContext();
-      undo[undo_index].encode(*story, pc, memory, stack);
+      undo[undo_next].encode(*story, pc, memory, stack);
       popContext();
 
-      undo_index = (undo_index + 1) % undo.size();
+      undo_next = (undo_next + 1) % undo.size();
+      if (undo_next == undo_oldest)
+      {
+         undo_oldest = (undo_oldest + 1) % undo.size();
+      }
 
       return true;
    }
@@ -165,10 +170,12 @@ public:
    //! Restore the dynamic state from the undo buffer
    bool restoreUndo()
    {
-      undo_index = undo_index == 0 ? undo.size() - 1
-                                   : undo_index - 1;
+      if (undo_next == undo_oldest) return false;
 
-      undo[undo_index].decode(*story, pc, memory, stack);
+      undo_next = undo_next == 0 ? undo.size() - 1
+                                 : undo_next - 1;
+
+      undo[undo_next].decode(*story, pc, memory, stack);
       popContext();
 
       return true;
