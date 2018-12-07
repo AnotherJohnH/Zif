@@ -31,6 +31,7 @@
 #include "ZStack.h"
 #include "ZMemory.h"
 
+//! Encode/decode game state to/from quetzal format
 class ZQuetzal
 {
 public:
@@ -134,33 +135,26 @@ private:
       const uint8_t* ref = story.getGame() - sizeof(ZHeader);
       const uint8_t* mem = &memory[0];
 
-      uint8_t run_length = 0;
+      uint32_t run_length = 0;
       for(uint32_t i=0; i<memory.size(); i++)
       {
-         uint8_t enc_byte;
-         if (i < story.getGameSize())
-         {
-            enc_byte = ref[i] ^ mem[i];
-         }
-         else
-         {
-            enc_byte = mem[i];
-         }
+         uint8_t enc_byte = i < story.getGameSize() ? enc_byte = ref[i] ^ mem[i]
+                                                    : enc_byte = mem[i];
          if (enc_byte == 0x00)
          {
-            if (++run_length == 0)
-            {
-               cmem->push(uint8_t(0x00));
-               cmem->push(uint8_t(0xFF));
-            }
+            ++run_length;
          }
          else
          {
-            if (run_length != 0)
+            while(run_length != 0)
             {
+               uint32_t n = run_length <= 0x100 ? run_length
+                                                : 0x100;
+
                cmem->push(uint8_t(0x00));
-               cmem->push(uint8_t(run_length-1));
-               run_length = 0;
+               cmem->push(uint8_t(n - 1));
+
+               run_length -= n;
             }
             cmem->push(enc_byte);
          }
