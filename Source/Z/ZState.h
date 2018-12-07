@@ -48,17 +48,19 @@ private:
    uint32_t       global_base{0};
    uint32_t       memory_limit{0};
 
-   // Dynamic state
+   // Saved state
    ZQuetzal              save_file;
    std::vector<ZQuetzal> undo;
    unsigned              undo_oldest{0};
    unsigned              undo_next{0};
-   uint32_t              rand_state{1};
-   uint32_t              pc{0};
-   uint16_t              frame_ptr{0};
-   ZStack                stack;
+
+   // Dynamic state
+   uint32_t rand_state{1};
+   uint32_t pc{0};
+   uint16_t frame_ptr{0};
+   ZStack   stack;
 public:
-   ZMemory               memory;
+   ZMemory  memory;
 
 private:
    // Terminal state
@@ -104,7 +106,6 @@ public:
    }
 
    //! Reset the dynamic state to the initial conditions.
-   //  This includes loading the body of the game file
    void reset()
    {
       do_quit = false;
