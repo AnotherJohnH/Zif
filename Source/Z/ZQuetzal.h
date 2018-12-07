@@ -138,8 +138,8 @@ private:
       uint32_t run_length = 0;
       for(uint32_t i=0; i<memory.size(); i++)
       {
-         uint8_t enc_byte = i < story.getGameSize() ? enc_byte = ref[i] ^ mem[i]
-                                                    : enc_byte = mem[i];
+         uint8_t enc_byte = i < story.getGameSize() ? ref[i] ^ mem[i]
+                                                    : mem[i];
          if (enc_byte == 0x00)
          {
             ++run_length;
