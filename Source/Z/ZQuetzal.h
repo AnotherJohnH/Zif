@@ -43,20 +43,25 @@ public:
    //! Save the ZMachine state in this Quetzal object
    void encode(const ZStory&  story,
                uint32_t       pc,
+               uint32_t       rand_num_state,
                const ZMemory& memory,
                const ZStack&  stack)
    {
       encodeHeader(story, pc);
       encodeMemory(story, memory);
       encodeStacks(stack);
+      encodeZifHeader(rand_num_state);
    }
 
    //! Restore the ZMachine state from this Quetzal object
    bool decode(const ZStory& story,
                uint32_t&     pc,
+               uint32_t&     rand_num_state,
                ZMemory&      memory,
                ZStack&       stack)
    {
+      decodeZifHeader(rand_num_state);
+
       return decodeHeader(story, pc) &&
              decodeMemory(story, memory) &&
              decodeStacks(stack);
@@ -98,6 +103,11 @@ public:
    }
 
 private:
+   struct ZifHeader
+   {
+      STB::Big32 rand_num_state;
+   };
+
    struct IFhd
    {
       STB::Big16 release;
@@ -109,6 +119,17 @@ private:
    STB::IFF::Document doc{"FORM", "IFSZ"};
    std::string        path{};
    std::string        error{};
+
+   //! Prepare ZifH chunk
+   void encodeZifHeader(uint32_t rand_num_state)
+   {
+      STB::IFF::Chunk* zifh_chunk = doc.newChunk("ZifH", sizeof(ZifHeader));
+      ZifHeader        zifh;
+
+      zifh.rand_num_state = rand_num_state;
+
+      zifh_chunk->push(zifh);
+   }
 
    //! Prepare IFhd chunk
    void encodeHeader(const ZStory& story, uint32_t pc)
@@ -171,6 +192,19 @@ private:
          STB::Big16 word = stack[i];
          stks->push(word);
       }
+   }
+
+   //! Decode ZifH chunk
+   void decodeZifHeader(uint32_t& rand_num_state)
+   {
+       const ZifHeader* zifh = doc.load<ZifHeader>("ZifH");
+       if (zifh == nullptr)
+       {
+          // header is optional
+          return;
+       }
+
+       rand_num_state = zifh->rand_num_state;
    }
 
    //! Decode IFhd chunk

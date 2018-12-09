@@ -130,7 +130,7 @@ public:
    bool save(const std::string& name)
    {
       pushContext();
-      save_file.encode(*story, pc, memory, stack);
+      save_file.encode(*story, pc, rand_state, memory, stack);
       popContext();
 
       return save_file.write(save_dir, name);
@@ -140,7 +140,7 @@ public:
    bool restore(const std::string& name)
    {
       if (save_file.read(save_dir, name) &&
-          save_file.decode(*story, pc, memory, stack))
+          save_file.decode(*story, pc, rand_state, memory, stack))
       {
          validatePC();
          popContext();
@@ -156,7 +156,7 @@ public:
       if (undo.size() == 0) return false;
 
       pushContext();
-      undo[undo_next].encode(*story, pc, memory, stack);
+      undo[undo_next].encode(*story, pc, rand_state, memory, stack);
       popContext();
 
       undo_next = (undo_next + 1) % undo.size();
@@ -176,7 +176,7 @@ public:
       undo_next = undo_next == 0 ? undo.size() - 1
                                  : undo_next - 1;
 
-      undo[undo_next].decode(*story, pc, memory, stack);
+      undo[undo_next].decode(*story, pc, rand_state, memory, stack);
       popContext();
 
       return true;
@@ -393,15 +393,13 @@ private:
    //! Save dynamic registers on the stack
    void pushContext()
    {
-      push32(rand_state);
       push(frame_ptr);
    }
 
    //! Restore dynamic registers from the stack
    void popContext()
    {
-      frame_ptr   = pop();
-      rand_state  = pop32();
+      frame_ptr = pop();
 
       validateFramePtr();
    }
