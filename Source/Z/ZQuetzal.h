@@ -60,6 +60,8 @@ public:
                ZMemory&      memory,
                ZStack&       stack)
    {
+      error = "";
+
       decodeZifHeader(rand_num_state);
 
       return decodeHeader(story, pc) &&
@@ -81,6 +83,8 @@ public:
    //! Read Quetzal object from a file
    bool read(const std::string& dir, const std::string& name)
    {
+      error = "";
+
       path = dir;
       path += '/';
       path += name;
@@ -88,9 +92,10 @@ public:
 
       if (!doc.read(path))
       {
-         error = "Failed to open file '";
-         error += name;
+         error = "Failed to open Quetzal save file '";
+         error += path;
          error += "'";
+         return false;
       }
 
       if (!doc.isDocType("FORM") || !doc.isFileType("IFSZ"))

@@ -37,6 +37,9 @@ class ZStory
 public:
    ZStory() = default;
 
+   //! Get error message for the last error
+   const std::string& getLastError() const { return error; }
+
    //! Return true if previous load() was successful
    bool isLoadedOk() const { return !image.empty(); }
 
@@ -61,7 +64,7 @@ public:
    //! Return size of story (bytes)
    size_t getGameSize() const { return image.size() - GAME_START; }
 
-   bool load(const std::string& path, std::string& error)
+   bool load(const std::string& path)
    {
       error = "";
 
@@ -70,9 +73,9 @@ public:
       FILE* fp = fopen(path.c_str(), "r");
       if (fp == nullptr)
       {
-         error = "Failed to open story Z-file \"";
+         error = "Failed to open story Z-file \'";
          error += path;
-         error += "\" for read";
+         error += "\'";
       }
       else
       {
@@ -131,7 +134,8 @@ private:
 
    std::vector<uint8_t> image;
    bool                 checksum_ok{false};
-   std::string          filename;
+   std::string          filename{};
+   std::string          error{};
 
    bool seekToZHeader(FILE* fp, const std::string& path)
    {

@@ -1484,10 +1484,9 @@ public:
    //! \return true if there were no errors
    bool play(const std::string& filename, bool restore_save = false)
    {
-      std::string err;
-      if (!story.load(filename, err))
+      if (!story.load(filename))
       {
-         error(err.c_str());
+         error(story.getLastError().c_str());
          return false;
       }
 
