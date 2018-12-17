@@ -133,13 +133,23 @@ public:
       save_file.encode(*story, pc, rand_state, memory, stack);
       popContext();
 
-      return save_file.write(save_dir, name);
+      std::string path = save_dir;
+      path += '/';
+      path += name;
+      path += ".qzl";
+
+      return save_file.write(path);
    }
 
    //! Restore the dynamic state from a save file
    bool restore(const std::string& name)
    {
-      if (save_file.read(save_dir, name) &&
+      std::string path = save_dir;
+      path += '/';
+      path += name;
+      path += ".qzl";
+
+      if (save_file.read(path) &&
           save_file.decode(*story, pc, rand_state, memory, stack))
       {
          validatePC();

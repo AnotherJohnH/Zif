@@ -70,25 +70,15 @@ public:
    }
 
    //! Write Quetzal object to a file
-   bool write(const std::string& dir, const std::string& name)
+   bool write(const std::string& path)
    {
-      path = dir;
-      path += '/';
-      path += name;
-      path += ".qzl";
-
       return doc.write(path);
    }
 
    //! Read Quetzal object from a file
-   bool read(const std::string& dir, const std::string& name)
+   bool read(const std::string& path)
    {
       error = "";
-
-      path = dir;
-      path += '/';
-      path += name;
-      path += ".qzl";
 
       if (!doc.read(path))
       {
