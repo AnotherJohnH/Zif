@@ -88,9 +88,9 @@ public:
          return false;
       }
 
-      if (!doc.isDocType("FORM") || !doc.isFileType("IFSZ"))
+      if (!doc.isDocType("FORM") || !doc.isFileType("IFZS"))
       {
-         error = "File is not an IFF FORM of type IFSZ";
+         error = "File is not an IFF FORM of type IFZS";
          return false;
       }
 
@@ -111,7 +111,7 @@ private:
       uint8_t    initial_pc[3];
    };
 
-   STB::IFF::Document doc{"FORM", "IFSZ"};
+   STB::IFF::Document doc{"FORM", "IFZS"};
    std::string        path{};
    std::string        error{};
 
