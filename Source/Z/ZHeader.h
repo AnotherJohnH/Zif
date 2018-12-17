@@ -212,8 +212,10 @@ public:
          interpreter_version = 0;
       }
 
-      screen_lines = console.getAttr(Console::LINES);
-      screen_cols  = console.getAttr(Console::COLS);
+      screen_lines  = console.getAttr(Console::LINES);
+      screen_cols   = console.getAttr(Console::COLS);
+      screen_width  = screen_cols;
+      screen_height = screen_lines;
 
       font_height = console.getAttr(Console::FONT_HEIGHT);
       font_width  = console.getAttr(Console::FONT_WIDTH);
