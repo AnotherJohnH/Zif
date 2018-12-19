@@ -27,7 +27,7 @@
 #include "TRM/Launcher.h"
 
 #define  PROGRAM         "Zif"
-#define  DESCRIPTION     "Z-code engine for IF"
+#define  DESCRIPTION     "Z-code engine for interactive fiction"
 #define  LINK            "https://github.com/AnotherJohnH/Zif"
 #define  AUTHOR          "John D. Haughton"
 #define  VERSION         PROJ_VERSION
