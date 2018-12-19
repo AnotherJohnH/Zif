@@ -274,6 +274,11 @@ private:
             }
          }
 
+         while(addr < story.getGameSize())
+         {
+            (void) decodeByte(memory, ref, story.getGameSize(), addr++, 0x00);
+         }
+
          return true;
       }
 
