@@ -219,6 +219,9 @@ public:
 
       font_height = console.getAttr(Console::FONT_HEIGHT);
       font_width  = console.getAttr(Console::FONT_WIDTH);
+
+      background_colour = 2;
+      foreground_colour = 9;
    }
 };
 
