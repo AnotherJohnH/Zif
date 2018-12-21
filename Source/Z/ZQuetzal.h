@@ -148,14 +148,14 @@ private:
    {
       STB::IFF::Chunk* cmem = doc.newChunk("CMem");
 
-      const uint8_t* ref = story.getGame() - sizeof(ZHeader);
+      const uint8_t* ref = story.data();
       const uint8_t* mem = &memory[0];
 
       uint32_t run_length = 0;
       for(uint32_t i=0; i<memory.size(); i++)
       {
-         uint8_t enc_byte = i < story.getGameSize() ? ref[i] ^ mem[i]
-                                                    : mem[i];
+         uint8_t enc_byte = i < story.size() ? ref[i] ^ mem[i]
+                                             : mem[i];
          if (enc_byte == 0x00)
          {
             ++run_length;
@@ -240,7 +240,7 @@ private:
       const uint8_t* cmem = doc.load<uint8_t>("CMem", &size);
       if (cmem != nullptr)
       {
-         const uint8_t* ref  = story.getGame() - sizeof(ZHeader);
+         const uint8_t* ref  = story.data();
          uint32_t       addr = 0;
 
          for(uint32_t i=0; i<size; )
@@ -257,7 +257,7 @@ private:
                unsigned n = cmem[i++] + 1;
                for(unsigned j=0; j<n; j++)
                {
-                  if (!decodeByte(memory, ref, story.getGameSize(), addr++, 0))
+                  if (!decodeByte(memory, ref, story.size(), addr++, 0))
                   {
                      error = "CMem chunk too big";
                      return false;
@@ -266,7 +266,7 @@ private:
             }
             else
             {
-               if (!decodeByte(memory, ref, story.getGameSize(), addr++, byte))
+               if (!decodeByte(memory, ref, story.size(), addr++, byte))
                {
                   error = "CMem chunk too big";
                   return false;
@@ -274,9 +274,9 @@ private:
             }
          }
 
-         while(addr < story.getGameSize())
+         while(addr < story.size())
          {
-            (void) decodeByte(memory, ref, story.getGameSize(), addr++, 0x00);
+            (void) decodeByte(memory, ref, story.size(), addr++, 0x00);
          }
 
          return true;

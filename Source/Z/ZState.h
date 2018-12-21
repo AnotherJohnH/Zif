@@ -121,7 +121,7 @@ public:
       // TODO the header should be reset (only bits 0 and 1 from Flags 2
       //      shoud be preserved)
 
-      memcpy(&memory[GAME_START], story->getGame(), story->getGameSize());
+      memcpy(&memory[GAME_START], story->data() + GAME_START, story->size() - GAME_START);
 
       memory.zero(game_end, memory_limit);
    }

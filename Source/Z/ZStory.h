@@ -56,13 +56,13 @@ public:
    }
 
    //! Return pointer to initial state of Z story
-   const uint8_t* getGame() const
+   const uint8_t* data() const
    {
-      return &image[GAME_START];
+      return image.data();
    }
 
    //! Return size of story (bytes)
-   size_t getGameSize() const { return image.size() - GAME_START; }
+   size_t size() const { return image.size(); }
 
    bool load(const std::string& path)
    {
@@ -103,7 +103,7 @@ public:
 
                image.resize(header->getStorySize());
 
-               if (fread(&image[GAME_START], getGameSize(), 1, fp) != 1)
+               if (fread(&image[GAME_START], image.size() - GAME_START, 1, fp) != 1)
                {
                   error = "Failed to read Z body";
                }
