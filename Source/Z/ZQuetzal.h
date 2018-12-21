@@ -148,11 +148,12 @@ private:
    {
       STB::IFF::Chunk* cmem = doc.newChunk("CMem");
 
+      uint32_t       static_mem = story.getHeader()->stat;
       const uint8_t* ref = story.data();
       const uint8_t* mem = &memory[0];
 
       uint32_t run_length = 0;
-      for(uint32_t i=0; i<memory.size(); i++)
+      for(uint32_t i=0; i<static_mem; i++)
       {
          uint8_t enc_byte = i < story.size() ? ref[i] ^ mem[i]
                                              : mem[i];
