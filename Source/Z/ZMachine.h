@@ -1384,8 +1384,6 @@ private:
 
    void fetchDecodeExecute()
    {
-      inst_addr = state.getPC();
-
       uint8_t opcode = state.fetchByte();
 
       clearOperands();
@@ -1526,6 +1524,7 @@ public:
       {
          while(!state.isQuitRequested())
          {
+            inst_addr = state.getPC();
             printTrace();
             fetchDecodeExecute();
          }
@@ -1534,6 +1533,7 @@ public:
       {
          while(!state.isQuitRequested())
          {
+            inst_addr = state.getPC();
             fetchDecodeExecute();
          }
       }
