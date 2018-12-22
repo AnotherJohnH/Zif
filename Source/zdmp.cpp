@@ -168,7 +168,7 @@ private:
       }
 
       const ZHeader* header = story.getHeader();
-      memory.configure(header);
+      memory.init(header);
 
       if (save_file != nullptr)
       {

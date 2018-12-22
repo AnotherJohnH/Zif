@@ -53,7 +53,7 @@ public:
    ZHeader* getHeader() { return reinterpret_cast<ZHeader*>(data); }
 
    //! Configure memory for a game
-   bool configure(const ZHeader* header)
+   bool init(const ZHeader* header)
    {
       // Validate memory limit
       if (header->getMemoryLimit() > MAX_SIZE) return false;

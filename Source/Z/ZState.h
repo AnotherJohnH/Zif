@@ -42,7 +42,6 @@ private:
    // Static configuration
    std::string    save_dir;
    const ZStory*  story{nullptr};
-   const ZHeader* header{nullptr};
    uint16_t       initial_rand_seed{0};
    uint32_t       game_end{0};
    uint32_t       global_base{0};
@@ -88,12 +87,13 @@ public:
    //! Initialise with the game configuration
    void init(const ZStory& story_)
    {
+      const ZHeader* header = story->getHeader();
+
       story        = &story_;
-      header       = story->getHeader();
       game_end     = header->getStorySize();
       global_base  = header->glob;
 
-      if (!memory.configure(header))
+      if (!memory.init(header))
       {
          error(Error::BAD_CONFIG);
       }
@@ -106,7 +106,7 @@ public:
 
       random(-(initial_rand_seed & 0x7FFF));
 
-      jump(header->getEntryPoint());
+      jump(story->getHeader()->getEntryPoint());
 
       frame_ptr = 0;
 
