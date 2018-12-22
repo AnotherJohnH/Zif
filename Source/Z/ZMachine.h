@@ -1499,6 +1499,8 @@ public:
       header->init(console, config);
 
       stream.init(header->version);
+      // TODO fix this! and maybe just pass ZHeader* int stream
+      // stream.setColours(header->foreground_colour, header->background_colour);
       text.init(header->version, header->abbr);
       parser.init(header->version);
       object.init(header->obj, header->version);
