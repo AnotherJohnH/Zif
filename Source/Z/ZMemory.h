@@ -155,39 +155,6 @@ public:
       data[addr + 1] = word & 0xFF;
    }
 
-   //! Zero a block of memory
-   void zero(uint32_t start, uint32_t end)
-   {
-      assert((start < size) && (end <= size));
-
-      for(uint32_t addr = start; addr < end; addr++)
-      {
-         data[addr] = 0;
-      }
-   }
-
-   //! Copy a block of memory (copy lowest address first)
-   void copyForward(uint32_t from, uint32_t to, uint32_t n)
-   {
-      assert(((from + n) <= size) && ((to + n) <= static_mem));
-
-      for(uint32_t i = 0; i < n; i++)
-      {
-         data[to + i] = data[from + i];
-      }
-   }
-
-   //! Copy a block of memory (copy highest address first)
-   void copyBackward(uint32_t from, uint32_t to, uint32_t n)
-   {
-      assert(((from + n) <= size) && ((to + n) <= static_mem));
-
-      for(uint32_t i = n; i > 0; i--)
-      {
-         data[to + i - 1] = data[from + i - 1];
-      }
-   }
-
 private:
    static const Address MAX_SIZE{512 * 1024};
 

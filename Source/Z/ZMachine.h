@@ -793,15 +793,24 @@ private:
 
       if(to == 0)
       {
-         state.memory.zero(from, from + size);
+         for(uint32_t i = 0; i<size; i++)
+         {
+            state.memory.write(from + i, 0);
+         }
       }
       else if((size < 0) || (from > to))
       {
-         state.memory.copyForward(from, to, abs(size));
+         for(uint32_t i = 0; i < abs(size); i++)
+         {
+            state.memory.write(to + i, state.memory.read(from + i));
+         }
       }
       else
       {
-         state.memory.copyBackward(from, to, size);
+         for(uint32_t i = size; i > 0; i--)
+         {
+            state.memory.write(to + i - 1, state.memory.read(from + i - 1));
+         }
       }
    }
 
