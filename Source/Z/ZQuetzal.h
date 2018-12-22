@@ -152,7 +152,7 @@ private:
       const uint8_t* mem = memory.getData();
 
       uint32_t run_length = 0;
-      for(uint32_t i=0; i<memory.getStaticAddr(); i++)
+      for(uint32_t i=0; i<memory.getStaticStart(); i++)
       {
          uint8_t enc_byte = i < story.size() ? ref[i] ^ mem[i]
                                              : mem[i];
@@ -235,7 +235,6 @@ private:
    bool decodeMemory(const ZStory& story, ZMemory& memory)
    {
       uint32_t size = 0;
-      uint8_t* mem  = memory.getData();
 
       const uint8_t* cmem = doc.load<uint8_t>("CMem", &size);
       if (cmem != nullptr)
@@ -285,7 +284,7 @@ private:
       const uint8_t* umem = doc.load<uint8_t>("UMem", &size);
       if (umem != nullptr)
       {
-         memcpy(mem, umem, size);
+         memory.reset(umem);
          return true;
       }
 

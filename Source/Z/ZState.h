@@ -115,7 +115,7 @@ public:
       // TODO the header should be reset (only bits 0 and 1 from Flags 2
       //      shoud be preserved)
 
-      memcpy(memory.getData() + GAME_START, story->data() + GAME_START, story->size() - GAME_START);
+      memory.reset(story->data());
    }
 
    //! Save the dynamic state to a file

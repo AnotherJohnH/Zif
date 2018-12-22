@@ -190,7 +190,7 @@ private:
       }
       else
       {
-         memcpy(memory.getData(), story.data(), story.size());
+         memory.reset(story.data());
       }
 
       dumpHeader(header);

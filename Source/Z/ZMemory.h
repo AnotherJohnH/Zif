@@ -38,19 +38,16 @@ public:
    ZMemory() = default;
 
    //! Get start of static memory
-   Address getStaticAddr() const { return static_mem; }
+   Address getStaticStart() const { return static_mem; }
 
    //! Get start of hi-memory
-   Address getHimemAddr() const { return hi_mem; }
+   Address getHimemStart() const { return hi_mem; }
 
    //! Get size of memory
    Address getSize() const { return size; }
 
    //! Get read-only pointer to raw memory
    const uint8_t* getData() const { return data; }
-
-   //! Get writable pointer to raw memory
-   uint8_t* getData() { return data; }
 
    //! Get writable pointer to header
    ZHeader* getHeader() { return reinterpret_cast<ZHeader*>(data); }
@@ -86,9 +83,15 @@ public:
 
       memcpy(data, header, sizeof(ZHeader));
 
-      zero(sizeof(ZHeader), size);
-
       return true;
+   }
+
+   //! Reset memory from game image
+   void reset(const uint8_t* image)
+   {
+      memcpy(data + sizeof(ZHeader),
+            image + sizeof(ZHeader),
+            getSize() - sizeof(ZHeader));
    }
  
    //! Read byte from any part of memory
