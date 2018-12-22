@@ -1488,12 +1488,11 @@ public:
          return false;
       }
 
-      state.memory.resize(sizeof(ZHeader));
-      memcpy(&state.memory[0], story.getHeader(), sizeof(ZHeader));
-
       ZConfig config;
       config.interp_major_version = 1;
       config.interp_minor_version = 0;
+
+      state.init(story);
 
       header = reinterpret_cast<ZHeader*>(&state.memory[0]);
       header->init(console, config);
@@ -1504,8 +1503,6 @@ public:
       text.init(header->version, header->abbr);
       parser.init(header->version);
       object.init(header->obj, header->version);
-
-      state.init(story);
 
       initDecoder();
 

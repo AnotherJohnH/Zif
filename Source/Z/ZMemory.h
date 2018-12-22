@@ -25,31 +25,67 @@
 
 #include <cassert>
 #include <cstdint>
+#include <cstring>
+
+#include "ZHeader.h"
 
 //! Z machine memory
 class ZMemory
 {
 public:
+   using Address = uint32_t;
+
    ZMemory() = default;
 
-   //! Get memory size
-   uint32_t getSize() const { return limit; }
+   //! Get start of static memory
+   Address getStaticAddr() const { return static_mem; }
 
-   //! Set memory size limit (bytes)
-   void resize(uint32_t limit_)
+   //! Get start of hi-memory
+   Address getHimemAddr() const { return hi_mem; }
+
+   //! Get size of memory
+   Address getSize() const { return size; }
+
+   //! Configure memory for a game
+   bool configure(const ZHeader* header)
    {
-      assert((limit_ > limit) && (limit_ <= MAX_SIZE));
+      // Validate memory limit
+      if (header->getMemoryLimit() > MAX_SIZE) return false;
 
-      uint32_t prev_limit = limit;
-      limit = limit_;
+      // Validate story size
+      if (header->getStorySize() > header->getMemoryLimit()) return false;
 
-      zero(prev_limit, limit);
+      // Validate static memory region
+      if ((header->stat < sizeof(ZHeader)) ||
+          (header->stat > 0xFFFF) ||
+          (header->stat > header->getStorySize()))
+      {
+          return false;
+      }
+
+      // Validate hi-memory region
+      if ((header->himem < sizeof(ZHeader)) ||
+          (header->himem > header->getStorySize()) ||
+          (header->himem < header->stat))
+      {
+          return false;
+      }
+
+      static_mem  = header->stat;
+      hi_mem      = header->himem;
+      size        = header->getStorySize();
+
+      memcpy(data, header, sizeof(ZHeader));
+
+      zero(sizeof(ZHeader), size);
+
+      return true;
    }
-
+ 
    //! Get constant reference to a memory byte
    const uint8_t& operator[](uint32_t addr) const
    {
-      assert(addr < limit);
+      assert(addr < size);
 
       return data[addr];
    }
@@ -57,7 +93,8 @@ public:
    //! Get reference to a memory byte
    uint8_t& operator[](uint32_t addr)
    {
-      assert(addr < limit);
+      // TODO assert(addr < static_mem);
+      assert(addr < size);
 
       return data[addr];
    }
@@ -67,7 +104,7 @@ public:
    //! Read 16-bit word
    uint16_t readWord(uint32_t addr) const
    {
-      assert(addr < (limit - 1));
+      assert(addr < (size - 1));
 
       uint16_t msb = data[addr];
       return (msb << 8) | data[addr + 1];
@@ -76,7 +113,7 @@ public:
    //! Write 16-bit word
    void writeWord(uint32_t addr, uint16_t word)
    {
-      assert(addr < (limit - 1));
+      assert(addr < (static_mem - 1));
 
       data[addr]     = word >> 8;
       data[addr + 1] = word & 0xFF;
@@ -85,7 +122,7 @@ public:
    //! Compute checksum for a block of memory
    uint16_t checksum(uint32_t start, uint32_t end)
    {
-      assert((start < limit) && (end <= limit));
+      assert((start < size) && (end <= size));
 
       uint16_t checksum = 0;
 
@@ -100,7 +137,7 @@ public:
    //! Zero a block of memory
    void zero(uint32_t start, uint32_t end)
    {
-      assert((start < limit) && (end <= limit));
+      assert((start < size) && (end <= size));
 
       for(uint32_t addr = start; addr < end; addr++)
       {
@@ -111,7 +148,7 @@ public:
    //! Copy a block of memory (copy lowest address first)
    void copyForward(uint32_t from, uint32_t to, uint32_t n)
    {
-      assert(((from + n) <= size) && ((to + n) <= size));
+      assert(((from + n) <= size) && ((to + n) <= static_mem));
 
       for(uint32_t i = 0; i < n; i++)
       {
@@ -122,7 +159,7 @@ public:
    //! Copy a block of memory (copy highest address first)
    void copyBackward(uint32_t from, uint32_t to, uint32_t n)
    {
-      assert(((from + n) <= size) && ((to + n) <= size));
+      assert(((from + n) <= size) && ((to + n) <= static_mem));
 
       for(uint32_t i = n; i > 0; i--)
       {
@@ -131,9 +168,11 @@ public:
    }
 
 private:
-   static const uint32_t MAX_SIZE{512 * 1024};
+   static const Address MAX_SIZE{512 * 1024};
 
-   uint32_t limit{0};
+   Address  static_mem{0};
+   Address  hi_mem{0};
+   Address  size{0};
    uint8_t  data[MAX_SIZE];
 };
 

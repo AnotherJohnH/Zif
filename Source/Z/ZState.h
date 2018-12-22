@@ -46,7 +46,6 @@ private:
    uint16_t       initial_rand_seed{0};
    uint32_t       game_end{0};
    uint32_t       global_base{0};
-   uint32_t       memory_limit{0};
 
    // Saved state
    ZQuetzal              save_file;
@@ -93,16 +92,11 @@ public:
       header       = story->getHeader();
       game_end     = header->getStorySize();
       global_base  = header->glob;
-      memory_limit = header->getMemoryLimit();
 
-      if ((GAME_START >= game_end)   ||
-          (game_end >= memory_limit) ||
-          (global_base >= memory_limit))
+      if (!memory.configure(header))
       {
          error(Error::BAD_CONFIG);
       }
-
-      memory.resize(memory_limit);
    }
 
    //! Reset the dynamic state to the initial conditions.
@@ -122,8 +116,6 @@ public:
       //      shoud be preserved)
 
       memcpy(&memory[GAME_START], story->data() + GAME_START, story->size() - GAME_START);
-
-      memory.zero(game_end, memory_limit);
    }
 
    //! Save the dynamic state to a file
@@ -382,9 +374,7 @@ private:
    //! Range check PC
    bool validatePC() const
    {
-      // TODO maybe (pc >= GAME_START) && (pc < game_end)
-      // if self-modifying code is excluded
-      return (pc >= GAME_START) && (pc < memory_limit) ? true : error(Error::BAD_PC);
+      return (pc >= GAME_START) && (pc < game_end) ? true : error(Error::BAD_PC);
    }
 
    //! Range check frame pointer
@@ -397,7 +387,7 @@ private:
    //! Range check address
    bool validateAddr(uint32_t addr) const
    {
-      return addr < memory_limit ? true : error(Error::BAD_ADDRESS);
+      return addr < game_end ? true : error(Error::BAD_ADDRESS);
    }
 
    //! Save dynamic registers on the stack
