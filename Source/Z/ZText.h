@@ -260,7 +260,7 @@ public:
       {
          for(unsigned col = 0; col < width; col++)
          {
-            writer(memory.get(addr));
+            writer(memory.get(addr++));
          }
 
          addr += skip;
@@ -278,7 +278,7 @@ public:
 
          for(uint16_t i=0; i<length; i++)
          {
-            writer(memory.get(addr));
+            writer(memory.get(addr++));
          }
       }
    }
