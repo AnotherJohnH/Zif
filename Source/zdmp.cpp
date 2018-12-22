@@ -30,7 +30,7 @@
 #include <iostream>
 #include <iomanip>
 
-#define  PROGRAM         "QDmp"
+#define  PROGRAM         "ZDmp"
 #define  DESCRIPTION     "Dump Z story contents"
 #define  LINK            "https://github.com/AnotherJohnH/Zif"
 #define  AUTHOR          "John D. Haughton"
@@ -38,7 +38,7 @@
 #define  COPYRIGHT_YEAR  "2018"
 
 //!
-class QDmp : public STB::ConsoleApp
+class ZDmp : public STB::ConsoleApp
 {
 private:
    STB::Option<const char*> save_file{'s', "save", "Save file"};
@@ -212,7 +212,7 @@ private:
    }
 
 public:
-   QDmp(int argc, const char* argv[])
+   ZDmp(int argc, const char* argv[])
       : ConsoleApp(PROGRAM, DESCRIPTION, LINK, AUTHOR, VERSION, COPYRIGHT_YEAR)
    {
       parseArgsAndStart(argc, argv);
@@ -222,5 +222,5 @@ public:
 
 int main(int argc, const char* argv[])
 {
-   QDmp(argc, argv);
+   ZDmp(argc, argv);
 }
