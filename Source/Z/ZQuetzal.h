@@ -301,7 +301,7 @@ private:
                    uint32_t       addr,
                    uint8_t        byte)
    {
-      if (addr >= memory.size())
+      if (addr >= memory.getSize())
       {
          return false;
       }

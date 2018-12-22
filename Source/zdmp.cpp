@@ -109,13 +109,13 @@ private:
    {
       std::cout << "  \"memory\": [" << std::endl;
 
-      for(unsigned addr=0; addr<memory.size(); addr += 16)
+      for(unsigned addr=0; addr<memory.getSize(); addr += 16)
       {
          std::cout << "    {\"a\": \"" << std::setw(6) << addr << "\", \"b\": \"";
 
          for(unsigned i=0; i<16; i++)
          {
-            if ((addr + i) < memory.size())
+            if ((addr + i) < memory.getSize())
             {
                std::cout << " " << std::setw(2) << unsigned(memory[addr + i]);
             }
@@ -125,7 +125,7 @@ private:
 
          for(unsigned i=0; i<16; i++)
          {
-            if ((addr + i) < memory.size())
+            if ((addr + i) < memory.getSize())
             {
                uint8_t ch = memory[addr + i];
                if (isprint(ch))

@@ -29,17 +29,11 @@
 //! Z machine memory
 class ZMemory
 {
-private:
-   static const uint32_t MAX_SIZE{512 * 1024};
-
-   uint32_t limit{0};
-   uint8_t  data[MAX_SIZE];
-
 public:
    ZMemory() = default;
 
    //! Get memory size
-   uint32_t size() const { return limit; }
+   uint32_t getSize() const { return limit; }
 
    //! Set memory size limit (bytes)
    void resize(uint32_t limit_)
@@ -115,26 +109,32 @@ public:
    }
 
    //! Copy a block of memory (copy lowest address first)
-   void copyForward(uint32_t from, uint32_t to, uint32_t size)
+   void copyForward(uint32_t from, uint32_t to, uint32_t n)
    {
-      assert(((from + size) <= limit) && ((to + size) <= limit));
+      assert(((from + n) <= size) && ((to + n) <= size));
 
-      for(uint32_t i = 0; i < size; i++)
+      for(uint32_t i = 0; i < n; i++)
       {
          data[to + i] = data[from + i];
       }
    }
 
    //! Copy a block of memory (copy highest address first)
-   void copyBackward(uint32_t from, uint32_t to, uint32_t size)
+   void copyBackward(uint32_t from, uint32_t to, uint32_t n)
    {
-      assert(((from + size) <= limit) && ((to + size) <= limit));
+      assert(((from + n) <= size) && ((to + n) <= size));
 
-      for(uint32_t i = size; i > 0; i--)
+      for(uint32_t i = n; i > 0; i--)
       {
          data[to + i - 1] = data[from + i - 1];
       }
    }
+
+private:
+   static const uint32_t MAX_SIZE{512 * 1024};
+
+   uint32_t limit{0};
+   uint8_t  data[MAX_SIZE];
 };
 
 #endif
