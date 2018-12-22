@@ -121,7 +121,7 @@ public:
    }
 
    //! Read byte from dynamic or static memory
-   uint8_t read(Address addr) const
+   uint8_t readByte(Address addr) const
    {
       assert(addr < static_mem_end);
 
@@ -138,7 +138,7 @@ public:
    }
 
    //! Write byte to dynamic memory
-   void write(Address addr, uint8_t byte)
+   void writeByte(Address addr, uint8_t byte)
    {
       assert(addr < static_mem);
 
