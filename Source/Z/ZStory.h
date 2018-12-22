@@ -50,16 +50,10 @@ public:
    const std::string& getFilename() const { return filename; }
 
    //! Return pointer to initial state of Z header
-   const ZHeader* getHeader() const
-   {
-      return reinterpret_cast<const ZHeader*>(image.data());
-   }
+   const ZHeader* getHeader() const { return reinterpret_cast<const ZHeader*>(data()); }
 
    //! Return pointer to initial state of Z story
-   const uint8_t* data() const
-   {
-      return image.data();
-   }
+   const uint8_t* data() const { return image.data(); }
 
    //! Return size of story (bytes)
    size_t size() const { return image.size(); }
