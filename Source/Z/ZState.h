@@ -203,14 +203,14 @@ public:
    uint8_t fetchByte()
    {
       assert(validatePC());
-      return memory.getByte(pc++);
+      return memory.codeByte(pc++);
    }
 
    //! Fetch an instruction word
    uint16_t fetchWord()
    {
       assert(validatePC());
-      uint16_t word = memory.getWord(pc);
+      uint16_t word = memory.codeWord(pc);
       pc += 2;
       return word;
    }

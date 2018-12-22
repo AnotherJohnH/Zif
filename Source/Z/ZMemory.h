@@ -106,21 +106,29 @@ public:
       return data[addr];
    }
 
-   //! Read 16-bit word from any part of memory
-   uint16_t getWord(Address addr) const
-   {
-      assert(addr < (size - 1));
-
-      uint16_t msb = data[addr];
-      return (msb << 8) | data[addr + 1];
-   }
-
    //! Write byte to any part of memory
    void setByte(Address addr, uint8_t byte)
    {
       assert(addr < size);
 
       data[addr] = byte;
+   }
+
+   //! Read code byte
+   uint8_t codeByte(Address addr) const
+   {
+      assert(addr < size);
+
+      return data[addr];
+   }
+
+   //! Read 16-bit code word
+   uint16_t codeWord(Address addr) const
+   {
+      assert(addr < (size - 1));
+
+      uint16_t msb = data[addr];
+      return (msb << 8) | data[addr + 1];
    }
 
    //! Read byte from dynamic or static memory

@@ -141,9 +141,9 @@ public:
    void tokenise(ZMemory& memory, uint32_t out, uint32_t in, uint32_t dict, bool partial)
    {
       uint8_t  max_word_len = version <= 4 ? 6 : 9;
-      uint8_t  num_sep      = memory.getByte(dict);
-      uint8_t  entry_length = memory.getByte(dict + 1 + num_sep);
-      uint16_t num_entry    = memory.getWord(dict + 1 + num_sep + 1);
+      uint8_t  num_sep      = memory.codeByte(dict);
+      uint8_t  entry_length = memory.codeByte(dict + 1 + num_sep);
+      uint16_t num_entry    = memory.codeWord(dict + 1 + num_sep + 1);
       uint32_t first        = dict + 1 + num_sep + 3;
 
       unsigned max_num_word = memory.readByte(out);
@@ -163,7 +163,7 @@ public:
          // Check for custom seperators
          for(uint8_t j = 0; !is_sep && (j < num_sep); j++)
          {
-            is_sep = (memory.getByte(dict + 1 + j) == ch);
+            is_sep = (memory.codeByte(dict + 1 + j) == ch);
          }
 
          if(!is_sep)
