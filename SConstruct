@@ -1,11 +1,10 @@
 
-source  = ['Source/zif.cpp',
-           'Source/ConsoleImpl.cpp',
-           'Source/Z/ZStream.cpp']
+binaries = ['zif','zdmp']
+app      = 'Zif'
+version  = '0.5.5'
 
-binary  = 'zif'
-app     = 'Zif'
-version = '0.5.4'
+source  = ['Source/ConsoleImpl.cpp',
+           'Source/Z/ZStream.cpp']
 
 # Get a build environment
 env,libs = SConscript('Platform/build.scons', ['app', 'version'])
@@ -21,8 +20,10 @@ else:
 env.Append(CPPPATH = ['Source'])
 
 # Builders
-exe = env.Program(binary, source)
-Depends(exe, libs)
+exe = []
+for binary in binaries:
+   exe += env.Program(binary, source+['Source/'+binary+'.cpp'])
+   Depends(exe, libs)
 
 env.Tar(app+'_'+env['target']+'_'+env['machine']+'_'+version+'.tgz',
         [exe, env['platform_files'], 'LICENSE', 'zif.cfg', 'TermConfig.xml', 'Games'])
