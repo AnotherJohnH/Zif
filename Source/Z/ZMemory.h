@@ -91,18 +91,7 @@ public:
       return true;
    }
  
-#if 1
-   //! Get reference to a memory byte
-   uint8_t& operator[](uint32_t addr)
-   {
-      // TODO assert(addr < static_mem);
-      assert(addr < size);
-
-      return data[addr];
-   }
-#endif
-
-   //! Read byte from part of memory
+   //! Read byte from any part of memory
    uint8_t get(Address addr) const
    {
       assert(addr < size);
@@ -110,7 +99,7 @@ public:
       return data[addr];
    }
 
-   //! Read 16-bit word any part of memory
+   //! Read 16-bit word from any part of memory
    uint16_t getWord(Address addr) const
    {
       assert(addr < (size - 1));
@@ -119,7 +108,7 @@ public:
       return (msb << 8) | data[addr + 1];
    }
 
-   //!
+   //! Write byte to any part of memory
    void set(Address addr, uint8_t byte)
    {
       assert(addr < size);

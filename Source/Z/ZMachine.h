@@ -486,7 +486,7 @@ private:
    //  which must lie in static or dynamic memory)
    void op2_loadb()
    {
-      state.varWrite(state.fetchByte(), state.memory[uarg[0] + uarg[1]]);
+      state.varWrite(state.fetchByte(), state.memory.read(uarg[0] + uarg[1]));
    }
 
    void op2_get_prop()      { state.varWrite(state.fetchByte(), object.getProp(uarg[0], uarg[1])); }
@@ -536,7 +536,7 @@ private:
    void opV_call_vn()        { subCall(1, uarg[0], num_arg-1, &uarg[1]); }
    void opV_call_vn2()       { opV_call_vn(); }
    void opV_storew()         { state.memory.writeWord(uarg[0] + 2*uarg[1], uarg[2]); }
-   void opV_storeb()         { state.memory[uarg[0] + uarg[1]] = uarg[2]; }
+   void opV_storeb()         { state.memory.write(uarg[0] + uarg[1], uarg[2]); }
    void opV_put_prop()       { object.setProp(uarg[0], uarg[1], uarg[2]); }
 
    //! V1 sread text parse
@@ -551,7 +551,7 @@ private:
 
       if(SHOW_STATUS) showStatus();
 
-      uint8_t  max   = state.memory[buffer++] - 1;
+      uint8_t  max   = state.memory.read(buffer++) - 1;
       uint16_t start = buffer;
 
       for(uint8_t len = 0; len < max; len++)
@@ -575,12 +575,12 @@ private:
          }
          else if(ch == '\n')
          {
-            state.memory[buffer] = '\0';
+            state.memory.write(buffer, '\0');
             break;
          }
          else
          {
-            state.memory[buffer++] = tolower(ch);
+            state.memory.write(buffer++, tolower(ch));
          }
       }
 
@@ -595,8 +595,8 @@ private:
       uint16_t timeout = num_arg >= 3 ? uarg[2] : 0;
       uint16_t routine = num_arg >= 4 ? uarg[3] : 0;
 
-      uint8_t max = state.memory[buffer++];
-      uint8_t len = state.memory[buffer++];
+      uint8_t max = state.memory.read(buffer++);
+      uint8_t len = state.memory.read(buffer++);
 
       uint16_t start  = buffer;
       uint8_t  status = 0;
@@ -622,14 +622,14 @@ private:
          }
          else if(ch == '\n')
          {
-            state.memory[buffer]    = '\0';
-            state.memory[start - 1] = len;
+            state.memory.write(buffer, '\0');
+            state.memory.write(start - 1, len);
             status = ch;
             break;
          }
          else
          {
-            state.memory[buffer++] = ch;
+            state.memory.write(buffer++, ch);
          }
       }
 
@@ -757,7 +757,7 @@ private:
       for(uint16_t i = 0; i < len; ++i)
       {
          uint16_t v = (form & 0x80) ? state.memory.readWord(table)
-                                    : state.memory[table];
+                                    : state.memory.read(table);
 
          if(v == x)
          {
@@ -1454,7 +1454,7 @@ private:
 
    void printTrace()
    {
-      (void) dis.disassemble(dis_text, state.getPC(), &state.memory[inst_addr]);
+      (void) dis.disassemble(dis_text, state.getPC(), state.memory.getData() + inst_addr);
 
       // TODO avoid sprintf
       std::string fmt_op_count = "NNNNNN";
@@ -1494,7 +1494,7 @@ public:
 
       state.init(story);
 
-      header = reinterpret_cast<ZHeader*>(&state.memory[0]);
+      header = state.memory.getHeader();
       header->init(console, config);
 
       stream.init(header->version);
@@ -1546,7 +1546,7 @@ public:
       Error exit_code = state.getExitCode();
       if(isError(exit_code))
       {
-         (void) dis.disassemble(dis_text, inst_addr, &state.memory[inst_addr]);
+         (void) dis.disassemble(dis_text, inst_addr, state.memory.getData() + inst_addr);
          error("PC=%s : %s", dis_text.c_str(), errorString(exit_code));
          return false;
       }
