@@ -87,7 +87,7 @@ public:
    //! Initialise with the game configuration
    void init(const ZStory& story_)
    {
-      const ZHeader* header = story->getHeader();
+      const ZHeader* header = story_.getHeader();
 
       story        = &story_;
       game_end     = header->getStorySize();
