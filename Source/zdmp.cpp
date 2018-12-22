@@ -117,7 +117,7 @@ private:
          {
             if ((addr + i) < memory.getSize())
             {
-               std::cout << " " << std::setw(2) << unsigned(memory[addr + i]);
+               std::cout << " " << std::setw(2) << unsigned(memory.get(addr + i));
             }
          }
 
@@ -127,7 +127,7 @@ private:
          {
             if ((addr + i) < memory.getSize())
             {
-               uint8_t ch = memory[addr + i];
+               uint8_t ch = memory.get(addr + i);
                if (isprint(ch))
                {
                   std::cout << ch;
@@ -186,11 +186,11 @@ private:
          attr("PC", pc);
          attr("randState", rand_state);
 
-         header = reinterpret_cast<ZHeader*>(&memory[0]);
+         header = memory.getHeader();
       }
       else
       {
-         memcpy(&memory[0], story.data(), story.size());
+         memcpy(memory.getData(), story.data(), story.size());
       }
 
       dumpHeader(header);

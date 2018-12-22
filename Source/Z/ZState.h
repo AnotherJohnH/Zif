@@ -115,7 +115,7 @@ public:
       // TODO the header should be reset (only bits 0 and 1 from Flags 2
       //      shoud be preserved)
 
-      memcpy(&memory[GAME_START], story->data() + GAME_START, story->size() - GAME_START);
+      memcpy(memory.getData() + GAME_START, story->data() + GAME_START, story->size() - GAME_START);
    }
 
    //! Save the dynamic state to a file
@@ -206,7 +206,7 @@ public:
    uint8_t fetchByte()
    {
       assert(validatePC());
-      return memory[pc++];
+      return memory.get(pc++);
    }
 
    //! Fetch an instruction word

@@ -149,7 +149,7 @@ private:
       STB::IFF::Chunk* cmem = doc.newChunk("CMem");
 
       const uint8_t* ref = story.data();
-      const uint8_t* mem = &memory[0];
+      const uint8_t* mem = memory.getData();
 
       uint32_t run_length = 0;
       for(uint32_t i=0; i<memory.getStaticAddr(); i++)
@@ -235,7 +235,7 @@ private:
    bool decodeMemory(const ZStory& story, ZMemory& memory)
    {
       uint32_t size = 0;
-      uint8_t* mem  = &memory[0];
+      uint8_t* mem  = memory.getData();
 
       const uint8_t* cmem = doc.load<uint8_t>("CMem", &size);
       if (cmem != nullptr)
@@ -307,11 +307,11 @@ private:
 
       if (addr < ref_size)
       {
-         memory[addr] = ref[addr] ^ byte;
+         memory.set(addr, ref[addr] ^ byte);
       }
       else
       {
-         memory[addr] = byte;
+         memory.set(addr, byte);
       }
 
       return true;

@@ -46,6 +46,15 @@ public:
    //! Get size of memory
    Address getSize() const { return size; }
 
+   //! Get read-only pointer to raw memory
+   const uint8_t* getData() const { return data; }
+
+   //! Get writable pointer to raw memory
+   uint8_t* getData() { return data; }
+
+   //! Get writable pointer to header
+   ZHeader* getHeader() { return reinterpret_cast<ZHeader*>(data); }
+
    //! Configure memory for a game
    bool configure(const ZHeader* header)
    {
@@ -82,14 +91,7 @@ public:
       return true;
    }
  
-   //! Get constant reference to a memory byte
-   const uint8_t& operator[](uint32_t addr) const
-   {
-      assert(addr < size);
-
-      return data[addr];
-   }
-
+#if 1
    //! Get reference to a memory byte
    uint8_t& operator[](uint32_t addr)
    {
@@ -98,11 +100,18 @@ public:
 
       return data[addr];
    }
+#endif
 
-   // 16-bit word access
+   //! Read byte from part of memory
+   uint8_t get(Address addr) const
+   {
+      assert(addr < size);
 
-   //! Read 16-bit word
-   uint16_t readWord(uint32_t addr) const
+      return data[addr];
+   }
+
+   //! Read 16-bit word any part of memory
+   uint16_t getWord(Address addr) const
    {
       assert(addr < (size - 1));
 
@@ -110,28 +119,48 @@ public:
       return (msb << 8) | data[addr + 1];
    }
 
-   //! Write 16-bit word
-   void writeWord(uint32_t addr, uint16_t word)
+   //!
+   void set(Address addr, uint8_t byte)
+   {
+      assert(addr < size);
+
+      data[addr] = byte;
+   }
+
+   //! Read byte from dynamic or static memory
+   uint8_t read(Address addr) const
+   {
+      // TODO assert(in static memory)
+      assert(addr < size);
+
+      return data[addr];
+   }
+
+   //! Write byte to dynamic memory
+   void write(Address addr, uint8_t byte)
+   {
+      assert(addr < static_mem);
+
+      data[addr] = byte;
+   }
+
+   //! Read 16-bit word from dynamic or static memory
+   uint16_t readWord(Address addr) const
+   {
+      // TODO assert(in static memory)
+      assert(addr < (size - 1));
+
+      uint16_t msb = data[addr];
+      return (msb << 8) | data[addr + 1];
+   }
+
+   //! Write 16-bit word to dynamic memory
+   void writeWord(Address addr, uint16_t word)
    {
       assert(addr < (static_mem - 1));
 
       data[addr]     = word >> 8;
       data[addr + 1] = word & 0xFF;
-   }
-
-   //! Compute checksum for a block of memory
-   uint16_t checksum(uint32_t start, uint32_t end)
-   {
-      assert((start < size) && (end <= size));
-
-      uint16_t checksum = 0;
-
-      for(uint32_t addr = start; addr < end; ++addr)
-      {
-         checksum += data[addr];
-      }
-
-      return checksum;
    }
 
    //! Zero a block of memory

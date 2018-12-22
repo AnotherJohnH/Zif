@@ -67,7 +67,7 @@ private:
 
       uint32_t addr = getObjAddress(obj) + (getMaxAttr() / 8);
       if(small)
-         return memory[addr + n];
+         return memory.read(addr + n);
       else
          return memory.readWord(addr + n * sizeof(uint16_t));
    }
@@ -77,14 +77,14 @@ private:
    {
       uint32_t addr = getObjAddress(obj) + (getMaxAttr() / 8);
       if(small)
-         memory[addr + n] = link;
+         memory.write(addr + n, link);
       else
          memory.writeWord(addr + n * sizeof(uint16_t), link);
    }
 
    unsigned fetchPropInfo(uint32_t& addr, unsigned& index) const
    {
-      uint8_t id = memory[addr++];
+      uint8_t id = memory.read(addr++);
       if(id == 0)
       {
          index = 0;
@@ -103,7 +103,7 @@ private:
       {
          if(id & (1 << 7))
          {
-            size = memory[addr++] & 0x3F;
+            size = memory.read(addr++) & 0x3F;
             if(size == 0)
             {
                size = 0x40;
@@ -125,7 +125,7 @@ private:
       uint32_t addr = getPropTableAddress(obj);
 
       // Skip object name
-      uint8_t name_len = memory[addr++];
+      uint8_t name_len = memory.read(addr++);
       addr += name_len * 2;
 
       while(true)
@@ -174,7 +174,7 @@ public:
 
       uint32_t addr = getObjAddress(obj) + (attr / 8);
       unsigned bit  = 7 - (attr & 7);
-      uint8_t  byte = memory[addr];
+      uint8_t  byte = memory.read(addr);
       return (byte & (1 << bit)) != 0;
    }
 
@@ -187,12 +187,12 @@ public:
 
       uint32_t addr = getObjAddress(obj) + (attr / 8);
       unsigned bit  = 7 - (attr & 7);
-      uint8_t  byte = memory[addr];
+      uint8_t  byte = memory.read(addr);
       if(set)
          byte |= 1 << bit;
       else
          byte &= ~(1 << bit);
-      memory[addr] = byte;
+      memory.write(addr, byte);
    }
 
    uint16_t getParent(uint16_t obj)  const { return getObjLink(obj, 0); }
@@ -234,7 +234,7 @@ public:
       uint32_t addr = getPropTableAddress(obj);
 
       // Skip object name
-      uint8_t name_len = memory[addr++];
+      uint8_t name_len = memory.read(addr++);
       addr += name_len * 2;
 
       if(prop == 0)
@@ -269,7 +269,7 @@ public:
       --addr;
       if(!small)
       {
-         uint8_t id = memory[addr];
+         uint8_t id = memory.read(addr);
          if((id & (1 << 7)) != 0)
          {
             --addr;
@@ -289,7 +289,7 @@ public:
       switch(size)
       {
       case 0:  return getDefaultProp(prop);
-      case 1:  return memory[addr];
+      case 1:  return memory.read(addr);
       default: return memory.readWord(addr);
       }
       return 0;
@@ -305,7 +305,7 @@ public:
       switch(size)
       {
       case 0:  assert(!"property not found"); break;
-      case 1:  memory[addr] = uint8_t(value); break;
+      case 1:  memory.write(addr, uint8_t(value)); break;
       case 2:  memory.writeWord(addr, value); break;
       default: assert(!"property size must be 1 or 2"); break;
       }

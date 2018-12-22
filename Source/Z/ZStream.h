@@ -193,7 +193,7 @@ public:
       if(memory_enable)
       {
          memory.writeWord(memory_len_ptr, memory.readWord(memory_len_ptr) + 1);
-         memory[memory_ptr++] = zscii;
+         memory.write(memory_ptr++, zscii);
       }
       else if(buffer_enable)
       {
