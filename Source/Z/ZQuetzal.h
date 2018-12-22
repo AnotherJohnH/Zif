@@ -284,7 +284,10 @@ private:
       const uint8_t* umem = doc.load<uint8_t>("UMem", &size);
       if (umem != nullptr)
       {
-         memory.reset(umem);
+         for(uint32_t addr=0; addr<size; addr++)
+         {
+            memory.setByte(addr, umem[addr]);
+         }
          return true;
       }
 

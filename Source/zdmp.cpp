@@ -167,8 +167,7 @@ private:
          return error(story.getLastError());
       }
 
-      const ZHeader* header = story.getHeader();
-      memory.init(header);
+      memory.init(story);
 
       if (save_file != nullptr)
       {
@@ -185,15 +184,13 @@ private:
 
          attr("PC", pc);
          attr("randState", rand_state);
-
-         header = memory.getHeader();
       }
       else
       {
-         memory.reset(story.data());
+         memory.reset();
       }
 
-      dumpHeader(header);
+      dumpHeader(memory.getHeader());
       dumpMemory();
 
       if (save_file != nullptr)

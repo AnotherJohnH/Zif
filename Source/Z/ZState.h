@@ -93,7 +93,7 @@ public:
       game_end     = header->getStorySize();
       global_base  = header->glob;
 
-      if (!memory.init(header))
+      if (!memory.init(story_))
       {
          error(Error::BAD_CONFIG);
       }
@@ -112,10 +112,7 @@ public:
 
       stack.clear();
 
-      // TODO the header should be reset (only bits 0 and 1 from Flags 2
-      //      shoud be preserved)
-
-      memory.reset(story->data());
+      memory.reset();
    }
 
    //! Save the dynamic state to a file

@@ -27,7 +27,7 @@
 #include <cstdint>
 #include <cstring>
 
-#include "ZHeader.h"
+#include "ZStory.h"
 
 //! Z machine memory
 class ZMemory
@@ -40,9 +40,6 @@ public:
    //! Get start of static memory
    Address getStaticStart() const { return static_mem; }
 
-   //! Get start of hi-memory
-   Address getHimemStart() const { return hi_mem; }
-
    //! Get size of memory
    Address getSize() const { return size; }
 
@@ -53,8 +50,10 @@ public:
    ZHeader* getHeader() { return reinterpret_cast<ZHeader*>(data); }
 
    //! Configure memory for a game
-   bool init(const ZHeader* header)
+   bool init(const ZStory& story_)
    {
+      const ZHeader* header = story_.getHeader();
+
       // Validate memory limit
       if (header->getMemoryLimit() > MAX_SIZE) return false;
 
@@ -77,6 +76,7 @@ public:
           return false;
       }
 
+      story          = &story_;
       static_mem     = header->stat;
       static_mem_end = header->getStorySize() < 0x10000 ? header->getStorySize() : 0x10000;
       hi_mem         = header->himem;
@@ -88,11 +88,14 @@ public:
    }
 
    //! Reset memory from game image
-   void reset(const uint8_t* image)
+   void reset()
    {
+      // TODO the header should be reset (only bits 0 and 1 from Flags 2
+      //      shoud be preserved)
+
       memcpy(data + sizeof(ZHeader),
-            image + sizeof(ZHeader),
-            getSize() - sizeof(ZHeader));
+             story->data() + sizeof(ZHeader),
+             story->size() - sizeof(ZHeader));
    }
  
    //! Read byte from any part of memory
@@ -157,11 +160,12 @@ public:
 private:
    static const Address MAX_SIZE{512 * 1024};
 
-   Address  static_mem{0};
-   Address  static_mem_end{0};
-   Address  hi_mem{0};
-   Address  size{0};
-   uint8_t  data[MAX_SIZE];
+   const ZStory* story{nullptr};
+   Address       static_mem{0};
+   Address       static_mem_end{0};
+   Address       hi_mem{0};
+   Address       size{0};
+   uint8_t       data[MAX_SIZE];
 };
 
 #endif
