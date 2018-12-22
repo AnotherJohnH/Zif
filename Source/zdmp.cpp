@@ -117,7 +117,7 @@ private:
          {
             if ((addr + i) < memory.getSize())
             {
-               std::cout << " " << std::setw(2) << unsigned(memory.get(addr + i));
+               std::cout << " " << std::setw(2) << unsigned(memory.getByte(addr + i));
             }
          }
 
@@ -127,7 +127,7 @@ private:
          {
             if ((addr + i) < memory.getSize())
             {
-               uint8_t ch = memory.get(addr + i);
+               uint8_t ch = memory.getByte(addr + i);
                if (isprint(ch))
                {
                   std::cout << ch;

@@ -77,9 +77,10 @@ public:
           return false;
       }
 
-      static_mem  = header->stat;
-      hi_mem      = header->himem;
-      size        = header->getStorySize();
+      static_mem     = header->stat;
+      static_mem_end = header->getStorySize() < 0x10000 ? header->getStorySize() : 0x10000;
+      hi_mem         = header->himem;
+      size           = header->getStorySize();
 
       memcpy(data, header, sizeof(ZHeader));
 
@@ -95,7 +96,7 @@ public:
    }
  
    //! Read byte from any part of memory
-   uint8_t get(Address addr) const
+   uint8_t getByte(Address addr) const
    {
       assert(addr < size);
 
@@ -112,7 +113,7 @@ public:
    }
 
    //! Write byte to any part of memory
-   void set(Address addr, uint8_t byte)
+   void setByte(Address addr, uint8_t byte)
    {
       assert(addr < size);
 
@@ -122,10 +123,18 @@ public:
    //! Read byte from dynamic or static memory
    uint8_t read(Address addr) const
    {
-      // TODO assert(in static memory)
-      assert(addr < size);
+      assert(addr < static_mem_end);
 
       return data[addr];
+   }
+
+   //! Read 16-bit word from dynamic or static memory
+   uint16_t readWord(Address addr) const
+   {
+      assert(addr < (static_mem_end - 1));
+
+      uint16_t msb = data[addr];
+      return (msb << 8) | data[addr + 1];
    }
 
    //! Write byte to dynamic memory
@@ -134,16 +143,6 @@ public:
       assert(addr < static_mem);
 
       data[addr] = byte;
-   }
-
-   //! Read 16-bit word from dynamic or static memory
-   uint16_t readWord(Address addr) const
-   {
-      // TODO assert(in static memory)
-      assert(addr < (size - 1));
-
-      uint16_t msb = data[addr];
-      return (msb << 8) | data[addr + 1];
    }
 
    //! Write 16-bit word to dynamic memory
@@ -159,6 +158,7 @@ private:
    static const Address MAX_SIZE{512 * 1024};
 
    Address  static_mem{0};
+   Address  static_mem_end{0};
    Address  hi_mem{0};
    Address  size{0};
    uint8_t  data[MAX_SIZE];

@@ -64,11 +64,11 @@ private:
 
    void decodeAbbr(Writer writer, unsigned index)
    {
-      uint32_t entry = memory.readWord(abbr + index * 2) * 2;
+      uint32_t entry = memory.getWord(abbr + index * 2) * 2;
 
       state = DECODE_ABBR;
 
-      for(; decode(writer, memory.readWord(entry)); entry += 2)
+      for(; decode(writer, memory.getWord(entry)); entry += 2)
       {
       }
    }
@@ -245,7 +245,7 @@ public:
    {
       resetDecoder();
 
-      while(decode(writer, memory.readWord(addr)))
+      while(decode(writer, memory.getWord(addr)))
       {
           addr += 2;
       }
@@ -260,7 +260,7 @@ public:
       {
          for(unsigned col = 0; col < width; col++)
          {
-            writer(memory.get(addr++));
+            writer(memory.getByte(addr++));
          }
 
          addr += skip;
@@ -272,13 +272,13 @@ public:
    {
       while(true)
       {
-         uint16_t length = memory.readWord(addr);
+         uint16_t length = memory.getWord(addr);
          if (length == 0) break;
          addr += 2;
 
          for(uint16_t i=0; i<length; i++)
          {
-            writer(memory.get(addr++));
+            writer(memory.getByte(addr++));
          }
       }
    }

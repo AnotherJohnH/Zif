@@ -306,11 +306,11 @@ private:
 
       if (addr < ref_size)
       {
-         memory.set(addr, ref[addr] ^ byte);
+         memory.setByte(addr, ref[addr] ^ byte);
       }
       else
       {
-         memory.set(addr, byte);
+         memory.setByte(addr, byte);
       }
 
       return true;

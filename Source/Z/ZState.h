@@ -206,14 +206,14 @@ public:
    uint8_t fetchByte()
    {
       assert(validatePC());
-      return memory.get(pc++);
+      return memory.getByte(pc++);
    }
 
    //! Fetch an instruction word
    uint16_t fetchWord()
    {
       assert(validatePC());
-      uint16_t word = memory.readWord(pc);
+      uint16_t word = memory.getWord(pc);
       pc += 2;
       return word;
    }
