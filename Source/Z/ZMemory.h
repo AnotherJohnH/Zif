@@ -79,7 +79,6 @@ public:
       story          = &story_;
       static_mem     = header->stat;
       static_mem_end = header->getStorySize() < 0x10000 ? header->getStorySize() : 0x10000;
-      hi_mem         = header->himem;
       size           = header->getStorySize();
 
       memcpy(data, header, sizeof(ZHeader));
@@ -171,7 +170,6 @@ private:
    const ZStory* story{nullptr};
    Address       static_mem{0};
    Address       static_mem_end{0};
-   Address       hi_mem{0};
    Address       size{0};
    uint8_t       data[MAX_SIZE];
 };
