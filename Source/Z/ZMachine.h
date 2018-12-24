@@ -793,23 +793,23 @@ private:
 
       if(to == 0)
       {
-         for(uint32_t i = 0; i<size; i++)
+         for(int16_t i = 0; i<size; i++)
          {
             state.memory.writeByte(from + i, 0);
          }
       }
       else if((size < 0) || (from > to))
       {
-         for(uint32_t i = 0; i < abs(size); i++)
+         for(int16_t i = 0; i < abs(size); i++)
          {
             state.memory.writeByte(to + i, state.memory.readByte(from + i));
          }
       }
       else
       {
-         for(uint32_t i = size; i > 0; i--)
+         for(int16_t i = size - 1; i >= 0; i--)
          {
-            state.memory.writeByte(to + i - 1, state.memory.readByte(from + i - 1));
+            state.memory.writeByte(to + i, state.memory.readByte(from + i));
          }
       }
    }
