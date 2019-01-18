@@ -1,5 +1,5 @@
 
-binaries = ['zif','zdmp']
+binaries = ['zif','zdmp', 'zcrape']
 app      = 'Zif'
 version  = '0.5.5'
 
