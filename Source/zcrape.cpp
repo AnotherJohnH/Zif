@@ -111,7 +111,7 @@ private:
          std::string file = (const char*) cache;
          file += "/index.html";
 
-         if(http.getFile((const char*)path, file))
+         if (getFile(http, (const char*)path, file))
          {
             STB::XML::Document xml(file, /* require_prolog */ false);
 
