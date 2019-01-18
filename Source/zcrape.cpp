@@ -65,9 +65,9 @@ private:
    {
       const char* ext_list[] =
       {
-         ".z1", ".z2", ".z3", ".z4", ".z5", ".z6", ".z7", ".z8", ".zip",
-         ".Z1", ".Z2", ".Z3", ".Z4", ".Z5", ".Z6", ".Z7", ".Z8", ".ZIP",
-         nullptr
+         ".z1", ".z2", ".z3", ".z4", ".z5", ".z6", ".z7", ".z8",
+         ".Z1", ".Z2", ".Z3", ".Z4", ".Z5", ".Z6", ".Z7", ".Z8",
+         ".zip", ".zblorb", nullptr
       };
 
       for(const auto& element : xml)
