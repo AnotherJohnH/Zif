@@ -27,6 +27,7 @@
 
 #include "STB/ConsoleApp.h"
 
+#include <fstream>
 #include <iostream>
 #include <iomanip>
 
@@ -42,6 +43,10 @@ class ZDmp : public STB::ConsoleApp
 {
 private:
    STB::Option<const char*> save_file{'s', "save", "Save file"};
+   STB::Option<const char*> output_file{'o', "out", "Output file"};
+
+   std::ofstream out_file_stream;
+   std::ostream* out{&std::cout};
 
    std::string filename;
    ZStory      story;
@@ -60,13 +65,13 @@ private:
 
    void attr(const std::string& name, const std::string& value)
    {
-      std::cout << "  \"" << name << "\": \"" << value << "\"," << std::endl;
+      *out << "  \"" << name << "\": \"" << value << "\"," << std::endl;
    }
 
    void attr(const std::string& name, unsigned value)
    {
-      std::cout << std::hex << std::setfill('0');
-      std::cout << "  \"" << name << "\": \"0x" << value << "\"," << std::endl;
+      *out << std::hex << std::setfill('0');
+      *out << "  \"" << name << "\": \"0x" << value << "\"," << std::endl;
    }
 
    void dumpHeader(const ZHeader* header)
@@ -107,21 +112,21 @@ private:
 
    void dumpMemory()
    {
-      std::cout << "  \"memory\": [" << std::endl;
+      *out << "  \"memory\": [" << std::endl;
 
       for(unsigned addr=0; addr<memory.getSize(); addr += 16)
       {
-         std::cout << "    {\"a\": \"" << std::setw(6) << addr << "\", \"b\": \"";
+         *out << "    {\"a\": \"" << std::setw(6) << addr << "\", \"b\": \"";
 
          for(unsigned i=0; i<16; i++)
          {
             if ((addr + i) < memory.getSize())
             {
-               std::cout << " " << std::setw(2) << unsigned(memory.getByte(addr + i));
+               *out << " " << std::setw(2) << unsigned(memory.getByte(addr + i));
             }
          }
 
-         std::cout << "\", \"c\": \"";
+         *out << "\", \"c\": \"";
 
          for(unsigned i=0; i<16; i++)
          {
@@ -130,36 +135,45 @@ private:
                uint8_t ch = memory.getByte(addr + i);
                if (isprint(ch))
                {
-                  std::cout << ch;
+                  *out << ch;
                }
                else
                {
-                  std::cout << '.';
+                  *out << '.';
                }
             }
          }
 
-         std::cout << "\"}," << std::endl;
+         *out << "\"}," << std::endl;
       }
 
-      std::cout << "  ]," << std::endl;
+      *out << "  ]," << std::endl;
    }
 
    void dumpStack()
    {
-      std::cout << "  \"stack\": [" << std::endl;
+      *out << "  \"stack\": [" << std::endl;
 
       for(unsigned i=0; i<stack.size(); i++)
       {
-         std::cout << "    \"0x" << std::setw(4) << stack[i] << "\"," << std::endl;
+         *out << "    \"0x" << std::setw(4) << stack[i] << "\"," << std::endl;
       }
 
-      std::cout << "  ]" << std::endl;
+      *out << "  ]" << std::endl;
    }
 
    virtual int startConsoleApp() override
    {
-      std::cout << "{" << std::endl;
+      if (output_file != nullptr)
+      {
+         out_file_stream.open(output_file, std::ofstream::binary);
+         if (out_file_stream.is_open())
+         {
+            out = &out_file_stream;
+         }
+      }
+
+      *out << "{" << std::endl;
 
       attr("story", filename);
       if (!story.load(filename))
@@ -198,7 +212,7 @@ private:
          dumpStack();
       }
 
-      std::cout << "}" << std::endl;
+      *out << "}" << std::endl;
 
       return 0;
    }
