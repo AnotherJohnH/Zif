@@ -133,7 +133,7 @@ public:
    //! Read byte from dynamic or static memory
    uint8_t readByte(Address addr) const
    {
-      assert(addr < static_mem_end);
+      //assert(addr < static_mem_end);
 
       return data[addr];
    }
@@ -141,7 +141,7 @@ public:
    //! Read 16-bit word from dynamic or static memory
    uint16_t readWord(Address addr) const
    {
-      assert(addr < (static_mem_end - 1));
+      //assert(addr < (static_mem_end - 1));
 
       uint16_t msb = data[addr];
       return (msb << 8) | data[addr + 1];
