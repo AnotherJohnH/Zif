@@ -55,21 +55,31 @@ Fiction Archive (http://ifarchive.org/) and the Interactive Fiction Database
 
 ## How to build
 
-Type scons in the top level directory to run the SConstruct file.
+Use scons in the top level directory to run the SConstruct file. e.g.
+
+```
+scons
+```
 
 The build files will work out whether the host system is Linux or macOS and configure the
 build environment for the host system as the target. The automatic target selection can be
 overriden by setting the PROJ\_TARGET environment variable. e.g.
 
+```
    PROJ\_TARGET=macOS
+```
 
 or
 
+```
    PROJ\_TARGET=Linux
+```
 
 Cross targets are also selected via the PROJ\_TARGET environment variable. e.g.
 
+```
    PROJ\_TARGET=Kindle3
+```
 
 The BUILD\_... .sh scripts are provided to initialise PROJ\_TARGET and set other
 environment variables required by each specific build. These scripts should
