@@ -66,19 +66,19 @@ build environment for the host system as the target. The automatic target select
 overriden by setting the PROJ\_TARGET environment variable. e.g.
 
 ```
-   PROJ\_TARGET=macOS
+   PROJ_TARGET=macOS
 ```
 
 or
 
 ```
-   PROJ\_TARGET=Linux
+   PROJ_TARGET=Linux
 ```
 
 Cross targets are also selected via the PROJ\_TARGET environment variable. e.g.
 
 ```
-   PROJ\_TARGET=Kindle3
+   PROJ_TARGET=Kindle3
 ```
 
 The BUILD\_... .sh scripts are provided to initialise PROJ\_TARGET and set other
