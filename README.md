@@ -18,13 +18,13 @@ This project is just for the fun of writing code and the learning that brings.
 
 The application is currently beta quality. It has been built and seen to run on various platforms.
 Almost all Z-code files, .z# and .zblorb, downloaded from the interactive fiction archive, start
-to run as expected. (785/789) Although further testing is necessary, initial indications are that
+to run as expected. (819/817) Although further testing is necessary, initial indications are that
 there is enough functionality in place to play many of the available games.
 
 |Target|Build|Run|
 |---|---|---|
 |Linux|OK|OK|
-|macOS|OK|OK - macOS 10.14 has issues with SDL v2.0.8 see Platform|
+|macOS|OK|OK|
 |Kindle3|OK|OK|
 |Android|OK|Only using third party terminal e.g. --term|
 |Emscripten|OK|Not working, only simple command line options --help etc.|
@@ -33,7 +33,7 @@ there is enough functionality in place to play many of the available games.
 ## How to run
 
 Running with no command line arguments will load the default launcher configuration file
-"zif.cfg" from the current working directory and will start the launcher front-end using the
+("zif.cfg") from the current working directory and will start the launcher front-end using the
 built-in terminal emulator.
 
 The command line option --help (or -h) provides basic help. Supplying a Z-code game
@@ -77,11 +77,11 @@ be sourced and then the top level SConstruct invoked in the normal way.
 
 ### Linux and macOS
 
-Depend on SDL2, so a development install of SDL2 is required.
+Depend on SDL2 and SDL2-image, so a development installs of SDL2 and SDL2-image are required.
 
 ### Kindle3
 
-Although this is also a Linux build, it does not depend on SDL2.
+Although also a Linux build, the Kindle3 build does not depend on SDL2 or SDL2-image.
 
 Requires gcc built for arm-linux-gnueabihf and a set of headers and static runtime libraries
 that are compatible with the Linux installed on the Kindle3. The original ARMv6 Raspberry Pi
@@ -90,7 +90,7 @@ running a Debian based Linux has been found to be suitable platform to build the
 ### Browser (via Emscripten)
 
 Uses the SDL2 library supplied with Emscripten. Some re-work/conditonal compilation will
-be required to make it work.
+be required to make it work. (TODO)
 
 ### iOS
 
@@ -105,10 +105,15 @@ an Xcode project file.
 Requires an NDK installation. Currently builds as a console only app as an integration with
 an Android build of SDL2 has not been achieved yet.
 
+## Testing
+
+Regression testing is mostly achieved via the [ZifTest](https://github.com/AnotherJohnH/ZifTest/)
+project.
+
 ## Coding style
 
 The source is C++ but has the following non-typical for modern C++ features ...
-* Memory is statically or stack allocated i.e. (almost) no new/delete
+* Dynamic memory allocation is mostly avoided
 * Use of C style stdio API
 * In some places have re-invented the wheel avoiding functionality that is in standard libraries
 * 3 space indent

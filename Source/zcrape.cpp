@@ -32,7 +32,7 @@
 #define  PROGRAM         "zscrape"
 #define  DESCRIPTION     "Zcrape IF archive using http for story files (please be nice!)"
 #define  LINK            "https://github.com/AnotherJohnH/"
-#define  COPYRIGHT_YEAR  "2018"
+#define  COPYRIGHT_YEAR  "2018-2019"
 #define  AUTHOR          "John D. Haughton"
 #define  VERSION         PROJ_VERSION
 

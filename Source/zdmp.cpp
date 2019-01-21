@@ -36,7 +36,7 @@
 #define  LINK            "https://github.com/AnotherJohnH/Zif"
 #define  AUTHOR          "John D. Haughton"
 #define  VERSION         PROJ_VERSION
-#define  COPYRIGHT_YEAR  "2018"
+#define  COPYRIGHT_YEAR  "2018-2019"
 
 //!
 class ZDmp : public STB::ConsoleApp

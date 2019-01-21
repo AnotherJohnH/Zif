@@ -31,7 +31,7 @@
 #define  LINK            "https://github.com/AnotherJohnH/Zif"
 #define  AUTHOR          "John D. Haughton"
 #define  VERSION         PROJ_VERSION
-#define  COPYRIGHT_YEAR  "2015-2018"
+#define  COPYRIGHT_YEAR  "2015-2019"
 
 
 //! The Zif Launcher Application
