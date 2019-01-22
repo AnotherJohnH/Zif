@@ -53,9 +53,7 @@ int ConsoleImpl::getInput(unsigned timeout_ms)
       }
       else
       {
-         char ch;
-         ch = fgetc(input_fp);
-         return ch;
+         return fgetc(input_fp);
       }
    }
 

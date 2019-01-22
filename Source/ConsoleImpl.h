@@ -290,8 +290,8 @@ private:
 
    TRM::Curses curses;
    unsigned    num_fonts_avail{1};
-   bool        colours_avail{true};
    unsigned    scroll{0};
+   bool        colours_avail{true};
    bool        only_white_space{true};
    bool        screen_enable{true};
 };
