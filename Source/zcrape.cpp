@@ -21,8 +21,8 @@
 //------------------------------------------------------------------------------
 
 #include <array>
-
-#include "unistd.h"
+#include <sys/stat.h>
+#include <unistd.h>
 
 #include "STB/ConsoleApp.h"
 #include "STB/Option.h"
@@ -104,6 +104,8 @@ private:
 
    virtual int startConsoleApp() override
    {
+      mkdir(cache, 0777);
+
       STB::Http http;
 
       if(http.open((const char*)host))
