@@ -116,10 +116,7 @@ public:
    }
 
    //! Synchronise current col used for line breaking
-   void setCol(unsigned col_)
-   {
-      buffer_col = col_;
-   }
+   void setCol(unsigned col_) { buffer_col = col_; }
 
    //! Control automatic line breaking
    bool setBuffering(bool buffer_enable_)

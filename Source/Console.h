@@ -103,11 +103,8 @@ public:
    //! Returns false on timeout
    virtual bool read(uint8_t& ch, unsigned timeout_ms) = 0;
 
-   //! Set the scroll region
-   virtual void setScrollRegion(unsigned top, unsigned bottom) = 0;
-
-   //! Clear range of lines
-   virtual void clearLines(unsigned first, unsigned last) = 0;
+   //! Clear the console
+   virtual void clear() = 0;
 
    //! Write character
    virtual void write(uint8_t ch) = 0;
