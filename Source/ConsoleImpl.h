@@ -77,6 +77,8 @@ public:
       {
          closeInputFile();
       }
+
+      setScrollRegion(1, curses.lines);
    }
 
    //! Return console attribute
@@ -109,13 +111,16 @@ public:
    //! Get current position of cursor
    virtual void getCursorPos(unsigned& line, unsigned& col) override
    {
-       curses.getyx(line, col);
+      curses.getyx(line, col);
    }
 
    //! Set the scroll region
    virtual void setScrollRegion(unsigned top, unsigned bottom) override
    {
+      unsigned line, col;
+      curses.getyx(line, col);
       curses.setscrreg(top, bottom);
+      curses.move(line, col);
    }
 
    //! Clear range of lines

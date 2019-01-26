@@ -157,10 +157,38 @@ public:
       stream.enableStream(2, printer_enabled);
    }
 
-   void split(unsigned upper_height_) { window[WINDOW_UPPER].size.y = upper_height_; }
+   void split(unsigned upper_height_)
+   {
+      DBGF("split(%u)\n", upper_height_);
+
+      window[WINDOW_LOWER].pos.x  = 1;
+      window[WINDOW_LOWER].pos.y  = upper_height_ + 1;
+      window[WINDOW_LOWER].size.x = console.getAttr(Console::COLS);
+      window[WINDOW_LOWER].size.y = console.getAttr(Console::LINES) - upper_height_;
+
+      if (upper_height_ != 0)
+      {
+          window[WINDOW_UPPER].pos.x  = 1;
+          window[WINDOW_UPPER].pos.y  = 1;
+          window[WINDOW_UPPER].size.x = window[WINDOW_LOWER].size.x;
+          window[WINDOW_UPPER].size.y = upper_height_;
+      }
+      else
+      {
+          window[WINDOW_UPPER].pos.x  = 0;
+          window[WINDOW_UPPER].pos.y  = 0;
+          window[WINDOW_UPPER].size.x = 0;
+          window[WINDOW_UPPER].size.y = 0;
+      }
+
+      console.setScrollRegion(window[WINDOW_LOWER].pos.y,
+                              window[WINDOW_LOWER].pos.y + window[WINDOW_LOWER].size.y);
+   }
 
    void select(unsigned index_)
    {
+      DBGF("select(%u)\n", index_);
+
       if(index == index_) return;
 
       index = index_;
@@ -189,6 +217,8 @@ public:
 
    void eraseWindow(signed index)
    {
+      DBGF("eraseWindow(%d)\n", index);
+
       // TODO properly
       console.clear();
    }
