@@ -673,7 +673,7 @@ private:
    void opV_split_window()   { window_mgr.split(uarg[0]); }
    void opV_set_window()     { window_mgr.select(uarg[0]); }
    void opV_call_vs2()       { subCall(0, uarg[0], num_arg - 1, &uarg[1]); }
-   void opV_erase_window()   { window_mgr.eraseWindow(uarg[0]); }
+   void opV_erase_window()   { window_mgr.eraseWindow(sarg[0]); }
 
    void opV_erase_line_v4()
    {
@@ -1438,8 +1438,6 @@ private:
    //! Reset machine state to intial conditions
    void start(bool restore_save)
    {
-      console.clear();
-
       state.reset();
 
       if((version() >= 3) && !story.isChecksumOk())
@@ -1506,7 +1504,7 @@ public:
       header = state.memory.getHeader();
       header->init(console, config);
 
-      stream.init(header->version);
+      window_mgr.init(header->version);
       // TODO fix this! and maybe just pass ZHeader* int stream
       // stream.setColours(header->foreground_colour, header->background_colour);
       text.init(header->version, header->abbr);

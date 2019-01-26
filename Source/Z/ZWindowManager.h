@@ -27,6 +27,8 @@
 #include "Options.h"
 #include "ZStream.h"
 
+#define DBGF if (0) printf
+
 //! Console window manager
 class ZWindowManager
 {
@@ -63,11 +65,22 @@ public:
       : console(console_)
       , stream(stream_)
    {
-       printer_enabled = options.print;
+      printer_enabled = options.print;
+
+      eraseWindow(-1);
+   }
+
+   void init(unsigned version_)
+   {
+      version = version_;
+
+      stream.init(version_);
    }
 
    uint16_t getWindowProp(unsigned index_, unsigned prop_)
    {
+      DBGF("getWindowProp(%u, %u)\n", index_, prop_);
+
       // TODO validate index and prop
 
       switch(prop_)
@@ -95,6 +108,8 @@ public:
 
    void setWindowProp(unsigned index_, unsigned prop_, unsigned value)
    {
+      DBGF("setWindowProp(%u, %u, %u)\n", index_, prop_, value);
+
       // TODO validate index and prop
       // TODO side effects
 
@@ -124,6 +139,8 @@ public:
    // Update the status line (v1-3)
    void showStatus(const char* left, const char* right)
    {
+      DBGF("showStatus(%s, %s)\n", left, right);
+
       printer_enabled = stream.enableStream(2, false);
 
       console.moveCursor(1, 1);
@@ -140,46 +157,104 @@ public:
       stream.enableStream(2, printer_enabled);
    }
 
-   void split(unsigned upper_height_) { window[WINDOW_UPPER].size.y = upper_height_; }
+   void split(unsigned upper_height_)
+   {
+      DBGF("split(%u)\n", upper_height_);
+
+      window[WINDOW_LOWER].pos.x  = 1;
+      window[WINDOW_LOWER].pos.y  = upper_height_ + 1;
+      window[WINDOW_LOWER].size.x = console.getAttr(Console::COLS);
+      window[WINDOW_LOWER].size.y = console.getAttr(Console::LINES) - upper_height_;
+
+      if (upper_height_ != 0)
+      {
+          window[WINDOW_UPPER].pos.x  = 1;
+          window[WINDOW_UPPER].pos.y  = 1;
+          window[WINDOW_UPPER].size.x = window[WINDOW_LOWER].size.x;
+          window[WINDOW_UPPER].size.y = upper_height_;
+      }
+      else
+      {
+          window[WINDOW_UPPER].pos.x  = 0;
+          window[WINDOW_UPPER].pos.y  = 0;
+          window[WINDOW_UPPER].size.x = 0;
+          window[WINDOW_UPPER].size.y = 0;
+      }
+
+      console.setScrollRegion(window[WINDOW_LOWER].pos.y,
+                              window[WINDOW_LOWER].pos.y + window[WINDOW_LOWER].size.y);
+   }
 
    void select(unsigned index_)
    {
+      DBGF("select(%u)\n", index_);
+
       if(index == index_) return;
 
-      index = index_;
-
-      if(index == WINDOW_UPPER)
+      if (index == WINDOW_LOWER)
       {
+         // Sample current lower window state
          printer_enabled = stream.enableStream(2, false);
+
+         // 8.7.2.5 - In versions 3 to 5, text buffering is never active in the
+         //           upper window
+         if ((version >= 3) && (version <= 5))
+         {
+            lower_buffering = stream.setBuffering(false);
+         }
 
          unsigned line, col;
          console.getCursorPos(line, col);
          window[WINDOW_LOWER].cursor.y = line;
          window[WINDOW_LOWER].cursor.x = col;
-         lower_buffering               = stream.setBuffering(false);
-         stream.setCol(1);
-         console.moveCursor(1, 1);
       }
-      else
+
+      index = index_;
+
+      if(index == WINDOW_LOWER)
       {
          stream.enableStream(2, printer_enabled);
-
-         console.moveCursor(window[WINDOW_LOWER].cursor.y, window[WINDOW_LOWER].cursor.x);
          stream.setBuffering(lower_buffering);
-         stream.setCol(window[WINDOW_LOWER].cursor.x);
+
+         if (version == 4)
+         {
+            // 8.7.2.2 - In version 4, the lower window's cursor is always on the
+            //           bottom screen line
+            window[index].cursor.y = window[index].pos.y + window[index].size.y - 1;
+         }
       }
+      else if (version != 6)
+      {
+         // 8.7.2 - Whenever the upper window is selected, its cursor position is
+         //         reset to the top left
+         window[index].cursor.y = 1;
+         window[index].cursor.x = 1;
+      }
+
+      console.moveCursor(window[index].cursor.y, window[index].cursor.x);
+      stream.setCol(window[index].cursor.x);
    }
 
-   void eraseWindow(unsigned index_)
+   void eraseWindow(signed index)
    {
-      // TODO properly
-      console.clear();
+      DBGF("erase(%d)\n", index);
+
+      if (index == -1)
+      {
+         split(0);
+         select(WINDOW_LOWER);
+         index = 0;
+      }
+
+      console.clearLines(window[index].pos.y,
+                         window[index].pos.y + window[index].size.y);
    }
 
 private:
    Console&  console;
    ZStream&  stream;
    ZWindow   window[MAX_WINDOW];
+   unsigned  version{0};
    unsigned  index{WINDOW_LOWER};
    bool      lower_buffering{true};
    bool      printer_enabled{false};

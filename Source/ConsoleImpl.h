@@ -112,10 +112,22 @@ public:
        curses.getyx(line, col);
    }
 
-   //! Clear the console
-   virtual void clear() override
+   //! Set the scroll region
+   virtual void setScrollRegion(unsigned top, unsigned bottom) override
    {
-      curses.clear();
+      curses.setscrreg(top, bottom);
+   }
+
+   //! Clear range of lines
+   virtual void clearLines(unsigned first, unsigned last) override
+   {
+      if(!screen_enable) return;
+
+      for(unsigned line=first; line<last; line++)
+      {
+         curses.move(line, 1);
+         curses.clrtoeol();
+      }
    }
 
    //! Select the current font
@@ -177,6 +189,8 @@ public:
    //! Move cursor
    virtual void moveCursor(unsigned line, unsigned col) override
    {
+      //printf("moveCurosr(%u, %u)\n", line, col);
+
       if(!screen_enable) return;
 
       curses.move(line, col);
