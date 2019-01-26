@@ -27,6 +27,8 @@
 #include "Options.h"
 #include "ZStream.h"
 
+#define DBGF if (0) printf
+
 //! Console window manager
 class ZWindowManager
 {
@@ -63,11 +65,22 @@ public:
       : console(console_)
       , stream(stream_)
    {
-       printer_enabled = options.print;
+      printer_enabled = options.print;
+
+      eraseWindow(-1);
+   }
+
+   void init(unsigned version_)
+   {
+      version = version_;
+
+      stream.init(version_);
    }
 
    uint16_t getWindowProp(unsigned index_, unsigned prop_)
    {
+      DBGF("getWindowProp(%u, %u)\n", index_, prop_);
+
       // TODO validate index and prop
 
       switch(prop_)
@@ -95,6 +108,8 @@ public:
 
    void setWindowProp(unsigned index_, unsigned prop_, unsigned value)
    {
+      DBGF("setWindowProp(%u, %u, %u)\n", index_, prop_, value);
+
       // TODO validate index and prop
       // TODO side effects
 
@@ -124,6 +139,8 @@ public:
    // Update the status line (v1-3)
    void showStatus(const char* left, const char* right)
    {
+      DBGF("showStatus(%s, %s)\n", left, right);
+
       printer_enabled = stream.enableStream(2, false);
 
       console.moveCursor(1, 1);
@@ -170,7 +187,7 @@ public:
       }
    }
 
-   void eraseWindow(unsigned index_)
+   void eraseWindow(signed index)
    {
       // TODO properly
       console.clear();
@@ -180,6 +197,7 @@ private:
    Console&  console;
    ZStream&  stream;
    ZWindow   window[MAX_WINDOW];
+   unsigned  version{0};
    unsigned  index{WINDOW_LOWER};
    bool      lower_buffering{true};
    bool      printer_enabled{false};
