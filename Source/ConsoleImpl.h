@@ -112,6 +112,24 @@ public:
        curses.getyx(line, col);
    }
 
+   //! Set the scroll region
+   virtual void setScrollRegion(unsigned top, unsigned bottom) override
+   {
+      curses.setscrreg(top, bottom);
+   }
+
+   //! Clear range of lines
+   virtual void clearLines(unsigned first, unsigned last) override
+   {
+      if(!screen_enable) return;
+
+      for(unsigned line=first; line<last; line++)
+      {
+         curses.move(line, 1);
+         curses.clrtoeol();
+      }
+   }
+
    //! Clear the console
    virtual void clear() override
    {
