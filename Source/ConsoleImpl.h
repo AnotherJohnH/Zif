@@ -124,13 +124,13 @@ public:
    }
 
    //! Clear range of lines
-   virtual void clearLines(unsigned first, unsigned last) override
+   virtual void clearLines(unsigned first, unsigned n) override
    {
       if(!screen_enable) return;
 
-      for(unsigned line=first; line<last; line++)
+      for(unsigned i=0; i<n; i++)
       {
-         curses.move(line, 1);
+         curses.move(first + i, 0);
          curses.clrtoeol();
       }
    }

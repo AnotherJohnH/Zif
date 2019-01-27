@@ -107,7 +107,7 @@ public:
    virtual void setScrollRegion(unsigned top, unsigned bottom) = 0;
 
    //! Clear range of lines
-   virtual void clearLines(unsigned first, unsigned last) = 0;
+   virtual void clearLines(unsigned first, unsigned n) = 0;
 
    //! Clear the console
    virtual void clear() = 0;
