@@ -66,6 +66,21 @@ public:
       }
    }
 
+   bool getBuffering() const { return buffer_enable; }
+
+   bool getStreamEnable(unsigned index) const
+   {
+      switch(index)
+      {
+      case 1: return console_enable;
+      case 2: return printer_enable;
+      case 3: return memory_enable;
+      case 4: return snooper_enable;
+
+      default: assert(!"unexpected index"); return false;
+      }
+   }
+
    //! Configure stream for Z-code version
    void init(uint8_t version)
    {
@@ -122,11 +137,9 @@ public:
    }
 
    //! Control automatic line breaking
-   bool setBuffering(bool buffer_enable_)
+   void setBuffering(bool buffer_enable_)
    {
-      bool prev     = buffer_enable;
       buffer_enable = buffer_enable_;
-      return prev;
    }
 
    //! Flush any output that has been buffered
@@ -138,23 +151,17 @@ public:
    }
 
    //! Control state of output streams
-   bool enableStream(unsigned index, bool next = true)
+   void enableStream(unsigned index, bool next = true)
    {
-      bool* state = nullptr;
-
       switch(index)
       {
-      case 1: state = &console_enable; break;
-      case 2: state = &printer_enable; break;
-      case 3: state = &memory_enable; break;
-      case 4: state = &snooper_enable; break;
+      case 1: console_enable = next; break;
+      case 2: printer_enable = next; break;
+      case 3: memory_enable  = next; break;
+      case 4: snooper_enable = next; break;
 
-      default: assert(!"unexpected index"); return false;
+      default: assert(!"unexpected index"); break;
       }
-
-      bool prev = *state;
-      *state    = next;
-      return prev;
    }
 
    //! Enable use of memory stream

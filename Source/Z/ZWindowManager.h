@@ -55,6 +55,8 @@ private:
       uint8_t  font_size{0};
       uint8_t  attr{0};
       int16_t  line_count{0};
+      bool     printer_enabled{false};
+      bool     buffering{false};
    };
 
 public:
@@ -65,7 +67,7 @@ public:
       : console(console_)
       , stream(stream_)
    {
-      printer_enabled = options.print;
+      window[WINDOW_LOWER].printer_enabled = options.print;
 
       eraseWindow(-1);
    }
@@ -141,7 +143,8 @@ public:
    {
       DBGF("showStatus(%s, %s)\n", left, right);
 
-      printer_enabled = stream.enableStream(2, false);
+      bool printer_enabled = stream.getStreamEnable(2);
+      stream.enableStream(2, false);
 
       console.moveCursor(1, 1);
 
@@ -189,37 +192,50 @@ public:
    {
       DBGF("select(%u)\n", index_);
 
-      if(index == index_) return;
+      if (index == index_) return;
+
+      // Save state of current window
+      ZWindow& current = window[index];
+
+      unsigned line, col;
+      console.getCursorPos(line, col);
+      current.cursor.y        = line;
+      current.cursor.x        = col;
+      current.printer_enabled = stream.getStreamEnable(2);
+      current.buffering       = stream.getBuffering();
 
       index = index_;
 
-      if(index == WINDOW_UPPER)
-      {
-         printer_enabled = stream.enableStream(2, false);
+      // Set state for next window
+      ZWindow& next = window[index];
 
-         unsigned line, col;
-         console.getCursorPos(line, col);
-         window[WINDOW_LOWER].cursor.y = line;
-         window[WINDOW_LOWER].cursor.x = col;
-         lower_buffering               = stream.setBuffering(false);
-         stream.setCol(1);
-         console.moveCursor(1, 1);
-      }
-      else
+      if ((index == WINDOW_UPPER) && (version != 6))
       {
-         stream.enableStream(2, printer_enabled);
-
-         console.moveCursor(window[WINDOW_LOWER].cursor.y, window[WINDOW_LOWER].cursor.x);
-         stream.setBuffering(lower_buffering);
-         stream.setCol(window[WINDOW_LOWER].cursor.x);
+         next.cursor.y        = 1;
+         next.cursor.x        = 1;
+         next.printer_enabled = false;
+         next.buffering       = false;
       }
+
+      stream.setCol(next.cursor.x);
+      console.moveCursor(next.cursor.y, next.cursor.x);
+      stream.enableStream(2, next.printer_enabled);
+      stream.setBuffering(next.buffering);
    }
 
    void eraseWindow(signed index)
    {
       DBGF("eraseWindow(%d)\n", index);
 
-      // TODO properly
+      if (index == -1)
+      {
+         split(0);
+         index = WINDOW_LOWER;
+         select(index);
+      }
+
+      // TODO just clear the selected window
+      //console.clearLines(window[index].pos.y, window[index].size.y);
       console.clear();
    }
 
@@ -229,8 +245,6 @@ private:
    ZWindow   window[MAX_WINDOW];
    unsigned  version{0};
    unsigned  index{WINDOW_LOWER};
-   bool      lower_buffering{true};
-   bool      printer_enabled{false};
 };
 
 #endif
