@@ -42,6 +42,7 @@
 class ZDmp : public STB::ConsoleApp
 {
 private:
+   STB::Option<bool>        dump_mem{'d', "mem", "Dump memory", false};
    STB::Option<const char*> save_file{'s', "save", "Save file"};
    STB::Option<const char*> output_file{'o', "out", "Output file"};
 
@@ -205,7 +206,11 @@ private:
       }
 
       dumpHeader(memory.getHeader());
-      dumpMemory();
+
+      if (dump_mem)
+      {
+         dumpMemory();
+      }
 
       if (save_file != nullptr)
       {
