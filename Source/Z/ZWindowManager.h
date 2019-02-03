@@ -67,9 +67,18 @@ public:
       : console(console_)
       , stream(stream_)
    {
-      window[WINDOW_LOWER].printer_enabled = options.print;
-
-      eraseWindow(-1);
+      if ((version == 1) || (version == 2))
+      {
+          // 8.5.2 clear screen and move cursor to bottom left corner
+          stream.enableStream(2, options.print);
+          console.clear();
+          console.moveCursor(console.getAttr(Console::LINES), 1);
+      }
+      else
+      {
+         window[WINDOW_LOWER].printer_enabled = options.print;
+         eraseWindow(-1);
+      }
    }
 
    void init(unsigned version_)
