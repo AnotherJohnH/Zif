@@ -232,7 +232,7 @@ private:
 
    void showStatus()
    {
-      unsigned num_cols = console.getAttr(Console::COLS);
+      unsigned num_cols = window_mgr.getScreenWidth();
       unsigned limit    = isTimeGame() ? num_cols - 61
                                        : num_cols - 27;
 
@@ -661,24 +661,24 @@ private:
    void opV_erase_line_v4()
    {
       if (uarg[0] == 1)
-         console.eraseLine();
+         window_mgr.eraseLine();
    }
 
    void opV_erase_line_v6()
    {
       if (uarg[0] == 1)
-         console.eraseLine();
+         window_mgr.eraseLine();
       else
          TODO_WARN("v6 op erase_line pixels unimplemented");
    }
 
-   void opV_set_cursor_v4()  { console.moveCursor(uarg[0], uarg[1]); }
+   void opV_set_cursor_v4()  { window_mgr.moveCursor(uarg[0], uarg[1]); }
    void opV_set_cursor_v6()  { TODO_WARN("op set_cursor_v6 unimplemented"); }
 
    void opV_get_cursor()
    {
       unsigned row, col;
-      console.getCursorPos(row, col);
+      window_mgr.getCursor(row, col);
 
       uint16_t array = uarg[0];
       state.memory.writeWord(array + 0, row);
@@ -1489,7 +1489,6 @@ public:
 
       window_mgr.init(header->version);
       // TODO fix this! and maybe just pass ZHeader* int stream
-      // stream.setColours(header->foreground_colour, header->background_colour);
       text.init(header->version, header->abbr);
       parser.init(header->version);
       object.init(header->obj, header->version);
@@ -1500,14 +1499,6 @@ public:
       info("Checksum : %04X", header->checksum);
 
       start(restore_save);
-
-      if (version() <= 3)
-      {
-         // Add some blank lines to avoid loosing the first line of text
-         // under the status header
-         console.write('\n');
-         console.write('\n');
-      }
 
       if(options.trace)
       {

@@ -67,18 +67,12 @@ public:
       : console(console_)
       , stream(stream_)
    {
-      if ((version == 1) || (version == 2))
-      {
-          // 8.5.2 clear screen and move cursor to bottom left corner
-          stream.enableStream(2, options.print);
-          console.clear();
-          console.moveCursor(console.getAttr(Console::LINES), 1);
-      }
-      else
-      {
-         window[WINDOW_LOWER].printer_enabled = options.print;
-         eraseWindow(-1);
-      }
+      stream.enableStream(2, options.print);
+   }
+
+   ~ZWindowManager()
+   {
+      // console.waitForKey();
    }
 
    void init(unsigned version_)
@@ -86,7 +80,30 @@ public:
       version = version_;
 
       stream.init(version_);
+
+      if ((version == 1) || (version == 2))
+      {
+          // 8.5.2 clear screen and move cursor to bottom left corner
+          console.clear();
+          console.moveCursor(console.getAttr(Console::LINES), 1);
+      }
+      else
+      {
+         window[WINDOW_LOWER].printer_enabled = stream.getStreamEnable(2);
+         eraseWindow(-1);
+      }
+
+      if (version <= 3)
+      {
+         // Add some blank lines to avoid loosing the first line of text
+         // under the status header
+         // XXX this is wrong cursor should start at bottom
+         console.write('\n');
+         console.write('\n');
+      }
    }
+
+   unsigned getScreenWidth() const { return console.getAttr(Console::COLS); }
 
    // for v6
    uint16_t getWindowProp(unsigned index_, unsigned prop_)
@@ -179,7 +196,7 @@ public:
 
       window[WINDOW_LOWER].pos.x  = 1;
       window[WINDOW_LOWER].pos.y  = upper_height_ + 1;
-      window[WINDOW_LOWER].size.x = console.getAttr(Console::COLS);
+      window[WINDOW_LOWER].size.x = getScreenWidth();
       window[WINDOW_LOWER].size.y = console.getAttr(Console::LINES) - upper_height_;
 
       if (upper_height_ != 0)
@@ -257,6 +274,28 @@ public:
       // TODO just clear the selected window
       //console.clearLines(window[index].pos.y, window[index].size.y);
       console.clear();
+   }
+
+   // Erase line
+   void eraseLine()
+   {
+      console.eraseLine();
+   }
+
+   void moveCursor(unsigned row, unsigned col)
+   {
+      if (version >= 6)
+      {
+      }
+      else if (version >= 4)
+      {
+         console.moveCursor(row, col);
+      }
+   }
+
+   void getCursor(unsigned& row, unsigned &col)
+   {
+      console.getCursorPos(row, col);
    }
 
 private:
