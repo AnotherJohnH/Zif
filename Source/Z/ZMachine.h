@@ -1462,7 +1462,7 @@ public:
       , state((const char*)options.save_dir, options.undo, options.seed)
       , console(console_)
       , stream(console, options_, state.memory)
-      , screen(console, options_, stream)
+      , screen(console, stream)
       , object(state.memory)
       , text(state.memory)
    {

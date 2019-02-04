@@ -24,7 +24,6 @@
 #define Z_SCREEN_H
 
 #include "Console.h"
-#include "Options.h"
 #include "ZStream.h"
 
 #define DBGF if (0) printf
@@ -63,11 +62,10 @@ public:
    static const unsigned WINDOW_LOWER{0};
    static const unsigned WINDOW_UPPER{1};
 
-   ZScreen(Console& console_, Options& options, ZStream& stream_)
+   ZScreen(Console& console_, ZStream& stream_)
       : console(console_)
       , stream(stream_)
    {
-      stream.enableStream(2, options.print);
    }
 
    ~ZScreen()
