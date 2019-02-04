@@ -42,7 +42,7 @@
 #include "ZState.h"
 #include "ZStory.h"
 #include "ZText.h"
-#include "ZWindowManager.h"
+#include "ZScreen.h"
 
 //! Z machine implementation
 class ZMachine
@@ -59,7 +59,7 @@ private:
    ZDisassembler  dis;
    Console&       console;
    ZStream        stream;
-   ZWindowManager window_mgr;
+   ZScreen        screen;
    ZObject        object;
    ZText          text;
    ZParser        parser;
@@ -232,7 +232,7 @@ private:
 
    void showStatus()
    {
-      unsigned num_cols = window_mgr.getScreenWidth();
+      unsigned num_cols = screen.getWidth();
       unsigned limit    = isTimeGame() ? num_cols - 61
                                        : num_cols - 27;
 
@@ -287,7 +287,7 @@ private:
          work_str += " ";
       }
 
-      window_mgr.showStatus(work_str);
+      screen.showStatus(work_str);
    }
 
    uint32_t streamText(uint32_t addr)
@@ -653,32 +653,32 @@ private:
       state.varWrite(state.fetchByte(), value, true);
    }
 
-   void opV_split_window()   { window_mgr.split(uarg[0]); }
-   void opV_set_window()     { window_mgr.select(uarg[0]); }
+   void opV_split_window()   { screen.splitWindow(uarg[0]); }
+   void opV_set_window()     { screen.selectWindow(uarg[0]); }
    void opV_call_vs2()       { subCall(0, uarg[0], num_arg - 1, &uarg[1]); }
-   void opV_erase_window()   { window_mgr.eraseWindow(sarg[0]); }
+   void opV_erase_window()   { screen.eraseWindow(sarg[0]); }
 
    void opV_erase_line_v4()
    {
       if (uarg[0] == 1)
-         window_mgr.eraseLine();
+         screen.eraseLine();
    }
 
    void opV_erase_line_v6()
    {
       if (uarg[0] == 1)
-         window_mgr.eraseLine();
+         screen.eraseLine();
       else
          TODO_WARN("v6 op erase_line pixels unimplemented");
    }
 
-   void opV_set_cursor_v4()  { window_mgr.moveCursor(uarg[0], uarg[1]); }
+   void opV_set_cursor_v4()  { screen.moveCursor(uarg[0], uarg[1]); }
    void opV_set_cursor_v6()  { TODO_WARN("op set_cursor_v6 unimplemented"); }
 
    void opV_get_cursor()
    {
       unsigned row, col;
-      window_mgr.getCursor(row, col);
+      screen.getCursor(row, col);
 
       uint16_t array = uarg[0];
       state.memory.writeWord(array + 0, row);
@@ -1030,7 +1030,7 @@ private:
       uint16_t wind = uarg[0];
       uint16_t prop = uarg[1];
 
-      state.varWrite(state.fetchByte(), window_mgr.getWindowProp(wind, prop));
+      state.varWrite(state.fetchByte(), screen.getWindowProp(wind, prop));
    }
 
    void opE_scroll_window() { TODO_WARN("scroll_window unimplemented"); }
@@ -1083,7 +1083,7 @@ private:
       uint16_t prop  = uarg[1];
       uint16_t value = uarg[2];
 
-      window_mgr.setWindowProp(wind, prop, value);
+      screen.setWindowProp(wind, prop, value);
    }
 
    void opE_print_form()
@@ -1462,7 +1462,7 @@ public:
       , state((const char*)options.save_dir, options.undo, options.seed)
       , console(console_)
       , stream(console, options_, state.memory)
-      , window_mgr(console, options_, stream)
+      , screen(console, options_, stream)
       , object(state.memory)
       , text(state.memory)
    {
@@ -1487,7 +1487,7 @@ public:
       header = state.memory.getHeader();
       header->init(console, config);
 
-      window_mgr.init(header->version);
+      screen.init(header->version);
       // TODO fix this! and maybe just pass ZHeader* int stream
       text.init(header->version, header->abbr);
       parser.init(header->version);

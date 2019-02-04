@@ -20,8 +20,8 @@
 // SOFTWARE.
 //------------------------------------------------------------------------------
 
-#ifndef Z_WINDOW_MANAGER_H
-#define Z_WINDOW_MANAGER_H
+#ifndef Z_SCREEN_H
+#define Z_SCREEN_H
 
 #include "Console.h"
 #include "Options.h"
@@ -29,8 +29,8 @@
 
 #define DBGF if (0) printf
 
-//! Console window manager
-class ZWindowManager
+//! Screen model
+class ZScreen
 {
 private:
    static const unsigned MAX_WINDOW = 8;
@@ -63,14 +63,14 @@ public:
    static const unsigned WINDOW_LOWER{0};
    static const unsigned WINDOW_UPPER{1};
 
-   ZWindowManager(Console& console_, Options& options, ZStream& stream_)
+   ZScreen(Console& console_, Options& options, ZStream& stream_)
       : console(console_)
       , stream(stream_)
    {
       stream.enableStream(2, options.print);
    }
 
-   ~ZWindowManager()
+   ~ZScreen()
    {
       // console.waitForKey();
    }
@@ -103,10 +103,18 @@ public:
       }
    }
 
-   unsigned getScreenWidth() const { return console.getAttr(Console::COLS); }
+   unsigned getWidth() const
+   {
+      return console.getAttr(Console::COLS);
+   }
+
+   void getCursor(unsigned& row, unsigned &col) const
+   {
+      console.getCursorPos(row, col);
+   }
 
    // for v6
-   uint16_t getWindowProp(unsigned index_, unsigned prop_)
+   uint16_t getWindowProp(unsigned index_, unsigned prop_) const
    {
       DBGF("getWindowProp(%u, %u)\n", index_, prop_);
 
@@ -190,13 +198,13 @@ public:
    }
 
    // Select window (from v3)
-   void split(unsigned upper_height_)
+   void splitWindow(unsigned upper_height_)
    {
-      DBGF("split(%u)\n", upper_height_);
+      DBGF("splitWindow(%u)\n", upper_height_);
 
       window[WINDOW_LOWER].pos.x  = 1;
       window[WINDOW_LOWER].pos.y  = upper_height_ + 1;
-      window[WINDOW_LOWER].size.x = getScreenWidth();
+      window[WINDOW_LOWER].size.x = getWidth();
       window[WINDOW_LOWER].size.y = console.getAttr(Console::LINES) - upper_height_;
 
       if (upper_height_ != 0)
@@ -224,9 +232,9 @@ public:
    }
 
    // Select window (from v3)
-   void select(unsigned index_)
+   void selectWindow(unsigned index_)
    {
-      DBGF("select(%u)\n", index_);
+      DBGF("selectWindow(%u)\n", index_);
 
       if (index == index_) return;
 
@@ -266,9 +274,9 @@ public:
 
       if (index == -1)
       {
-         split(0);
+         splitWindow(0);
          index = WINDOW_LOWER;
-         select(index);
+         selectWindow(index);
       }
 
       // TODO just clear the selected window
@@ -291,11 +299,6 @@ public:
       {
          console.moveCursor(row, col);
       }
-   }
-
-   void getCursor(unsigned& row, unsigned &col)
-   {
-      console.getCursorPos(row, col);
    }
 
 private:
