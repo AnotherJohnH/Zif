@@ -1487,6 +1487,7 @@ public:
       header = state.memory.getHeader();
       header->init(console, config);
 
+      stream.init(header->version);
       screen.init(header->version);
       // TODO fix this! and maybe just pass ZHeader* int stream
       text.init(header->version, header->abbr);

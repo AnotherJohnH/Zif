@@ -73,37 +73,14 @@ public:
       // console.waitForKey();
    }
 
-   void init(unsigned version_)
-   {
-      version = version_;
-
-      stream.init(version_);
-
-      if ((version == 1) || (version == 2))
-      {
-          // 8.5.2 clear screen and move cursor to bottom left corner
-          console.clear();
-          console.moveCursor(console.getAttr(Console::LINES), 1);
-      }
-      else
-      {
-         window[WINDOW_LOWER].printer_enabled = stream.getStreamEnable(2);
-         eraseWindow(-1);
-      }
-
-      if (version <= 3)
-      {
-         // Add some blank lines to avoid loosing the first line of text
-         // under the status header
-         // XXX this is wrong cursor should start at bottom
-         console.write('\n');
-         console.write('\n');
-      }
-   }
-
    unsigned getWidth() const
    {
       return console.getAttr(Console::COLS);
+   }
+
+   unsigned getHeight() const
+   {
+      return console.getAttr(Console::LINES);
    }
 
    void getCursor(unsigned& row, unsigned &col) const
@@ -111,10 +88,209 @@ public:
       console.getCursorPos(row, col);
    }
 
-   // for v6
+   //! Initialise the screen state
+   void init(unsigned version_)
+   {
+      DBGF("Screen::init(%u)\n", version_);
+
+      version = version_;
+
+      switch(version)
+      {
+      case 1:
+      case 2:
+         // 8.5.2 clear screen and move cursor to bottom left corner
+         console.clear();
+         console.moveCursor(getHeight(), 1);
+         break;
+
+      case 3:
+         // 8.6.2 clear screen and move cursor to bottom left corner
+         console.clear();
+         console.moveCursor(getHeight(), 1);
+         window[WINDOW_LOWER].pos.x  = 1;
+         window[WINDOW_LOWER].pos.y  = getHeight();
+         window[WINDOW_LOWER].size.x = getWidth();
+         window[WINDOW_LOWER].size.y = getHeight();
+         window[WINDOW_LOWER].printer_enabled = stream.getStreamEnable(2);
+         break;
+
+      case 4:
+      case 5:
+      case 7:
+      case 8:
+         eraseWindow(-1);
+         break;
+
+      case 6:
+         eraseWindow(-1);
+         break;
+      }
+   }
+
+   // Update the status line (v1-3)
+   void showStatus(const std::string& text)
+   {
+      DBGF("Screen::showStatus(\"%s\")\n", text.c_str());
+
+      assert(version <= 3);
+
+      bool printer_enabled = stream.getStreamEnable(2);
+      stream.enableStream(2, false);
+
+      unsigned row, col;
+      console.getCursorPos(row, col);
+
+      // Inverse video header bar
+      console.setFontStyle(Console::FONT_STYLE_REVERSE);
+
+      console.write(1, 1, text);
+
+      // Restore cursor and style
+      console.setFontStyle(0);
+      console.moveCursor(row, col);
+
+      stream.enableStream(2, printer_enabled);
+   }
+
+   // Split window (v3+)
+   void splitWindow(unsigned upper_height_)
+   {
+      DBGF("Screen::splitWindow(%u)\n", upper_height_);
+
+      assert(version >= 3);
+
+      window[WINDOW_LOWER].pos.x  = 1;
+      window[WINDOW_LOWER].pos.y  = upper_height_ + 1;
+      window[WINDOW_LOWER].size.x = getWidth();
+      window[WINDOW_LOWER].size.y = getHeight() - upper_height_;
+
+      if (upper_height_ != 0)
+      {
+          window[WINDOW_UPPER].pos.x  = 1;
+          window[WINDOW_UPPER].pos.y  = 1;
+          window[WINDOW_UPPER].size.x = window[WINDOW_LOWER].size.x;
+          window[WINDOW_UPPER].size.y = upper_height_;
+
+          if (version == 3)
+          {
+             console.clearLines(1, upper_height_);
+          }
+      }
+      else
+      {
+          window[WINDOW_UPPER].pos.x  = 0;
+          window[WINDOW_UPPER].pos.y  = 0;
+          window[WINDOW_UPPER].size.x = 0;
+          window[WINDOW_UPPER].size.y = 0;
+      }
+
+      console.setScrollRegion(window[WINDOW_LOWER].pos.y,
+                              window[WINDOW_LOWER].pos.y + window[WINDOW_LOWER].size.y);
+   }
+
+   // Select window (v3+)
+   void selectWindow(unsigned index_)
+   {
+      DBGF("Screen::selectWindow(%u)\n", index_);
+
+      assert(version >= 3);
+
+      // Save state of current window
+      ZWindow& current = window[index];
+
+      unsigned line, col;
+      console.getCursorPos(line, col);
+      current.cursor.y        = line;
+      current.cursor.x        = col;
+      current.printer_enabled = stream.getStreamEnable(2);
+      current.buffering       = stream.getBuffering();
+
+      index = index_;
+
+      // Set state for next window
+      ZWindow& next = window[index];
+
+      if (index == WINDOW_UPPER)
+      {
+         if (version != 6)
+         {
+            next.cursor.y        = 1;
+            next.cursor.x        = 1;
+            next.printer_enabled = false;
+            next.buffering       = false;
+         }
+      }
+      else if (index == WINDOW_LOWER)
+      {
+         if (version == 4)
+         {
+            next.cursor.y = next.pos.y + next.size.y - 1;
+            next.cursor.x = 1;
+         }
+      }
+
+      stream.setCol(next.cursor.x);
+      stream.enableStream(2, next.printer_enabled);
+      stream.setBuffering(next.buffering);
+
+      console.moveCursor(next.cursor.y, next.cursor.x);
+   }
+
+   // Erase window (v4+)
+   void eraseWindow(signed index)
+   {
+      DBGF("Screen::eraseWindow(%d)\n", index);
+
+      assert(version >= 4);
+
+      if (index == -1)
+      {
+         splitWindow(0);
+         index = WINDOW_LOWER;
+         selectWindow(index);
+      }
+
+      // TODO just clear the selected window
+      //console.clearLines(window[index].pos.y, window[index].size.y);
+      console.clear();
+   }
+
+   // Erase line (v4+)
+   void eraseLine()
+   {
+      DBGF("Screen::eraseLine()\n");
+
+      assert(version >= 4);
+
+      console.eraseLine();
+   }
+
+   // Erase line (v4+)
+   void moveCursor(unsigned row, unsigned col)
+   {
+      DBGF("Screen::moveCursor(%u, %u)\n", row, col);
+
+      assert(version >= 4);
+
+      if (version == 6)
+      {
+      }
+      else if (version >= 4)
+      {
+         if (index == WINDOW_UPPER)
+         {
+            console.moveCursor(row, col);
+         }
+      }
+   }
+
+   //! Get a windows property (v6)
    uint16_t getWindowProp(unsigned index_, unsigned prop_) const
    {
-      DBGF("getWindowProp(%u, %u)\n", index_, prop_);
+      DBGF("Screen::getWindowProp(%u, %u)\n", index_, prop_);
+
+      assert(version == 6);
 
       // TODO validate index and prop
 
@@ -141,10 +317,12 @@ public:
       }
    }
 
-   // for v6
+   //! Set a windows property (v6)
    void setWindowProp(unsigned index_, unsigned prop_, unsigned value)
    {
-      DBGF("setWindowProp(%u, %u, %u)\n", index_, prop_, value);
+      DBGF("Screen::setWindowProp(%u, %u, %u)\n", index_, prop_, value);
+
+      assert(version == 6);
 
       // TODO validate index and prop
       // TODO side effects
@@ -169,133 +347,6 @@ public:
       case 15: window[index_].line_count = value; break;
 
       default: break;
-      }
-   }
-
-   // Update the status line (v1-3)
-   void showStatus(const std::string& text)
-   {
-      DBGF("showStatus(\"%s\")\n", text.c_str());
-
-      bool printer_enabled = stream.getStreamEnable(2);
-      stream.enableStream(2, false);
-
-      unsigned row, col;
-      console.getCursorPos(row, col);
-
-      // Inverse video header bar
-      console.setFontStyle(Console::FONT_STYLE_REVERSE);
-
-      console.write(1, 1, text);
-
-      // Restore cursor and style
-      console.setFontStyle(0);
-      console.moveCursor(row, col);
-
-      stream.enableStream(2, printer_enabled);
-   }
-
-   // Select window (from v3)
-   void splitWindow(unsigned upper_height_)
-   {
-      DBGF("splitWindow(%u)\n", upper_height_);
-
-      window[WINDOW_LOWER].pos.x  = 1;
-      window[WINDOW_LOWER].pos.y  = upper_height_ + 1;
-      window[WINDOW_LOWER].size.x = getWidth();
-      window[WINDOW_LOWER].size.y = console.getAttr(Console::LINES) - upper_height_;
-
-      if (upper_height_ != 0)
-      {
-          window[WINDOW_UPPER].pos.x  = 1;
-          window[WINDOW_UPPER].pos.y  = 1;
-          window[WINDOW_UPPER].size.x = window[WINDOW_LOWER].size.x;
-          window[WINDOW_UPPER].size.y = upper_height_;
-
-          if (version == 3)
-          {
-             console.clearLines(1, upper_height_);
-          }
-      }
-      else
-      {
-          window[WINDOW_UPPER].pos.x  = 0;
-          window[WINDOW_UPPER].pos.y  = 0;
-          window[WINDOW_UPPER].size.x = 0;
-          window[WINDOW_UPPER].size.y = 0;
-      }
-
-      console.setScrollRegion(window[WINDOW_LOWER].pos.y,
-                              window[WINDOW_LOWER].pos.y + window[WINDOW_LOWER].size.y);
-   }
-
-   // Select window (from v3)
-   void selectWindow(unsigned index_)
-   {
-      DBGF("selectWindow(%u)\n", index_);
-
-      if (index == index_) return;
-
-      // Save state of current window
-      ZWindow& current = window[index];
-
-      unsigned line, col;
-      console.getCursorPos(line, col);
-      current.cursor.y        = line;
-      current.cursor.x        = col;
-      current.printer_enabled = stream.getStreamEnable(2);
-      current.buffering       = stream.getBuffering();
-
-      index = index_;
-
-      // Set state for next window
-      ZWindow& next = window[index];
-
-      if ((index == WINDOW_UPPER) && (version != 6))
-      {
-         next.cursor.y        = 1;
-         next.cursor.x        = 1;
-         next.printer_enabled = false;
-         next.buffering       = false;
-      }
-
-      stream.setCol(next.cursor.x);
-      console.moveCursor(next.cursor.y, next.cursor.x);
-      stream.enableStream(2, next.printer_enabled);
-      stream.setBuffering(next.buffering);
-   }
-
-   // Erase window (from v4)
-   void eraseWindow(signed index)
-   {
-      DBGF("eraseWindow(%d)\n", index);
-
-      if (index == -1)
-      {
-         splitWindow(0);
-         index = WINDOW_LOWER;
-         selectWindow(index);
-      }
-
-      // TODO just clear the selected window
-      //console.clearLines(window[index].pos.y, window[index].size.y);
-      console.clear();
-   }
-
-   // Erase line
-   void eraseLine()
-   {
-      console.eraseLine();
-   }
-
-   void moveCursor(unsigned row, unsigned col)
-   {
-      if (version >= 6)
-      {
-      }
-      else if (version >= 4)
-      {
-         console.moveCursor(row, col);
       }
    }
 
