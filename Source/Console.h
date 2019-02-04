@@ -24,6 +24,7 @@
 #define CONSOLE_H
 
 #include <cstdint>
+#include <string>
 
 //! Console interface
 class Console
@@ -114,6 +115,17 @@ public:
 
    //! Write character
    virtual void write(uint8_t ch) = 0;
+
+   //! Write string
+   virtual void write(unsigned line, unsigned col, const std::string& str)
+   {
+      moveCursor(line, col);
+
+      for(const auto& ch : str)
+      {
+         write(ch);
+      }
+   }
 };
 
 #endif

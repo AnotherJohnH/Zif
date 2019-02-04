@@ -88,6 +88,7 @@ public:
       stream.init(version_);
    }
 
+   // for v6
    uint16_t getWindowProp(unsigned index_, unsigned prop_)
    {
       DBGF("getWindowProp(%u, %u)\n", index_, prop_);
@@ -117,6 +118,7 @@ public:
       }
    }
 
+   // for v6
    void setWindowProp(unsigned index_, unsigned prop_, unsigned value)
    {
       DBGF("setWindowProp(%u, %u, %u)\n", index_, prop_, value);
@@ -148,27 +150,29 @@ public:
    }
 
    // Update the status line (v1-3)
-   void showStatus(const char* left, const char* right)
+   void showStatus(const std::string& text)
    {
-      DBGF("showStatus(%s, %s)\n", left, right);
+      DBGF("showStatus(\"%s\")\n", text.c_str());
 
       bool printer_enabled = stream.getStreamEnable(2);
       stream.enableStream(2, false);
 
-      console.moveCursor(1, 1);
+      unsigned row, col;
+      console.getCursorPos(row, col);
 
-      for(unsigned i = 0; i < console.getAttr(Console::COLS); i++)
-      {
-         if(left[i] == '\0') break;
+      // Inverse video header bar
+      console.setFontStyle(Console::FONT_STYLE_REVERSE);
 
-         console.write(left[i]);
-      }
+      console.write(1, 1, text);
 
-      console.moveCursor(1, 999);
+      // Restore cursor and style
+      console.setFontStyle(0);
+      console.moveCursor(row, col);
 
       stream.enableStream(2, printer_enabled);
    }
 
+   // Select window (from v3)
    void split(unsigned upper_height_)
    {
       DBGF("split(%u)\n", upper_height_);
@@ -184,6 +188,11 @@ public:
           window[WINDOW_UPPER].pos.y  = 1;
           window[WINDOW_UPPER].size.x = window[WINDOW_LOWER].size.x;
           window[WINDOW_UPPER].size.y = upper_height_;
+
+          if (version == 3)
+          {
+             console.clearLines(1, upper_height_);
+          }
       }
       else
       {
@@ -197,6 +206,7 @@ public:
                               window[WINDOW_LOWER].pos.y + window[WINDOW_LOWER].size.y);
    }
 
+   // Select window (from v3)
    void select(unsigned index_)
    {
       DBGF("select(%u)\n", index_);
@@ -232,6 +242,7 @@ public:
       stream.setBuffering(next.buffering);
    }
 
+   // Erase window (from v4)
    void eraseWindow(signed index)
    {
       DBGF("eraseWindow(%d)\n", index);

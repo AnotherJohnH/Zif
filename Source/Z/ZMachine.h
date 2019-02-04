@@ -230,81 +230,64 @@ private:
       return true;
    }
 
-   void writeStatus(const std::string& str)
-   {
-      for(const auto& ch : str)
-      {
-         console.write(ch);
-      }
-   }
-
    void showStatus()
    {
-      unsigned row, col;
-      console.getCursorPos(row, col);
-
-      // Inverse video header bar
-      console.setFontStyle(Console::FONT_STYLE_REVERSE);
-      console.moveCursor(1, 1);
       unsigned num_cols = console.getAttr(Console::COLS);
-      for(unsigned i=0; i<num_cols; i++)
-      {
-         console.write(' ');
-      }
+      unsigned limit    = isTimeGame() ? num_cols - 61
+                                       : num_cols - 27;
 
-      unsigned loc_size = num_cols;
+      work_str = " ";
+
+      uint16_t loc  = state.varRead(16+0);
+      uint32_t name = object.getName(loc);
+      text.print([this, limit](uint16_t ch)
+                 {
+                    if (work_str.size() < limit)
+                    {
+                       work_str += ch;
+                    }
+                 },
+                 name);
+
+      while(work_str.size() < limit)
+      {
+         work_str += " ";
+      }
 
       if (isTimeGame())
       {
          uint16_t hours = state.varRead(16+1);
          uint16_t mins  = state.varRead(16+2);
 
-         work_str = "Time : ";
+         work_str += "Time : ";
          if (hours<10) work_str += '0';
          work_str += std::to_string(hours);
          work_str += ':';
          if (mins<10) work_str += '0';
          work_str += std::to_string(mins);
-
-         loc_size = num_cols - 15;
-         console.moveCursor(1, loc_size);
-         writeStatus(work_str);
       }
       else
       {
-         int16_t  score = state.varRead(16+1);
-         work_str = "Score : ";
-         work_str += std::to_string(score);
-
-         loc_size = num_cols - 26;
-         console.moveCursor(1, loc_size);
-         writeStatus(work_str);
-
          uint16_t moves = state.varRead(16+2);
-         work_str = "Moves: ";
+         work_str += "Moves: ";
          work_str += std::to_string(moves);
 
-         console.moveCursor(1, num_cols - 13);
-         writeStatus(work_str);
+         while(work_str.size() < (num_cols - 14))
+         {
+            work_str += " ";
+         }
+
+         int16_t  score = state.varRead(16+1);
+         work_str += "Score : ";
+         work_str += std::to_string(score);
       }
 
-      uint16_t loc  = state.varRead(16+0);
-      uint32_t name = object.getName(loc);
-      console.moveCursor(1, 2);
-      loc_size -= 2;
-      text.print([this, &loc_size](uint16_t ch)
-                 {
-                    if (loc_size > 1)
-                    {
-                       console.write(ch);
-                       --loc_size;
-                    }
-                 },
-                 name);
+      while(work_str.size() < num_cols)
+      {
+         work_str += " ";
+      }
 
-      // Restore cursor and style
-      console.setFontStyle(0);
-      console.moveCursor(row, col);
+      window_mgr.showStatus(work_str);
    }
 
    uint32_t streamText(uint32_t addr)
