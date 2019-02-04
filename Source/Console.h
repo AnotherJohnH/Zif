@@ -91,6 +91,9 @@ public:
    //! Set foreground colours
    virtual void setForegroundColour(Colour colour) = 0;
 
+   //! Set cursor visibility
+   virtual void setCursorVisibility(bool visible) = 0;
+
    //! Move the cursor
    virtual void moveCursor(unsigned line, unsigned col) = 0;
 

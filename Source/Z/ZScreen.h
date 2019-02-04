@@ -266,8 +266,8 @@ public:
       console.eraseLine();
    }
 
-   // Erase line (v4+)
-   void moveCursor(unsigned row, unsigned col)
+   // Move cursor (v4+)
+   void moveCursor(signed row, unsigned col, unsigned index_ = 0)
    {
       DBGF("Screen::moveCursor(%u, %u)\n", row, col);
 
@@ -275,6 +275,25 @@ public:
 
       if (version == 6)
       {
+         if (row == -1)
+         {
+            console.setCursorVisibility(false);
+         }
+         else if (row == -2)
+         {
+            console.setCursorVisibility(true);
+         }
+         else
+         {
+            window[index_].cursor.x = window[index_].pos.x - 1 + col;
+            window[index_].cursor.y = window[index_].pos.y - 1 + row;
+
+            if (index == index_)
+            {
+               console.moveCursor(window[index_].cursor.y,
+                                  window[index_].cursor.x);
+            }
+         }
       }
       else if (version >= 4)
       {

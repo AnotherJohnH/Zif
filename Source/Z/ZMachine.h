@@ -672,8 +672,15 @@ private:
          TODO_WARN("v6 op erase_line pixels unimplemented");
    }
 
-   void opV_set_cursor_v4()  { screen.moveCursor(uarg[0], uarg[1]); }
-   void opV_set_cursor_v6()  { TODO_WARN("op set_cursor_v6 unimplemented"); }
+   void opV_set_cursor_v4()
+   {
+      screen.moveCursor(sarg[0], uarg[1]);
+   }
+
+   void opV_set_cursor_v6()
+   {
+      screen.moveCursor(sarg[0], uarg[1], uarg[2]);
+   }
 
    void opV_get_cursor()
    {

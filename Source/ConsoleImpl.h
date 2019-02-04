@@ -197,6 +197,14 @@ public:
          curses.bgcolour(curses_colour);
    }
 
+   //! Set cursor visibility
+   virtual void setCursorVisibility(bool visible) override
+   {
+      if(!screen_enable) return;
+
+      // TODO
+   }
+
    //! Move cursor
    virtual void moveCursor(unsigned line, unsigned col) override
    {
