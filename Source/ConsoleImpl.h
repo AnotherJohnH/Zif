@@ -128,11 +128,16 @@ public:
    {
       if(!screen_enable) return;
 
+      unsigned line, col;
+      curses.getyx(line, col);
+
       for(unsigned i=0; i<n; i++)
       {
          curses.move(first + i, 0);
          curses.clrtoeol();
       }
+
+      curses.move(line, col);
    }
 
    //! Clear the console
@@ -202,7 +207,7 @@ public:
    {
       if(!screen_enable) return;
 
-      // TODO
+      curses.curs_set(visible ? 0 : 1);
    }
 
    //! Move cursor
