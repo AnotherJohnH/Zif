@@ -106,6 +106,14 @@ public:
       }
    }
 
+   void setStorySize(uint32_t size)
+   {
+      if ((version <= 3) && (size < 0x20000))
+      {
+         length = size >> 1;
+      }
+   }
+
    //! Return memory size limit (bytes)
    uint32_t getMemoryLimit() const
    {

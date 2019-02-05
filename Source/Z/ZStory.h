@@ -89,23 +89,47 @@ public:
             {
                const ZHeader* header = getHeader();
 
-               if (header->isVersionValid())
+               if (!header->isVersionValid())
                {
                   error = "Unexpected Z version ";
                   error += std::to_string(header->version);
                }
-
-               image.resize(header->getStorySize());
-
-               if (fread(&image[GAME_START], image.size() - GAME_START, 1, fp) != 1)
-               {
-                  error = "Failed to read Z body";
-               }
                else
                {
-                  calcCheckSum();
-                  extractFilename(path);
-                  ok = true;
+                  if (header->getStorySize() == 0)
+                  {
+                     if (fseek(fp, 0, SEEK_END) == 0)
+                     {
+                        long file_size = ftell(fp);
+                        if (file_size > 0)
+                        {
+                           if (fseek(fp, sizeof(ZHeader), SEEK_SET) == 0)
+                           {
+                              getHeader()->setStorySize(file_size);
+                           }
+                        }
+                     }
+                  }
+
+                  if (header->getStorySize() == 0)
+                  {
+                     error = "Failed to find file size";
+                  }
+                  else
+                  {
+                     image.resize(header->getStorySize());
+
+                     if (fread(&image[GAME_START], image.size() - GAME_START, 1, fp) != 1)
+                     {
+                        error = "Failed to read Z body";
+                     }
+                     else
+                     {
+                        calcCheckSum();
+                        extractFilename(path);
+                        ok = true;
+                     }
+                  }
                }
             }
          }
@@ -130,6 +154,9 @@ private:
    bool                 checksum_ok{false};
    std::string          filename{};
    std::string          error{};
+
+   //! Return pointer to initial state of Z header
+   ZHeader* getHeader() { return reinterpret_cast<ZHeader*>(image.data()); }
 
    bool seekToZHeader(FILE* fp, const std::string& path)
    {
