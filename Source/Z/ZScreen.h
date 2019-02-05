@@ -32,18 +32,22 @@
 class ZScreen
 {
 private:
-   static const unsigned MAX_WINDOW = 8;
+   static const unsigned LOWER_WINDOW{0};
+   static const unsigned UPPER_WINDOW{1};
+   static const unsigned MAX_WINDOW{8};
 
    struct Vec
    {
       uint16_t x{0}, y{0};
+
+      Vec(uint16_t x_, uint16_t y_) : x(x_), y(y_) {}
    };
 
    struct ZWindow
    {
-      Vec      pos;
-      Vec      size;
-      Vec      cursor;
+      Vec      pos{1,1};
+      Vec      size{0,0};
+      Vec      cursor{1,1};
       uint16_t left_margin{0};
       uint16_t right_margin{0};
       uint16_t newline_handler{0};
@@ -59,9 +63,6 @@ private:
    };
 
 public:
-   static const unsigned WINDOW_LOWER{0};
-   static const unsigned WINDOW_UPPER{1};
-
    ZScreen(Console& console_, ZStream& stream_)
       : console(console_)
       , stream(stream_)
@@ -102,17 +103,19 @@ public:
          // 8.5.2 clear screen and move cursor to bottom left corner
          console.clear();
          console.moveCursor(getHeight(), 1);
+         stream.setCol(1);
          break;
 
       case 3:
          // 8.6.2 clear screen and move cursor to bottom left corner
          console.clear();
          console.moveCursor(getHeight(), 1);
-         window[WINDOW_LOWER].pos.x  = 1;
-         window[WINDOW_LOWER].pos.y  = getHeight();
-         window[WINDOW_LOWER].size.x = getWidth();
-         window[WINDOW_LOWER].size.y = getHeight();
-         window[WINDOW_LOWER].printer_enabled = stream.getStreamEnable(2);
+         stream.setCol(1);
+         window[LOWER_WINDOW].pos.x  = 1;
+         window[LOWER_WINDOW].pos.y  = getHeight();
+         window[LOWER_WINDOW].size.x = getWidth();
+         window[LOWER_WINDOW].size.y = getHeight();
+         window[LOWER_WINDOW].printer_enabled = stream.getStreamEnable(2);
          break;
 
       case 4:
@@ -149,6 +152,7 @@ public:
       // Restore cursor and style
       console.setFontStyle(0);
       console.moveCursor(row, col);
+      stream.setCol(col);
 
       stream.enableStream(2, printer_enabled);
    }
@@ -160,17 +164,17 @@ public:
 
       assert(version >= 3);
 
-      window[WINDOW_LOWER].pos.x  = 1;
-      window[WINDOW_LOWER].pos.y  = upper_height_ + 1;
-      window[WINDOW_LOWER].size.x = getWidth();
-      window[WINDOW_LOWER].size.y = getHeight() - upper_height_;
+      window[LOWER_WINDOW].pos.x  = 1;
+      window[LOWER_WINDOW].pos.y  = upper_height_ + 1;
+      window[LOWER_WINDOW].size.x = getWidth();
+      window[LOWER_WINDOW].size.y = getHeight() - upper_height_;
 
       if (upper_height_ != 0)
       {
-          window[WINDOW_UPPER].pos.x  = 1;
-          window[WINDOW_UPPER].pos.y  = 1;
-          window[WINDOW_UPPER].size.x = window[WINDOW_LOWER].size.x;
-          window[WINDOW_UPPER].size.y = upper_height_;
+          window[UPPER_WINDOW].pos.x  = 1;
+          window[UPPER_WINDOW].pos.y  = 1;
+          window[UPPER_WINDOW].size.x = window[LOWER_WINDOW].size.x;
+          window[UPPER_WINDOW].size.y = upper_height_;
 
           if (version == 3)
           {
@@ -179,14 +183,14 @@ public:
       }
       else
       {
-          window[WINDOW_UPPER].pos.x  = 0;
-          window[WINDOW_UPPER].pos.y  = 0;
-          window[WINDOW_UPPER].size.x = 0;
-          window[WINDOW_UPPER].size.y = 0;
+          window[UPPER_WINDOW].pos.x  = 0;
+          window[UPPER_WINDOW].pos.y  = 0;
+          window[UPPER_WINDOW].size.x = 0;
+          window[UPPER_WINDOW].size.y = 0;
       }
 
-      console.setScrollRegion(window[WINDOW_LOWER].pos.y,
-                              window[WINDOW_LOWER].pos.y + window[WINDOW_LOWER].size.y);
+      console.setScrollRegion(window[LOWER_WINDOW].pos.y,
+                              window[LOWER_WINDOW].pos.y + window[LOWER_WINDOW].size.y);
    }
 
    // Select window (v3+)
@@ -211,7 +215,7 @@ public:
       // Set state for next window
       ZWindow& next = window[index];
 
-      if (index == WINDOW_UPPER)
+      if (index == UPPER_WINDOW)
       {
          if (version != 6)
          {
@@ -221,7 +225,7 @@ public:
             next.buffering       = false;
          }
       }
-      else if (index == WINDOW_LOWER)
+      else if (index == LOWER_WINDOW)
       {
          if (version == 4)
          {
@@ -230,10 +234,10 @@ public:
          }
       }
 
-      stream.setCol(next.cursor.x);
       stream.enableStream(2, next.printer_enabled);
       stream.setBuffering(next.buffering);
 
+      stream.setCol(next.cursor.x);
       console.moveCursor(next.cursor.y, next.cursor.x);
    }
 
@@ -247,7 +251,7 @@ public:
       if (index == -1)
       {
          splitWindow(0);
-         index = WINDOW_LOWER;
+         index = LOWER_WINDOW;
          selectWindow(index);
       }
 
@@ -290,6 +294,7 @@ public:
 
             if (index == index_)
             {
+               stream.setCol(window[index].cursor.x);
                console.moveCursor(window[index_].cursor.y,
                                   window[index_].cursor.x);
             }
@@ -297,8 +302,9 @@ public:
       }
       else if (version >= 4)
       {
-         if (index == WINDOW_UPPER)
+         if (index == UPPER_WINDOW)
          {
+            stream.setCol(col);
             console.moveCursor(row, col);
          }
       }
@@ -307,33 +313,39 @@ public:
    //! Get a windows property (v6)
    uint16_t getWindowProp(unsigned index_, unsigned prop_) const
    {
-      DBGF("Screen::getWindowProp(%u, %u)\n", index_, prop_);
+      DBGF("Screen::getWindowProp(%u, %u)", index_, prop_);
 
       assert(version == 6);
 
-      // TODO validate index and prop
+      uint16_t value = 0;
 
-      switch(prop_)
+      if (index_ < MAX_WINDOW)
       {
-      case  0: return window[index_].pos.y;
-      case  1: return window[index_].pos.x;
-      case  2: return window[index_].size.y;
-      case  3: return window[index_].size.x;
-      case  4: return window[index_].cursor.y;
-      case  5: return window[index_].cursor.x;
-      case  6: return window[index_].left_margin;
-      case  7: return window[index_].right_margin;
-      case  8: return window[index_].newline_handler;
-      case  9: return window[index_].interrupt_countdown;
-      case 10: return window[index_].text_style;
-      case 11: return window[index_].colour_data;
-      case 12: return window[index_].font_number;
-      case 13: return window[index_].font_size;
-      case 14: return window[index_].attr;
-      case 15: return window[index_].line_count;
-
-      default: return 0;
+          switch(prop_)
+          {
+          case  0: value = window[index_].pos.y; break;
+          case  1: value = window[index_].pos.x; break;
+          case  2: value = window[index_].size.y; break;
+          case  3: value = window[index_].size.x; break;
+          case  4: value = window[index_].cursor.y; break;
+          case  5: value = window[index_].cursor.x; break;
+          case  6: value = window[index_].left_margin; break;
+          case  7: value = window[index_].right_margin; break;
+          case  8: value = window[index_].newline_handler; break;
+          case  9: value = window[index_].interrupt_countdown; break;
+          case 10: value = window[index_].text_style; break;
+          case 11: value = window[index_].colour_data; break;
+          case 12: value = window[index_].font_number; break;
+          case 13: value = window[index_].font_size; break;
+          case 14: value = window[index_].attr; break;
+          case 15: value = window[index_].line_count; break;
+          default: break;
+          }
       }
+
+      DBGF(" => %u\n", value);
+
+      return value;
    }
 
    //! Set a windows property (v6)
@@ -343,29 +355,87 @@ public:
 
       assert(version == 6);
 
-      // TODO validate index and prop
-      // TODO side effects
-
-      switch(prop_)
+      if (index_ < MAX_WINDOW)
       {
-      case  0: window[index_].pos.y = value; break;
-      case  1: window[index_].pos.x = value; break;
-      case  2: window[index_].size.y = value; break;
-      case  3: window[index_].size.x = value; break;
-      case  4: window[index_].cursor.y = value; break;
-      case  5: window[index_].cursor.x = value; break;
-      case  6: window[index_].left_margin = value; break;
-      case  7: window[index_].right_margin = value; break;
-      case  8: window[index_].newline_handler = value; break;
-      case  9: window[index_].interrupt_countdown = value; break;
-      case 10: window[index_].text_style = value; break;
-      case 11: window[index_].colour_data = value; break;
-      case 12: window[index_].font_number = value; break;
-      case 13: window[index_].font_size = value; break;
-      case 14: window[index_].attr = value; break;
-      case 15: window[index_].line_count = value; break;
+          // TODO side effects
 
-      default: break;
+          switch(prop_)
+          {
+          case  0: window[index_].pos.y = value; break;
+          case  1: window[index_].pos.x = value; break;
+          case  2: window[index_].size.y = value; break;
+          case  3: window[index_].size.x = value; break;
+          case  4: window[index_].cursor.y = value; break;
+          case  5: window[index_].cursor.x = value; break;
+          case  6: window[index_].left_margin = value; break;
+          case  7: window[index_].right_margin = value; break;
+          case  8: window[index_].newline_handler = value; break;
+          case  9: window[index_].interrupt_countdown = value; break;
+          case 10: window[index_].text_style = value; break;
+          case 11: window[index_].colour_data = value; break;
+          case 12: window[index_].font_number = value; break;
+          case 13: window[index_].font_size = value; break;
+          case 14: window[index_].attr = value; break;
+          case 15: window[index_].line_count = value; break;
+
+          default: break;
+          }
+      }
+   }
+
+   // move window to pixel position (v6)
+   void moveWindow(unsigned index_, unsigned x_, unsigned y_)
+   {
+      DBGF("Screen::moveWindow(%u, %u, %u)\n", index_, x_, y_);
+
+      assert(version == 6);
+
+      if (index_ < MAX_WINDOW)
+      {
+          // TODO pixels
+          window[index_].pos.x = x_;
+          window[index_].pos.y = y_;
+      }
+   }
+
+   // Change size of window in pixels (v6)
+   void resizeWindow(unsigned index_, unsigned width_, unsigned height_)
+   {
+      DBGF("Screen::resizeWindow(%u, %u, %u)\n", index_, width_, height_);
+
+      assert(version == 6);
+
+      if (index_ < MAX_WINDOW)
+      {
+          // TODO pixels
+          window[index_].size.x = width_;
+          window[index_].size.y = height_;
+      }
+   }
+
+   // Change the attributes for a given window (v6)
+   void setWindowStyle(unsigned index_, unsigned flags_, unsigned operation_)
+   {
+      DBGF("Screen::setWindowStyle(%u, %x, %u)\n", index_, flags_, operation_);
+
+      assert(version == 6);
+
+      if (index_ < MAX_WINDOW)
+      {
+          // TODO
+      }
+   }
+
+   // scroll window in pixels (v6)
+   void scrollWindow(unsigned index_, unsigned pixels_)
+   {
+      DBGF("Screen::scrollWindow(%u, %u)\n", index_, pixels_);
+
+      assert(version == 6);
+
+      if (index_ < MAX_WINDOW)
+      {
+          // TODO
       }
    }
 
@@ -374,7 +444,7 @@ private:
    ZStream&  stream;
    ZWindow   window[MAX_WINDOW];
    unsigned  version{0};
-   unsigned  index{WINDOW_LOWER};
+   unsigned  index{LOWER_WINDOW};
 };
 
 #endif

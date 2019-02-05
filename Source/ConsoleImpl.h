@@ -128,16 +128,11 @@ public:
    {
       if(!screen_enable) return;
 
-      unsigned line, col;
-      curses.getyx(line, col);
-
       for(unsigned i=0; i<n; i++)
       {
-         curses.move(first + i, 0);
+         curses.move(first + i, 1);
          curses.clrtoeol();
       }
-
-      curses.move(line, col);
    }
 
    //! Clear the console

@@ -999,11 +999,7 @@ private:
       uint16_t y    = uarg[1];
       uint16_t x    = uarg[2];
 
-      (void)wind;
-      (void)y;
-      (void)x;
-
-      TODO_WARN("move_window");
+      screen.moveWindow(wind, y, x);
    }
 
    void opE_window_size()
@@ -1012,11 +1008,7 @@ private:
       uint16_t y    = uarg[1];
       uint16_t x    = uarg[2];
 
-      (void)wind;
-      (void)y;
-      (void)x;
-
-      TODO_WARN("window_size");
+      screen.resizeWindow(wind, y, x);
    }
 
    void opE_window_style()
@@ -1025,11 +1017,7 @@ private:
       uint16_t flags     = uarg[1];
       uint16_t operation = uarg[2];
 
-      (void)wind;
-      (void)flags;
-      (void)operation;
-
-      TODO_WARN("set_wind_style");
+      screen.setWindowStyle(wind, flags, operation);
    }
 
    void opE_get_wind_prop()
@@ -1040,7 +1028,13 @@ private:
       state.varWrite(state.fetchByte(), screen.getWindowProp(wind, prop));
    }
 
-   void opE_scroll_window() { TODO_WARN("scroll_window unimplemented"); }
+   void opE_scroll_window()
+   {
+      uint16_t wind   = uarg[0];
+      uint16_t pixels = uarg[1];
+
+      screen.scrollWindow(wind, pixels);
+   }
 
    void opE_pop_stack()
    {
