@@ -54,22 +54,22 @@ struct ZHeader
    uint8_t    interpreter_version; // $1F:
    uint8_t    screen_lines;        // $20:
    uint8_t    screen_cols;         // $21:
-   STB::Big16 screen_width;
-   STB::Big16 screen_height;
+   STB::Big16 screen_width;        // $22
+   STB::Big16 screen_height;       // $24
 
 private:
-   uint8_t font_height;
-   uint8_t font_width;
+   uint8_t font_height;               // $26
+   uint8_t font_width;                // $27
 
 public:
-   STB::Big16 routines;
-   STB::Big16 static_strings;
-   uint8_t    background_colour;
-   uint8_t    foreground_colour;
-   STB::Big16 terminating_characters;
-   STB::Big16 width_text_stream3;
-   STB::Big16 standard_revision;
-   STB::Big16 alphabet_table;
+   STB::Big16 routines;               // $28
+   STB::Big16 static_strings;         // $2A
+   uint8_t    background_colour;      // $2C
+   uint8_t    foreground_colour;      // $2D
+   STB::Big16 terminating_characters; // $2E
+   STB::Big16 width_text_stream3;     // $30
+   STB::Big16 standard_revision;      // $32
+   STB::Big16 alphabet_table;         // $34
    STB::Big16 header_ext;
    uint8_t    pad2[8];
 

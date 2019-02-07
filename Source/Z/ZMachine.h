@@ -1491,7 +1491,7 @@ public:
       stream.init(header->version);
       screen.init(header->version);
       // TODO fix this! and maybe just pass ZHeader* int stream
-      text.init(header->version, header->abbr);
+      text.init(header->version, header->abbr, header->alphabet_table);
       parser.init(header->version);
       object.init(header->obj, header->version);
 

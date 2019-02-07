@@ -53,47 +53,34 @@ private:
    const ZMemory& memory;
 
    // Configuration
-   uint8_t  version{0};
-   uint16_t abbr_table{0};
+   uint8_t     version{0};
+   uint16_t    abbr_table{0};
+   const char* alpha_table{nullptr};
 
    // Decoder state
    State    state;
    uint8_t  shift_lock;
-   uint8_t  shift;
+   uint8_t  alphabet;
    uint16_t zscii{0};
 
-   void reset(State state_, uint8_t shift_)
+   void reset(State state_, uint8_t alphabet_)
    {
       state      = state_;
-      shift_lock = shift_;
-      shift      = shift_;
+      shift_lock = alphabet_;
+      alphabet   = alphabet_;
    }
 
    void decodeAbbr(const Writer& writer, unsigned index)
    {
       uint8_t save_shift = shift_lock;
+      uint32_t abbr_addr = memory.codeWord(abbr_table + index * 2) * 2;
 
-      reset(IN_ABBR, /* shift */ 0);
-
-      for(uint32_t addr = memory.codeWord(abbr_table + index * 2) * 2;
-          decode(writer, memory.codeWord(addr));
-          addr += 2);
-
+      decodeText(writer, IN_ABBR, abbr_addr);
       reset(NORMAL, save_shift);
    }
 
    void decodeZChar(const Writer& writer, uint8_t code)
    {
-      // Alphabet table (v1) [3.5.4]
-      static const char* alphabet_v1 = "abcdefghijklmnopqrstuvwxyz"    // A0
-                                       "ABCDEFGHIJKLMNOPQRSTUVWXYZ"    // A1
-                                       " 0123456789.,!?_#'\"/\\<-:()"; // A2
-
-      // Alphabet table (v2 - v4) [3.5.3]
-      static const char* alphabet_v2_v4 = "abcdefghijklmnopqrstuvwxyz"     // A0
-                                          "ABCDEFGHIJKLMNOPQRSTUVWXYZ"     // A1
-                                          " \n0123456789.,!?_#'\"/\\-:()"; // A2
-
       switch(state)
       {
       case ABBR_1:
@@ -130,7 +117,7 @@ private:
             // Z char 1 is a new line (v1) [3.5.2]
             writer('\n');
          }
-         else if(state == NORMAL)
+         else if(state == NORMAL) // [3.3.1]
          {
             // Abbreviation 0-31 (v2+) [3.3]
             state = ABBR_1;
@@ -141,9 +128,9 @@ private:
          if(version <= 2)
          {
             // Shift up (v1 and v2) [3.2.2]
-            shift = (shift + 1) % 3;
+            alphabet = (alphabet + 1) % 3;
          }
-         else if(state == NORMAL)
+         else if(state == NORMAL) // [3.3.1]
          {
             // Abbreviation 32-63 (v3+) [3.3]
             state = ABBR_2;
@@ -154,9 +141,9 @@ private:
          if(version <= 2)
          {
             // Shift down (v1 and v2) [3.2.2]
-            shift = (shift + 2) % 3;
+            alphabet = (alphabet + 2) % 3;
          }
-         else if(state == NORMAL)
+         else if(state == NORMAL) // [3.3.1]
          {
             // 3.3 Abbreviation 64-95 (v3+) [3.3]
             state = ABBR_3;
@@ -164,63 +151,46 @@ private:
          return;
 
       case 4:
-         // Shift up [3.2.3]
-         shift = (shift + 1) % 3;
-         // Apply shift-lock (v1 and v2) [3.2.2]
-         if (version < 3) shift_lock = shift;
+         // Shift up [3.2.2]
+         alphabet = (alphabet + 1) % 3;
+         // Apply shift-lock (v1 and v2) [3.2.2, 3.2.3]
+         if (version < 3) shift_lock = alphabet;
          return;
 
       case 5:
-         // Shift down [3.2.3]
-         shift = (shift + 2) % 3;
-         // Apply shift-lock (v1 and v2) [3.2.2]
-         if (version < 3) shift_lock = shift;
+         // Shift down [3.2.2]
+         alphabet = (alphabet + 2) % 3;
+         // Apply shift-lock (v1 and v2) [3.2.2, 3.2.3]
+         if (version < 3) shift_lock = alphabet;
          return;
 
       default:
-         // [3.5]
-         if(shift == 2)
+         if(alphabet == 2)
          {
             if(code == 6)
             {
-               state = ZSCII_UPPER;
-               shift = shift_lock;
+               // [3.4]
+               state    = ZSCII_UPPER;
+               alphabet = shift_lock;
                break;
             }
             else if((code == 7) && (version != 1))
             {
                writer('\n');
-               shift = shift_lock;
+               alphabet = shift_lock;
                break;
             }
          }
 
-         {
-            const char* table = nullptr;
-
-            if(version == 1)
-            {
-               table = alphabet_v1;
-            }
-            else
-            {
-               table = alphabet_v2_v4;
-
-               if(version >= 5)
-               {
-                  // TODO 3.5.5 check header for alternate table
-               }
-            }
-
-            writer(table[(shift * 26) + code - 6]);
-            shift = shift_lock;
-         }
+         // [3.5]
+         writer(alpha_table[(alphabet * 26) + code - 6]);
+         alphabet = shift_lock;
          break;
       }
    }
 
    //! Decode text packed into a 16bit word
-   bool decode(const Writer& writer, uint16_t word)
+   bool decodeWord(const Writer& writer, uint16_t word)
    {
       decodeZChar(writer, (word >> 10) & 0x1F);
       decodeZChar(writer, (word >>  5) & 0x1F);
@@ -230,6 +200,20 @@ private:
       return cont;
    }
 
+   //! Decode text starting at the given address
+   uint32_t decodeText(const Writer& writer, State state_, uint32_t addr)
+   {
+      // Start with alphabet A0 [3.2.1]
+      reset(state_, /* alphabet */ 0);
+
+      while(decodeWord(writer, memory.codeWord(addr)))
+      {
+          addr += 2;
+      }
+
+      return addr + 2;
+   }
+
 public:
    ZText(ZMemory& memory_)
       : memory(memory_)
@@ -237,23 +221,38 @@ public:
    }
 
    //! Initialise
-   void init(uint8_t version_, uint16_t abbr_table_)
+   void init(uint8_t  version_,
+             uint16_t abbr_table_,
+             uint16_t alpha_table_addr_)
    {
-      version    = version_;
-      abbr_table = abbr_table_;
+      version     = version_;
+      abbr_table  = abbr_table_;
+
+      if(version == 1)
+      {
+         // Alphabet table (v1) [3.5.4]
+         alpha_table = "abcdefghijklmnopqrstuvwxyz"    // A0
+                       "ABCDEFGHIJKLMNOPQRSTUVWXYZ"    // A1
+                       " 0123456789.,!?_#'\"/\\<-:()"; // A2
+      }
+      else if((version >= 5) && (alpha_table_addr_ != 0))
+      {
+         // Check header for alternate table [3.5.5]
+         alpha_table = (const char*)memory.getData() + alpha_table_addr_;
+      }
+      else
+      {
+         // Alphabet table (v2 - v4) [3.5.3]
+         alpha_table = "abcdefghijklmnopqrstuvwxyz"     // A0
+                       "ABCDEFGHIJKLMNOPQRSTUVWXYZ"     // A1
+                       " \n0123456789.,!?_#'\"/\\-:()"; // A2
+      }
    }
 
    //! Write packed text starting at the given address
    uint32_t print(const Writer& writer, uint32_t addr)
    {
-      reset(NORMAL, /* shift */ 0);
-
-      while(decode(writer, memory.codeWord(addr)))
-      {
-          addr += 2;
-      }
-
-      return addr + 2;
+      return decodeText(writer, NORMAL, addr);
    }
 
    //! Write raw text starting at the given address
