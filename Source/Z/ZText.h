@@ -1,5 +1,5 @@
 //------------------------------------------------------------------------------
-// Copyright (c) 2016 John D. Haughton
+// Copyright (c) 2016-2019 John D. Haughton
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -41,12 +41,12 @@ private:
    enum State : uint8_t
    {
       NORMAL,
-      DECODE_ABBR,
+      IN_ABBR,
       ABBR_1,
-      ABBR_2,
-      ABBR_3,
-      ASCII_UPPER,
-      ASCII_LOWER
+      ABBR_2 = ABBR_1 + 1,
+      ABBR_3 = ABBR_2 + 1,
+      ZSCII_UPPER,
+      ZSCII_LOWER
    };
 
    // Linkage
@@ -54,34 +54,35 @@ private:
 
    // Configuration
    uint8_t  version{0};
-   uint16_t abbr{0};
+   uint16_t abbr_table{0};
 
    // Decoder state
-   State   state;
-   uint8_t a;
-   uint8_t next_a;
-   uint8_t ascii;
+   State    state;
+   uint8_t  shift_lock;
+   uint8_t  shift;
+   uint16_t zscii{0};
 
-   void decodeAbbr(Writer writer, unsigned index)
+   void reset(State state_, uint8_t shift_)
    {
-      uint32_t entry = memory.codeWord(abbr + index * 2) * 2;
-
-      state = DECODE_ABBR;
-
-      for(; decode(writer, memory.codeWord(entry)); entry += 2)
-      {
-      }
+      state      = state_;
+      shift_lock = shift_;
+      shift      = shift_;
    }
 
-   void resetDecoder()
+   void decodeAbbr(const Writer& writer, unsigned index)
    {
-      state  = NORMAL;
-      a      = 0;
-      next_a = 0;
-      ascii  = 0;
+      uint8_t save_shift = shift_lock;
+
+      reset(IN_ABBR, /* shift */ 0);
+
+      for(uint32_t addr = memory.codeWord(abbr_table + index * 2) * 2;
+          decode(writer, memory.codeWord(addr));
+          addr += 2);
+
+      reset(NORMAL, save_shift);
    }
 
-   void decodeZChar(Writer writer, uint8_t code)
+   void decodeZChar(const Writer& writer, uint8_t code)
    {
       // Alphabet table (v1) [3.5.4]
       static const char* alphabet_v1 = "abcdefghijklmnopqrstuvwxyz"    // A0
@@ -99,22 +100,20 @@ private:
       case ABBR_2:
       case ABBR_3:
          decodeAbbr(writer, (state - ABBR_1) * 32 + code);
-         a     = next_a;
-         state = NORMAL;
          return;
 
-      case ASCII_UPPER:
-         ascii = code;
-         state = ASCII_LOWER;
+      case ZSCII_UPPER:
+         zscii = code;
+         state = ZSCII_LOWER;
          return;
 
-      case ASCII_LOWER:
-         writer((ascii << 5) | code);
+      case ZSCII_LOWER:
+         writer((zscii << 5) | code);
          state = NORMAL;
          return;
 
       case NORMAL:
-      case DECODE_ABBR:
+      case IN_ABBR:
          break;
       }
 
@@ -142,8 +141,7 @@ private:
          if(version <= 2)
          {
             // Shift up (v1 and v2) [3.2.2]
-            next_a = a;
-            a      = (a + 1) % 3;
+            shift = (shift + 1) % 3;
          }
          else if(state == NORMAL)
          {
@@ -156,8 +154,7 @@ private:
          if(version <= 2)
          {
             // Shift down (v1 and v2) [3.2.2]
-            next_a = a;
-            a      = (a + 2) % 3;
+            shift = (shift + 2) % 3;
          }
          else if(state == NORMAL)
          {
@@ -168,62 +165,68 @@ private:
 
       case 4:
          // Shift up [3.2.3]
-         a = (a + 1) % 3;
+         shift = (shift + 1) % 3;
          // Apply shift-lock (v1 and v2) [3.2.2]
-         next_a = version < 3 ? a : 0;
+         if (version < 3) shift_lock = shift;
          return;
 
       case 5:
          // Shift down [3.2.3]
-         a = (a + 2) % 3;
+         shift = (shift + 2) % 3;
          // Apply shift-lock (v1 and v2) [3.2.2]
-         next_a = version < 3 ? a : 0;
+         if (version < 3) shift_lock = shift;
          return;
 
       default:
          // [3.5]
-         if(a == 2)
+         if(shift == 2)
          {
             if(code == 6)
             {
-               state = ASCII_UPPER;
+               state = ZSCII_UPPER;
+               shift = shift_lock;
                break;
             }
             else if((code == 7) && (version != 1))
             {
                writer('\n');
+               shift = shift_lock;
                break;
             }
          }
 
          {
-            const char* table = alphabet_v2_v4;
+            const char* table = nullptr;
 
             if(version == 1)
             {
                table = alphabet_v1;
             }
-            else if(version >= 5)
+            else
             {
+               table = alphabet_v2_v4;
+
+               if(version >= 5)
+               {
+                  // TODO 3.5.5 check header for alternate table
+               }
             }
 
-            writer(table[(a * 26) + code - 6]);
+            writer(table[(shift * 26) + code - 6]);
+            shift = shift_lock;
          }
          break;
       }
-
-      a = next_a;
    }
 
    //! Decode text packed into a 16bit word
-   bool decode(Writer writer, uint16_t word)
+   bool decode(const Writer& writer, uint16_t word)
    {
-      bool cont = (word & (1 << 15)) == 0;
-
       decodeZChar(writer, (word >> 10) & 0x1F);
       decodeZChar(writer, (word >>  5) & 0x1F);
       decodeZChar(writer, (word >>  0) & 0x1F);
 
+      bool cont = (word & (1 << 15)) == 0;
       return cont;
    }
 
@@ -234,16 +237,16 @@ public:
    }
 
    //! Initialise
-   void init(uint8_t version_, uint32_t abbr_)
+   void init(uint8_t version_, uint16_t abbr_table_)
    {
-      version = version_;
-      abbr    = abbr_;
+      version    = version_;
+      abbr_table = abbr_table_;
    }
 
    //! Write packed text starting at the given address
-   uint32_t print(Writer writer, uint32_t addr)
+   uint32_t print(const Writer& writer, uint32_t addr)
    {
-      resetDecoder();
+      reset(NORMAL, /* shift */ 0);
 
       while(decode(writer, memory.codeWord(addr)))
       {
@@ -254,7 +257,11 @@ public:
    }
 
    //! Write raw text starting at the given address
-   void printTable(Writer writer, uint32_t addr, unsigned width, unsigned height, unsigned skip)
+   void printTable(const Writer& writer,
+                   uint32_t      addr,
+                   unsigned      width,
+                   unsigned      height,
+                   unsigned      skip)
    {
       for(unsigned line = 0; line < height; line++)
       {
@@ -268,7 +275,7 @@ public:
    }
 
    //! Write raw text starting at the given address
-   void printForm(Writer writer, uint32_t addr)
+   void printForm(const Writer& writer, uint32_t addr)
    {
       while(true)
       {
@@ -276,7 +283,7 @@ public:
          if (length == 0) break;
          addr += 2;
 
-         for(uint16_t i=0; i<length; i++)
+         for(unsigned i=0; i<length; i++)
          {
             writer(memory.codeByte(addr++));
          }
