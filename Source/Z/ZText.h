@@ -79,23 +79,23 @@ private:
       reset(NORMAL, save_shift);
    }
 
-   void decodeZChar(const Writer& writer, uint8_t code)
+   void decodeZChar(const Writer& writer, uint8_t zchar)
    {
       switch(state)
       {
       case ABBR_1:
       case ABBR_2:
       case ABBR_3:
-         decodeAbbr(writer, (state - ABBR_1) * 32 + code);
+         decodeAbbr(writer, (state - ABBR_1) * 32 + zchar);
          return;
 
       case ZSCII_UPPER:
-         zscii = code;
+         zscii = zchar;
          state = ZSCII_LOWER;
          return;
 
       case ZSCII_LOWER:
-         writer((zscii << 5) | code);
+         writer((zscii << 5) | zchar);
          state = NORMAL;
          return;
 
@@ -104,12 +104,12 @@ private:
          break;
       }
 
-      switch(code)
+      switch(zchar)
       {
       case 0:
          // Z char 0 is a space [3.5.1]
          writer(' ');
-         return;
+         break;
 
       case 1:
          if(version == 1)
@@ -135,7 +135,7 @@ private:
             // Abbreviation 32-63 (v3+) [3.3]
             state = ABBR_2;
          }
-         return;
+         break;
 
       case 3:
          if(version <= 2)
@@ -148,42 +148,43 @@ private:
             // 3.3 Abbreviation 64-95 (v3+) [3.3]
             state = ABBR_3;
          }
-         return;
+         break;
 
       case 4:
          // Shift up [3.2.2]
          alphabet = (alphabet + 1) % 3;
          // Apply shift-lock (v1 and v2) [3.2.2, 3.2.3]
          if (version < 3) shift_lock = alphabet;
-         return;
+         break;
 
       case 5:
          // Shift down [3.2.2]
          alphabet = (alphabet + 2) % 3;
          // Apply shift-lock (v1 and v2) [3.2.2, 3.2.3]
          if (version < 3) shift_lock = alphabet;
-         return;
+         break;
 
       default:
          if(alphabet == 2)
          {
-            if(code == 6)
+            if(zchar == 6)
             {
                // [3.4]
                state    = ZSCII_UPPER;
-               alphabet = shift_lock;
-               break;
             }
-            else if((code == 7) && (version != 1))
+            else if((zchar == 7) && (version != 1))
             {
                writer('\n');
-               alphabet = shift_lock;
-               break;
+            }
+            else
+            {
+               writer(alpha_table[(alphabet * 26) + zchar - 6]);
             }
          }
-
-         // [3.5]
-         writer(alpha_table[(alphabet * 26) + code - 6]);
+         else
+         {
+            writer(alpha_table[(alphabet * 26) + zchar - 6]);
+         }
          alphabet = shift_lock;
          break;
       }
