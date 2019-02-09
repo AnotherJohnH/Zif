@@ -26,5 +26,5 @@ for binary in binaries:
    Depends(exe, libs)
 
 env.Tar(app+'_'+env['target']+'_'+env['machine']+'_'+version+'.tgz',
-        [exe, env['platform_files'], 'LICENSE', 'zif.cfg', 'TermConfig.xml', 'Games'])
+        [exe, env['platform_files'], 'LICENSE', 'zif.cfg', 'Games'])
 
