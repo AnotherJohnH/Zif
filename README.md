@@ -19,7 +19,7 @@ This project is just for the fun of writing code and the learning that brings.
 The application is currently beta quality. It has been built and seen to run on various platforms.
 Almost all Z-code files, .z# and .zblorb, downloaded from the interactive fiction archive, start
 to run as expected. (819/817) Although further testing is necessary, initial indications are that
-there is enough functionality in place to play many of the available games.
+there is enough functionality in place to play most of the available games.
 
 |Target|Build|Run|
 |---|---|---|
@@ -41,8 +41,8 @@ file as a command line argument will load and run the game file directly bypassi
 the front-end.
 
 The launcher configuration file ("zif.cfg") file is used to provide a front-end menu where
-z-code games available in the local file system can be selected and certain aspects of
-the terminal emulation configured.
+z-code games available in the local file system can be selected and the structure of the
+launcher menu system configured.
 
 ## Thanks & Acknowledgements
 
@@ -91,7 +91,7 @@ Depend on SDL2 and SDL2-image, so a development installs of SDL2 and SDL2-image 
 
 ### Kindle3
 
-Although also a Linux build, the Kindle3 build does not depend on SDL2 or SDL2-image.
+Although a Linux build, the Kindle3 build does not depend on SDL2 or SDL2-image.
 
 Requires gcc built for arm-linux-gnueabihf and a set of headers and static runtime libraries
 that are compatible with the Linux installed on the Kindle3. The original ARMv6 Raspberry Pi

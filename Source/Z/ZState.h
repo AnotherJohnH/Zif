@@ -24,6 +24,7 @@
 #define ZSTATE_H
 
 #include "STB/Stack.h"
+#include "PLT/File.h"
 
 #include "Error.h"
 
@@ -121,6 +122,9 @@ public:
       pushContext();
       save_file.encode(*story, pc, rand_state, memory, stack);
       popContext();
+
+      // Make sure the save directory exists
+      (void) PLT::File::createDir(save_dir.c_str());
 
       std::string path = save_dir;
       path += '/';
