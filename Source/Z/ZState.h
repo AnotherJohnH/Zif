@@ -32,7 +32,7 @@
 #include "ZMemory.h"
 #include "ZQuetzal.h"
 #include "ZStack.h"
-#include "ZStory.h"
+#include "Z/Story.h"
 
 //! Z machine state
 class ZState
@@ -41,11 +41,11 @@ private:
    static const uint32_t GAME_START = sizeof(ZHeader);
 
    // Static configuration
-   std::string    save_dir;
-   const ZStory*  story{nullptr};
-   uint16_t       initial_rand_seed{0};
-   uint32_t       game_end{0};
-   uint32_t       global_base{0};
+   std::string      save_dir;
+   const Z::Story*  story{nullptr};
+   uint16_t         initial_rand_seed{0};
+   uint32_t         game_end{0};
+   uint32_t         global_base{0};
 
    // Saved state
    ZQuetzal              save_file;
@@ -86,7 +86,7 @@ public:
    uint16_t getFramePtr() const { return frame_ptr; }
 
    //! Initialise with the game configuration
-   void init(const ZStory& story_)
+   void init(const Z::Story& story_)
    {
       const ZHeader* header = story_.getHeader();
 

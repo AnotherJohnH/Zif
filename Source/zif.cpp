@@ -41,21 +41,27 @@ class ZifApp : public TRM::Launcher
 private:
    Options options;
 
-   virtual int startTerminalLauncher(const char* story) override
+   virtual int startTerminalLauncher(const char* story_file) override
    {
       ConsoleImpl console(term, options);
 
-      if (ZMachine::isPlayable(story))
+      Z::Story z_story;
+      if (z_story.load(story_file))
       {
-         ZMachine machine(console, options);
-
-         return machine.play(story, options.restore) ? 0 : 1;
+         ZMachine machine(console, options, z_story);
+         return machine.play() ? 0 : 1;
       }
-      else if (Glulx::Machine::isPlayable(story))
+      else
       {
-         Glulx::Machine machine(console, options);
+         Glulx::Story glulx_story;
+         if (glulx_story.load(story_file))
+         {
+            Glulx::Machine machine(console, options, glulx_story);
+            return machine.play() ? 0 : 1;
+         }
 
-         return machine.play(story) ? 0 : 1;
+         console.error(z_story.getLastError());
+         console.waitForKey();
       }
 
       return 0;

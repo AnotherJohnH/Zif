@@ -40,9 +40,10 @@
 #include "ZObject.h"
 #include "ZParser.h"
 #include "ZState.h"
-#include "ZStory.h"
 #include "ZText.h"
 #include "ZScreen.h"
+
+#include "Z/Story.h"
 
 //! Z machine implementation
 class ZMachine
@@ -53,8 +54,8 @@ private:
    static const unsigned MAX_OPERANDS = 8;
 
    Options&       options;
+   Z::Story&      story;
    ZState         state;
-   ZStory         story;
    Log            trace{"trace.log"};
    ZDisassembler  dis;
    Console&       console;
@@ -1458,8 +1459,9 @@ private:
    }
 
 public:
-   ZMachine(Console& console_, Options& options_)
+   ZMachine(Console& console_, Options& options_, Z::Story& story_)
       : options(options_)
+      , story(story_)
       , state((const char*)options.save_dir, options.undo, options.seed)
       , console(console_)
       , stream(console, options_, state.memory)
@@ -1469,21 +1471,10 @@ public:
    {
    }
 
-   static bool isPlayable(const std::string& filename)
-   {
-      return true; // TODO actually check
-   }
-
    //! Play a Z file.
    //! \return true if there were no errors
-   bool play(const std::string& filename, bool restore_save = false)
+   bool play()
    {
-      if (!story.load(filename))
-      {
-         error(story.getLastError().c_str());
-         return false;
-      }
-
       ZConfig config;
       config.interp_major_version = 1;
       config.interp_minor_version = 0;
@@ -1505,7 +1496,7 @@ public:
       info("Version  : z%d",  header->version);
       info("Checksum : %04X", header->checksum);
 
-      start(restore_save);
+      start(options.restore);
 
       if(options.trace)
       {

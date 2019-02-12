@@ -32,33 +32,19 @@
 
 #include "ZHeader.h"
 
+namespace Z {
+
 //! Manage Z story image
-class ZStory : public StoryBase
+class Story : public StoryBase<ZHeader>
 {
 public:
-   ZStory() = default;
-
-   //! Return pointer to initial state of Z header
-   const ZHeader* getHeader() const { return reinterpret_cast<const ZHeader*>(data()); }
+   Story() = default;
 
 private:
-   static const uint32_t GAME_START = sizeof(ZHeader);
-
-   //! Return pointer to initial state of Z header
-   ZHeader* getHeader() { return reinterpret_cast<ZHeader*>(image.data()); }
-
    virtual std::string getBlorbId() const override { return "ZCOD"; }
 
-   virtual bool loadImage(FILE* fp) override
+   virtual bool validateHeader(FILE* fp, size_t& size) override
    {
-      image.resize(sizeof(ZHeader));
-
-      if (fread(image.data(), sizeof(ZHeader), 1, fp) != 1)
-      {
-         error = "Failed to read Z header";
-         return false;
-      }
-
       const ZHeader* header = getHeader();
 
       if (!header->isVersionValid())
@@ -70,6 +56,7 @@ private:
 
       if (header->getStorySize() == 0)
       {
+         // Some older Z files had a zerp file size in the header
          if (fseek(fp, 0, SEEK_END) == 0)
          {
             long file_size = ftell(fp);
@@ -89,30 +76,26 @@ private:
          return false;
       }
 
-      image.resize(header->getStorySize());
-
-      if (fread(&image[GAME_START], image.size() - GAME_START, 1, fp) != 1)
-      {
-         error = "Failed to read Z body";
-         return false;
-      }
+      size = header->getStorySize();
 
       return true;
    }
 
-   virtual void validateImage() override
+   virtual bool validateImage() const override
    {
       const ZHeader* header = getHeader();
 
       uint16_t checksum = 0;
 
-      for(uint32_t i = GAME_START; i < header->getStorySize(); ++i)
+      for(uint32_t i = BODY_START; i < header->getStorySize(); ++i)
       {
          checksum += image[i];
       }
 
-      is_valid = checksum == header->checksum;
+      return checksum == header->checksum;
    }
 };
+
+} // namespace Z
 
 #endif

@@ -25,21 +25,27 @@
 
 #include "share/StoryBase.h"
 
+#include "Glulx/Header.h"
+
 namespace Glulx {
 
 //! Manage Glulx story image
-class Story : public StoryBase
+class Story : public StoryBase<Glulx::Header>
 {
 public:
    Story() = default;
 
-   bool loadImage(const std::string& path) override
+   virtual std::string getBlorbId() const override { return "GLUL"; }
+
+   virtual bool validateHeader(FILE* fp, size_t& file_size) override
    {
+      error = "not implemented";
       return false;
    }
 
-   bool validateImage() override
+   virtual bool validateImage() const override
    {
+      return false;
    }
 };
 

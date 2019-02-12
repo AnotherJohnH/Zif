@@ -31,6 +31,7 @@
 #include "Blorb.h"
 
 //! Base class for story image objects
+template <typename HEADER>
 class StoryBase
 {
 public:
@@ -38,6 +39,9 @@ public:
 
    //! Get error message for the last error
    const std::string& getLastError() const { return error; }
+
+   //! Return pointer to initial state of header
+   const HEADER* getHeader() const { return reinterpret_cast<const HEADER*>(image.data()); }
 
    //! Return true if previous load() was successful
    bool isLoadedOk() const { return !image.empty(); }
@@ -61,7 +65,6 @@ public:
 
       is_valid = false;
       filename = "";
-      error    = "";
    }
 
    //! Load story from file
@@ -69,33 +72,52 @@ public:
    {
       clear();
 
-      bool ok = false;
-
       FILE* fp = fopen(path.c_str(), "r");
       if (fp == nullptr)
       {
          error = "Failed to open story file \'";
          error += path;
          error += "\'";
+         return false;
+      }
+
+      bool ok = false;
+
+      if (!seekToHeader(fp, path))
+      {
+         error = "Failed to seek to header";
       }
       else
       {
-         if (!seekToHeader(fp, path))
+         image.resize(sizeof(HEADER));
+
+         if (fread(image.data(), sizeof(HEADER), 1, fp) != 1)
          {
-            error = "Failed to seek to header";
+            error = "Failed to read header";
          }
          else
          {
-            if (loadImage(fp))
+            size_t file_size;
+
+            if (validateHeader(fp, file_size))
             {
-               validateImage();
-               extractFilename(path);
-               ok = true;
+               image.resize(file_size);
+
+               if (fread(&image[BODY_START], file_size - BODY_START, 1, fp) != 1)
+               {
+                  error = "Failed to read body";
+               }
+               else
+               {
+                  is_valid = validateImage();
+                  extractFilename(path);
+                  ok = true;
+               }
             }
          }
-
-         fclose(fp);
       }
+
+      fclose(fp);
 
       if (!ok)
       {
@@ -106,21 +128,28 @@ public:
    }
 
 protected:
+   static const uint32_t BODY_START = sizeof(HEADER);
+
    std::vector<uint8_t> image;
-   bool                 is_valid{false};
-   std::string          filename{};
    std::string          error{};
 
    //! Get image Blorb Id 
    virtual std::string getBlorbId() const = 0;
 
-   //! Check loaded the story image
-   virtual bool loadImage(FILE* fp) = 0;
+   //! Check header and return story size
+   virtual bool validateHeader(FILE* fp, size_t& size) = 0;
 
    //! Check loaded image matches the checksum in the header
-   virtual void validateImage() = 0;
+   virtual bool validateImage() const = 0;
 
-   bool seekToHeader(FILE* fp, const std::string& path)
+   //! Return pointer to header
+   HEADER* getHeader() { return reinterpret_cast<HEADER*>(image.data()); }
+
+private:
+   bool        is_valid{false};
+   std::string filename{};
+
+   bool seekToHeader(FILE* fp, const std::string& path) const
    {
       if (path.find("blorb") != std::string::npos)
       {

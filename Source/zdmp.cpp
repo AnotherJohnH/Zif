@@ -23,7 +23,7 @@
 #include "Z/ZMemory.h"
 #include "Z/ZQuetzal.h"
 #include "Z/ZStack.h"
-#include "Z/ZStory.h"
+#include "Z/Story.h"
 
 #include "STB/ConsoleApp.h"
 
@@ -50,7 +50,7 @@ private:
    std::ostream* out{&std::cout};
 
    std::string filename;
-   ZStory      story;
+   Z::Story    story;
    ZQuetzal    quetzal;
 
    uint32_t    pc;

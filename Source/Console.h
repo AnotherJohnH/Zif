@@ -120,14 +120,20 @@ public:
    virtual void write(uint8_t ch) = 0;
 
    //! Write string
-   virtual void write(unsigned line, unsigned col, const std::string& str)
+   void writeString(const std::string& text)
    {
-      moveCursor(line, col);
-
-      for(const auto& ch : str)
+      for(const auto& ch : text)
       {
          write(ch);
       }
+   }
+
+   //! Report an error
+   void error(const std::string& text)
+   {
+      writeString("ERR: ");
+      writeString(text);
+      write('\n');
    }
 };
 

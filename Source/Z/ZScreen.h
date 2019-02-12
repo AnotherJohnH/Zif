@@ -147,7 +147,8 @@ public:
       // Inverse video header bar
       console.setFontStyle(Console::FONT_STYLE_REVERSE);
 
-      console.write(1, 1, text);
+      console.moveCursor(1, 1);
+      console.writeString(text);
 
       // Restore cursor and style
       console.setFontStyle(0);

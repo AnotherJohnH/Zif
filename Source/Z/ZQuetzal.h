@@ -27,7 +27,7 @@
 
 #include "STB/IFF.h"
 
-#include "ZStory.h"
+#include "Z/Story.h"
 #include "ZStack.h"
 #include "ZMemory.h"
 
@@ -41,11 +41,11 @@ public:
    const std::string& getLastError() const { return error; }
 
    //! Save the ZMachine state in this Quetzal object
-   void encode(const ZStory&  story,
-               uint32_t       pc,
-               uint32_t       rand_num_state,
-               const ZMemory& memory,
-               const ZStack&  stack)
+   void encode(const Z::Story& story,
+               uint32_t        pc,
+               uint32_t        rand_num_state,
+               const ZMemory&  memory,
+               const ZStack&   stack)
    {
       encodeHeader(story, pc);
       encodeMemory(story, memory);
@@ -54,11 +54,11 @@ public:
    }
 
    //! Restore the ZMachine state from this Quetzal object
-   bool decode(const ZStory& story,
-               uint32_t&     pc,
-               uint32_t&     rand_num_state,
-               ZMemory&      memory,
-               ZStack&       stack)
+   bool decode(const Z::Story& story,
+               uint32_t&       pc,
+               uint32_t&       rand_num_state,
+               ZMemory&        memory,
+               ZStack&         stack)
    {
       error = "";
 
@@ -127,7 +127,7 @@ private:
    }
 
    //! Prepare IFhd chunk
-   void encodeHeader(const ZStory& story, uint32_t pc)
+   void encodeHeader(const Z::Story& story, uint32_t pc)
    {
       STB::IFF::Chunk* ifhd_chunk = doc.newChunk("IFhd", 13);
       const ZHeader*   header     = story.getHeader();
@@ -144,7 +144,7 @@ private:
    }
 
    //! Prepare CMem chunk
-   void encodeMemory(const ZStory&  story, const ZMemory& memory)
+   void encodeMemory(const Z::Story&  story, const ZMemory& memory)
    {
       STB::IFF::Chunk* cmem = doc.newChunk("CMem");
 
@@ -203,7 +203,7 @@ private:
    }
 
    //! Decode IFhd chunk
-   bool decodeHeader(const ZStory& story, uint32_t& pc)
+   bool decodeHeader(const Z::Story& story, uint32_t& pc)
    {
        const IFhd* ifhd = doc.load<IFhd>("IFhd");
        if (ifhd == nullptr)
@@ -232,7 +232,7 @@ private:
    }
 
    //! Read and decode CMem or UMem chunk
-   bool decodeMemory(const ZStory& story, ZMemory& memory)
+   bool decodeMemory(const Z::Story& story, ZMemory& memory)
    {
       uint32_t size = 0;
 

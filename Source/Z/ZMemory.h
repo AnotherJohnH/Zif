@@ -27,7 +27,7 @@
 #include <cstdint>
 #include <cstring>
 
-#include "ZStory.h"
+#include "Z/Story.h"
 
 //! Z machine memory
 class ZMemory
@@ -50,7 +50,7 @@ public:
    ZHeader* getHeader() { return reinterpret_cast<ZHeader*>(data); }
 
    //! Configure memory for a game
-   bool init(const ZStory& story_)
+   bool init(const Z::Story& story_)
    {
       const ZHeader* header = story_.getHeader();
 
@@ -167,11 +167,11 @@ public:
 private:
    static const Address MAX_SIZE{512 * 1024};
 
-   const ZStory* story{nullptr};
-   Address       static_mem{0};
-   Address       static_mem_end{0};
-   Address       size{0};
-   uint8_t       data[MAX_SIZE];
+   const Z::Story* story{nullptr};
+   Address         static_mem{0};
+   Address         static_mem_end{0};
+   Address         size{0};
+   uint8_t         data[MAX_SIZE];
 };
 
 #endif

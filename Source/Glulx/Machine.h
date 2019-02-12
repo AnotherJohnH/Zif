@@ -24,6 +24,7 @@
 #define GLULX_MACHINE_H
 
 #include "Glulx/State.h"
+#include "Glulx/Story.h"
 
 namespace Glulx {
 
@@ -31,16 +32,11 @@ namespace Glulx {
 class Machine
 {
 public:
-   Machine(Console& console_, Options& options_)
+   Machine(Console& console_, Options& options_, Glulx::Story& story_)
    {
    }
 
-   static bool isPlayable(const std::string& filename)
-   {
-      return false;
-   }
-
-   bool play(const std::string& filename)
+   bool play()
    {
       return false;
    }
