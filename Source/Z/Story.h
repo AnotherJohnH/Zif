@@ -92,7 +92,7 @@ private:
          checksum += image[i];
       }
 
-      return checksum == header->checksum;
+      return header->checksum == checksum;
    }
 };
 

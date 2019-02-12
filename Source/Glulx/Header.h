@@ -30,8 +30,10 @@ namespace Glulx {
 //! Glulx header
 struct Header
 {
-   STB::Big32 magic;
-   STB::Big32 glulx_version;
+   uint8_t    magic[4];
+   STB::Big16 version_major;
+   uint8_t    version_minor;
+   uint8_t    version_index;
    STB::Big32 ram_start;
    STB::Big32 ext_start;
    STB::Big32 end_mem;

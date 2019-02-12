@@ -39,13 +39,36 @@ public:
 
    virtual bool validateHeader(FILE* fp, size_t& file_size) override
    {
-      error = "not implemented";
-      return false;
+      const Header* header = getHeader();
+
+      if ((header->magic[0] != 'G') ||
+          (header->magic[0] != 'l') ||
+          (header->magic[0] != 'u') ||
+          (header->magic[0] != 'l'))
+      {
+         error = "Invalid Glulx magic key";
+         return false;
+      }
+
+      file_size = header->ext_start;
+
+      return true;
    }
 
    virtual bool validateImage() const override
    {
-      return false;
+      const Header* header = getHeader();
+
+      uint32_t checksum = 0;
+
+      for(size_t i=0; i<header->ext_start; i+= 4)
+      {
+         const uint32_t& word = (const uint32_t&) image[i];
+         // XXX assuming the host machine is little endian
+         checksum += STB::endianSwap(word);
+      }
+
+      return header->checksum == checksum;
    }
 };
 
