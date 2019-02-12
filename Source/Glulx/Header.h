@@ -20,58 +20,27 @@
 // SOFTWARE.
 //------------------------------------------------------------------------------
 
-#include "ConsoleImpl.h"
-#include "Options.h"
-#include "Z/ZMachine.h"
-#include "Glulx/Machine.h"
+#ifndef GLULX_HEADER_H
+#define GLULX_HEADER_H
 
-#include "TRM/Launcher.h"
+#include "STB/Endian.h"
 
-#define  PROGRAM         "Zif"
-#define  DESCRIPTION     "Z-code engine for interactive fiction"
-#define  LINK            "https://github.com/AnotherJohnH/Zif"
-#define  AUTHOR          "John D. Haughton"
-#define  VERSION         PROJ_VERSION
-#define  COPYRIGHT_YEAR  "2015-2019"
+namespace Glulx {
 
-
-//! The Zif Launcher Application
-class ZifApp : public TRM::Launcher
+//! Glulx header
+struct Header
 {
-private:
-   Options options;
-
-   virtual int startTerminalLauncher(const char* story) override
-   {
-      ConsoleImpl console(term, options);
-
-      if (ZMachine::isPlayable(story))
-      {
-         ZMachine machine(console, options);
-
-         return machine.play(story, options.restore) ? 0 : 1;
-      }
-      else if (Glulx::Machine::isPlayable(story))
-      {
-         Glulx::Machine machine(console, options);
-
-         return machine.play(story) ? 0 : 1;
-      }
-
-      return 0;
-   }
-
-public:
-   ZifApp(int argc, const char* argv[])
-      : TRM::Launcher(PROGRAM, DESCRIPTION, LINK, AUTHOR, VERSION, COPYRIGHT_YEAR,
-                      "[<story-file>]", "zif.cfg")
-   {
-      parseArgsAndStart(argc, argv);
-   }
+   STB::Big32 magic;
+   STB::Big32 glulx_version;
+   STB::Big32 ram_start;
+   STB::Big32 ext_start;
+   STB::Big32 end_mem;
+   STB::Big32 stack_size;
+   STB::Big32 start_func;
+   STB::Big32 decoding_table;
+   STB::Big32 checksum;
 };
 
+} // namespace Glulx
 
-int main(int argc, const char* argv[])
-{
-   ZifApp(argc, argv);
-}
+#endif

@@ -20,58 +20,32 @@
 // SOFTWARE.
 //------------------------------------------------------------------------------
 
-#include "ConsoleImpl.h"
-#include "Options.h"
-#include "Z/ZMachine.h"
-#include "Glulx/Machine.h"
+#ifndef GLULX_MACHINE_H
+#define GLULX_MACHINE_H
 
-#include "TRM/Launcher.h"
+#include "Glulx/State.h"
 
-#define  PROGRAM         "Zif"
-#define  DESCRIPTION     "Z-code engine for interactive fiction"
-#define  LINK            "https://github.com/AnotherJohnH/Zif"
-#define  AUTHOR          "John D. Haughton"
-#define  VERSION         PROJ_VERSION
-#define  COPYRIGHT_YEAR  "2015-2019"
+namespace Glulx {
 
-
-//! The Zif Launcher Application
-class ZifApp : public TRM::Launcher
+//! Glulx machine implementation
+class Machine
 {
-private:
-   Options options;
-
-   virtual int startTerminalLauncher(const char* story) override
+public:
+   Machine(Console& console_, Options& options_)
    {
-      ConsoleImpl console(term, options);
-
-      if (ZMachine::isPlayable(story))
-      {
-         ZMachine machine(console, options);
-
-         return machine.play(story, options.restore) ? 0 : 1;
-      }
-      else if (Glulx::Machine::isPlayable(story))
-      {
-         Glulx::Machine machine(console, options);
-
-         return machine.play(story) ? 0 : 1;
-      }
-
-      return 0;
    }
 
-public:
-   ZifApp(int argc, const char* argv[])
-      : TRM::Launcher(PROGRAM, DESCRIPTION, LINK, AUTHOR, VERSION, COPYRIGHT_YEAR,
-                      "[<story-file>]", "zif.cfg")
+   static bool isPlayable(const std::string& filename)
    {
-      parseArgsAndStart(argc, argv);
+      return false;
+   }
+
+   bool play(const std::string& filename)
+   {
+      return false;
    }
 };
 
+} // namespace Glulx
 
-int main(int argc, const char* argv[])
-{
-   ZifApp(argc, argv);
-}
+#endif

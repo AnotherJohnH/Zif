@@ -20,58 +20,29 @@
 // SOFTWARE.
 //------------------------------------------------------------------------------
 
-#include "ConsoleImpl.h"
-#include "Options.h"
-#include "Z/ZMachine.h"
-#include "Glulx/Machine.h"
+#ifndef GLULX_STORY_H
+#define GLULX_STORY_H
 
-#include "TRM/Launcher.h"
+#include "share/StoryBase.h"
 
-#define  PROGRAM         "Zif"
-#define  DESCRIPTION     "Z-code engine for interactive fiction"
-#define  LINK            "https://github.com/AnotherJohnH/Zif"
-#define  AUTHOR          "John D. Haughton"
-#define  VERSION         PROJ_VERSION
-#define  COPYRIGHT_YEAR  "2015-2019"
+namespace Glulx {
 
-
-//! The Zif Launcher Application
-class ZifApp : public TRM::Launcher
+//! Manage Glulx story image
+class Story : public StoryBase
 {
-private:
-   Options options;
+public:
+   Story() = default;
 
-   virtual int startTerminalLauncher(const char* story) override
+   bool loadImage(const std::string& path) override
    {
-      ConsoleImpl console(term, options);
-
-      if (ZMachine::isPlayable(story))
-      {
-         ZMachine machine(console, options);
-
-         return machine.play(story, options.restore) ? 0 : 1;
-      }
-      else if (Glulx::Machine::isPlayable(story))
-      {
-         Glulx::Machine machine(console, options);
-
-         return machine.play(story) ? 0 : 1;
-      }
-
-      return 0;
+      return false;
    }
 
-public:
-   ZifApp(int argc, const char* argv[])
-      : TRM::Launcher(PROGRAM, DESCRIPTION, LINK, AUTHOR, VERSION, COPYRIGHT_YEAR,
-                      "[<story-file>]", "zif.cfg")
+   bool validateImage() override
    {
-      parseArgsAndStart(argc, argv);
    }
 };
 
+} // namespace Glulx
 
-int main(int argc, const char* argv[])
-{
-   ZifApp(argc, argv);
-}
+#endif

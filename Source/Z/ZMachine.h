@@ -365,7 +365,7 @@ private:
    void op0_show_status() { showStatus(); }
 
    //! verify ?(label)
-   void op0_verify() { branch(story.isChecksumOk()); }
+   void op0_verify() { branch(story.isValid()); }
 
    //! piracy ?(label)
    void op0_piracy() { branch(true); }
@@ -1424,7 +1424,7 @@ private:
    {
       state.reset();
 
-      if((version() >= 3) && !story.isChecksumOk())
+      if((version() >= 3) && !story.isValid())
       {
          if (version() == 3)
          {
@@ -1467,6 +1467,11 @@ public:
       , object(state.memory)
       , text(state.memory)
    {
+   }
+
+   static bool isPlayable(const std::string& filename)
+   {
+      return true; // TODO actually check
    }
 
    //! Play a Z file.

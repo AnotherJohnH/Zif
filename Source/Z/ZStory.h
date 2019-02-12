@@ -28,155 +28,79 @@
 #include <string>
 #include <vector>
 
+#include "share/StoryBase.h"
+
 #include "ZHeader.h"
-#include "ZBlorb.h"
 
 //! Manage Z story image
-class ZStory
+class ZStory : public StoryBase
 {
 public:
    ZStory() = default;
 
-   //! Get error message for the last error
-   const std::string& getLastError() const { return error; }
-
-   //! Return true if previous load() was successful
-   bool isLoadedOk() const { return !image.empty(); }
-
-   //! Return true if previous load() was successful and checksum matches
-   bool isChecksumOk() const { return checksum_ok; }
-
-   //! Return name of ZStory file from previous succesful load()
-   const std::string& getFilename() const { return filename; }
-
    //! Return pointer to initial state of Z header
    const ZHeader* getHeader() const { return reinterpret_cast<const ZHeader*>(data()); }
-
-   //! Return pointer to initial state of Z story
-   const uint8_t* data() const { return image.data(); }
-
-   //! Return size of story (bytes)
-   size_t size() const { return image.size(); }
-
-   bool load(const std::string& path)
-   {
-      error = "";
-
-      bool ok = false;
-
-      FILE* fp = fopen(path.c_str(), "r");
-      if (fp == nullptr)
-      {
-         error = "Failed to open story Z-file \'";
-         error += path;
-         error += "\'";
-      }
-      else
-      {
-         if (!seekToZHeader(fp, path))
-         {
-            error = "Failed to seek to Z header";
-         }
-         else
-         {
-            image.resize(sizeof(ZHeader));
-
-            if (fread(image.data(), sizeof(ZHeader), 1, fp) != 1)
-            {
-               error = "Failed to read Z header";
-            }
-            else
-            {
-               const ZHeader* header = getHeader();
-
-               if (!header->isVersionValid())
-               {
-                  error = "Unexpected Z version ";
-                  error += std::to_string(header->version);
-               }
-               else
-               {
-                  if (header->getStorySize() == 0)
-                  {
-                     if (fseek(fp, 0, SEEK_END) == 0)
-                     {
-                        long file_size = ftell(fp);
-                        if (file_size > 0)
-                        {
-                           if (fseek(fp, sizeof(ZHeader), SEEK_SET) == 0)
-                           {
-                              getHeader()->setStorySize(file_size);
-                           }
-                        }
-                     }
-                  }
-
-                  if (header->getStorySize() == 0)
-                  {
-                     error = "Failed to find file size";
-                  }
-                  else
-                  {
-                     image.resize(header->getStorySize());
-
-                     if (fread(&image[GAME_START], image.size() - GAME_START, 1, fp) != 1)
-                     {
-                        error = "Failed to read Z body";
-                     }
-                     else
-                     {
-                        calcCheckSum();
-                        extractFilename(path);
-                        ok = true;
-                     }
-                  }
-               }
-            }
-         }
-
-         fclose(fp);
-      }
-
-      if (!ok)
-      {
-         image.clear();
-         checksum_ok = false;
-         filename = "";
-      }
-
-      return ok;
-   }
 
 private:
    static const uint32_t GAME_START = sizeof(ZHeader);
 
-   std::vector<uint8_t> image;
-   bool                 checksum_ok{false};
-   std::string          filename{};
-   std::string          error{};
-
    //! Return pointer to initial state of Z header
    ZHeader* getHeader() { return reinterpret_cast<ZHeader*>(image.data()); }
 
-   bool seekToZHeader(FILE* fp, const std::string& path)
-   {
-      if (path.find(".zblorb") != std::string::npos)
-      {
-         ZBlorb      zblorb{};
-         std::string type;
-         uint32_t    offset{0};
+   virtual std::string getBlorbId() const override { return "ZCOD"; }
 
-         if (zblorb.findResource(path, ZBlorb::Resource::EXEC, /* index */ 0, type, offset) &&
-             (type == "ZCOD"))
+   virtual bool loadImage(FILE* fp) override
+   {
+      image.resize(sizeof(ZHeader));
+
+      if (fread(image.data(), sizeof(ZHeader), 1, fp) != 1)
+      {
+         error = "Failed to read Z header";
+         return false;
+      }
+
+      const ZHeader* header = getHeader();
+
+      if (!header->isVersionValid())
+      {
+         error = "Unexpected Z version ";
+         error += std::to_string(header->version);
+         return false;
+      }
+
+      if (header->getStorySize() == 0)
+      {
+         if (fseek(fp, 0, SEEK_END) == 0)
          {
-            return fseek(fp, offset, SEEK_SET) == 0;
+            long file_size = ftell(fp);
+            if (file_size > 0)
+            {
+               if (fseek(fp, sizeof(ZHeader), SEEK_SET) == 0)
+               {
+                  getHeader()->setStorySize(file_size);
+               }
+            }
          }
+      }
+
+      if (header->getStorySize() == 0)
+      {
+         error = "Failed to find file size";
+         return false;
+      }
+
+      image.resize(header->getStorySize());
+
+      if (fread(&image[GAME_START], image.size() - GAME_START, 1, fp) != 1)
+      {
+         error = "Failed to read Z body";
+         return false;
       }
 
       return true;
    }
 
-   void calcCheckSum()
+   virtual void validateImage() override
    {
       const ZHeader* header = getHeader();
 
@@ -187,20 +111,7 @@ private:
          checksum += image[i];
       }
 
-      checksum_ok = checksum == header->checksum;
-   }
-
-   void extractFilename(const std::string& path)
-   {
-      size_t slash = path.rfind('/');
-      if (slash == std::string::npos)
-      {
-         filename = path;
-      }
-      else
-      {
-         filename = path.substr(slash + 1);
-      }
+      is_valid = checksum == header->checksum;
    }
 };
 

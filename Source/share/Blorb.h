@@ -20,12 +20,12 @@
 // SOFTWARE.
 //------------------------------------------------------------------------------
 
-#ifndef ZBLORB_H
-#define ZBLORB_H
+#ifndef BLORB_H
+#define BLORB_H
 
 #include "STB/IFF.h"
 
-class ZBlorb
+class Blorb
 {
 private:
    //! Resource index entry
@@ -50,7 +50,7 @@ public:
       SND
    };
 
-   ZBlorb() = default;
+   Blorb() = default;
 
    bool findResource(const std::string& filename,
                      Resource           resource,
