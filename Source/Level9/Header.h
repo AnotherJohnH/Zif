@@ -20,20 +20,19 @@
 // SOFTWARE.
 //------------------------------------------------------------------------------
 
-#ifndef GLULX_STATE_H
-#define GLULX_STATE_H
+#ifndef LEVEL9_HEADER_H
+#define LEVEL9_HEADER_H
 
-namespace Glulx {
+#include "STB/Endian.h"
 
-//! Glulx machine implementation
-class State
+namespace Level9 {
+
+//! Level9 header
+struct Header
 {
-public:
-   State()
-   {
-   }
+   uint8_t magic[4];
 };
 
-} // namespace Glulx
+} // namespace Level9
 
 #endif

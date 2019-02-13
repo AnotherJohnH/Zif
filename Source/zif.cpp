@@ -22,9 +22,12 @@
 
 #include "ConsoleImpl.h"
 #include "Options.h"
+
+#include "share/Blorb.h"
+
 #include "Z/ZMachine.h"
 #include "Glulx/Machine.h"
-#include "share/Blorb.h"
+#include "Level9/Machine.h"
 
 #include "TRM/Launcher.h"
 
@@ -41,6 +44,13 @@ class ZifApp : public TRM::Launcher
 {
 private:
    Options options;
+
+   int error(Console& console, const std::string& message)
+   {
+      console.error(message);
+      console.waitForKey();
+      return 1;
+   }
 
    virtual int startTerminalLauncher(const char* story_file) override
    {
@@ -70,8 +80,7 @@ private:
          }
          else
          {
-            console.error(z_story.getLastError());
-            return 1;
+            return error(console, z_story.getLastError());
          }
       }
 
@@ -85,13 +94,25 @@ private:
          }
          else
          {
-            console.error(glulx_story.getLastError());
-            return 1;
+            return error(console, glulx_story.getLastError());
          }
       }
 
-      console.error("Story file format not recognised");
-      return 1;
+      Level9::Story level9_story;
+      if ((exec_type == "LEVE") || level9_story.isRecognised(story_file))
+      {
+         if (level9_story.load(story_file, exec_offset))
+         {
+            Level9::Machine machine(console, options, level9_story);
+            return machine.play() ? 0 : 1;
+         }
+         else
+         {
+            return error(console, level9_story.getLastError());
+         }
+      }
+
+      return error(console,"Story file format not recognised");
    }
 
 public:

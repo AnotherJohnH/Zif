@@ -20,20 +20,34 @@
 // SOFTWARE.
 //------------------------------------------------------------------------------
 
-#ifndef GLULX_STATE_H
-#define GLULX_STATE_H
+#ifndef LEVEL9_MACHINE_H
+#define LEVEL9_MACHINE_H
 
-namespace Glulx {
+#include "Level9/State.h"
+#include "Level9/Story.h"
 
-//! Glulx machine implementation
-class State
+namespace Level9 {
+
+//! Level9 machine implementation
+class Machine
 {
 public:
-   State()
+   Machine(Console& console_, Options& options_, Level9::Story& story_)
+      : console(console_)
    {
    }
+
+   bool play()
+   {
+      console.error("Level9 games are not currently supported");
+      console.waitForKey();
+      return false;
+   }
+
+private:
+   Console& console;
 };
 
-} // namespace Glulx
+} // namespace Level9
 
 #endif

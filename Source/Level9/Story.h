@@ -20,20 +20,63 @@
 // SOFTWARE.
 //------------------------------------------------------------------------------
 
-#ifndef GLULX_STATE_H
-#define GLULX_STATE_H
+#ifndef LEVEL9_STORY_H
+#define LEVEL9_STORY_H
 
-namespace Glulx {
+#include "share/StoryBase.h"
 
-//! Glulx machine implementation
-class State
+#include "Level9/Header.h"
+
+namespace Level9 {
+
+//! Manage Level9 story image
+class Story : public StoryBase<Level9::Header>
 {
 public:
-   State()
+   Story() = default;
+
+   virtual bool checkHeader(FILE* fp) override
    {
+      uint8_t magic[4];
+
+      if (fread(&magic, 1, 4, fp) == 4)
+      {
+         return isMagic(magic);
+      }
+
+      return false;
+   }
+
+   virtual bool validateHeader(FILE* fp, size_t& file_size) override
+   {
+      const Header* header = getHeader();
+
+      if (!isMagic(header->magic))
+      {
+         error = "Invalid Level9 magic key";
+         return false;
+      }
+
+      file_size = 0;
+
+      return true;
+   }
+
+   virtual bool validateImage() const override
+   {
+      return true;
+   }
+
+private:
+   bool isMagic(const uint8_t* magic)
+   {
+      return (magic[0] == 0xFE) &&
+             (magic[1] == 0x58) &&
+             (magic[2] == 0x27) &&
+             (magic[3] == 0x9B);
    }
 };
 
-} // namespace Glulx
+} // namespace Level9
 
 #endif

@@ -20,12 +20,12 @@
 // SOFTWARE.
 //------------------------------------------------------------------------------
 
-#ifndef GLULX_STATE_H
-#define GLULX_STATE_H
+#ifndef LEVEL9_STATE_H
+#define LEVEL9_STATE_H
 
-namespace Glulx {
+namespace Level9 {
 
-//! Glulx machine implementation
+//! Level9 machine implementation
 class State
 {
 public:
@@ -34,6 +34,6 @@ public:
    }
 };
 
-} // namespace Glulx
+} // namespace Level9
 
 #endif

@@ -1,5 +1,5 @@
 //------------------------------------------------------------------------------
-// Copyright (c) 2016 John D. Haughton
+// Copyright (c) 2019 John D. Haughton
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -33,13 +33,19 @@ class Machine
 {
 public:
    Machine(Console& console_, Options& options_, Glulx::Story& story_)
+      : console(console_)
    {
    }
 
    bool play()
    {
+      console.error("Glulx games are not currently supported");
+      console.waitForKey();
       return false;
    }
+
+private:
+   Console& console;
 };
 
 } // namespace Glulx
