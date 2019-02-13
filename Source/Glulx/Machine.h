@@ -42,6 +42,8 @@ public:
 
    bool play()
    {
+      state.reset();
+
       (void) options;
       (void) story;
       console.error("Glulx games are not currently supported");

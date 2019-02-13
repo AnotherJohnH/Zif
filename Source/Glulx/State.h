@@ -23,6 +23,9 @@
 #ifndef GLULX_STATE_H
 #define GLULX_STATE_H
 
+#include <cstring>
+#include <vector>
+
 #include "Glulx/Story.h"
 
 namespace Glulx {
@@ -34,13 +37,30 @@ public:
    State(const Story& story_)
       : story(story_)
    {
+      const Header* header = story.getHeader();
+
+      memory.resize(header->end_mem);
    }
 
-//private:
-   const Story& story;
-   uint32_t     pc{0};
-   uint32_t     stack_ptr{0};
-   uint32_t     frame_ptr{0};
+   void reset()
+   {
+      const Header* header = story.getHeader();
+
+      pc        = header->start_func;
+      frame_ptr = 0;
+
+      memcpy(memory.data(), story.data(), story.size());
+      memset(memory.data() + header->ext_start, 0, header->end_mem - header->ext_start);
+
+      stack.clear();
+   }
+
+private:
+   const Story&         story;
+   uint32_t             pc{0};
+   uint32_t             frame_ptr{0};
+   std::vector<uint8_t> memory;
+   std::vector<uint8_t> stack;
 };
 
 } // namespace Glulx
