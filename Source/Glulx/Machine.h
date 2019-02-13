@@ -36,6 +36,7 @@ public:
       : console(console_)
       , options(options_)
       , story(story_)
+      , state(story_)
    {
    }
 

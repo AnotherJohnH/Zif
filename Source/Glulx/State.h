@@ -23,20 +23,24 @@
 #ifndef GLULX_STATE_H
 #define GLULX_STATE_H
 
+#include "Glulx/Story.h"
+
 namespace Glulx {
 
 //! Glulx machine implementation
 class State
 {
 public:
-   State()
+   State(const Story& story_)
+      : story(story_)
    {
    }
 
 //private:
-   uint32_t pc{0};
-   uint32_t stack_ptr{0};
-   uint32_t frame_ptr{0};
+   const Story& story;
+   uint32_t     pc{0};
+   uint32_t     stack_ptr{0};
+   uint32_t     frame_ptr{0};
 };
 
 } // namespace Glulx

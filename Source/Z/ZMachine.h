@@ -1463,7 +1463,7 @@ public:
       : console(console_)
       , options(options_)
       , story(story_)
-      , state((const char*)options.save_dir, options.undo, options.seed)
+      , state(story_, (const char*)options.save_dir, options.undo, options.seed)
       , stream(console, options_, state.memory)
       , screen(console, stream)
       , object(state.memory)
@@ -1478,8 +1478,6 @@ public:
       ZConfig config;
       config.interp_major_version = 1;
       config.interp_minor_version = 0;
-
-      state.init(story);
 
       header = state.memory.getHeader();
       header->init(console, config);

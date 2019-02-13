@@ -41,8 +41,8 @@ private:
    static const uint32_t GAME_START = sizeof(ZHeader);
 
    // Static configuration
+   const Z::Story&  story;
    std::string      save_dir;
-   const Z::Story*  story{nullptr};
    uint16_t         initial_rand_seed{0};
    uint32_t         game_end{0};
    uint32_t         global_base{0};
@@ -67,13 +67,25 @@ private:
    mutable Error exit_code{Error::NONE};
 
 public:
-   ZState(const std::string& save_dir_,
-          unsigned num_undo,
-          uint16_t initial_rand_seed_)
-      : save_dir(save_dir_)
+   ZState(const Z::Story&    story_,
+          const std::string& save_dir_,
+          unsigned           num_undo,
+          uint16_t           initial_rand_seed_)
+      : story(story_)
+      , save_dir(save_dir_)
       , initial_rand_seed(initial_rand_seed_)
    {
-       undo.resize(num_undo);
+      undo.resize(num_undo);
+
+      const ZHeader* header = story.getHeader();
+
+      game_end     = header->getStorySize();
+      global_base  = header->glob;
+
+      if (!memory.init(story))
+      {
+         error(Error::BAD_CONFIG);
+      }
    }
 
    //! Return whether the machine should stop
@@ -85,21 +97,6 @@ public:
    //! Current value of the frame pointer
    uint16_t getFramePtr() const { return frame_ptr; }
 
-   //! Initialise with the game configuration
-   void init(const Z::Story& story_)
-   {
-      const ZHeader* header = story_.getHeader();
-
-      story        = &story_;
-      game_end     = header->getStorySize();
-      global_base  = header->glob;
-
-      if (!memory.init(story_))
-      {
-         error(Error::BAD_CONFIG);
-      }
-   }
-
    //! Reset the dynamic state to the initial conditions.
    void reset()
    {
@@ -107,7 +104,7 @@ public:
 
       random(-(initial_rand_seed & 0x7FFF));
 
-      jump(story->getHeader()->getEntryPoint());
+      jump(story.getHeader()->getEntryPoint());
 
       frame_ptr = 0;
 
@@ -120,7 +117,7 @@ public:
    bool save(const std::string& name)
    {
       pushContext();
-      save_file.encode(*story, pc, rand_state, memory, stack);
+      save_file.encode(story, pc, rand_state, memory, stack);
       popContext();
 
       // Make sure the save directory exists
@@ -143,7 +140,7 @@ public:
       path += ".qzl";
 
       if (save_file.read(path) &&
-          save_file.decode(*story, pc, rand_state, memory, stack))
+          save_file.decode(story, pc, rand_state, memory, stack))
       {
          validatePC();
          popContext();
@@ -159,7 +156,7 @@ public:
       if (undo.size() == 0) return false;
 
       pushContext();
-      undo[undo_next].encode(*story, pc, rand_state, memory, stack);
+      undo[undo_next].encode(story, pc, rand_state, memory, stack);
       popContext();
 
       undo_next = (undo_next + 1) % undo.size();
@@ -179,7 +176,7 @@ public:
       undo_next = undo_next == 0 ? undo.size() - 1
                                  : undo_next - 1;
 
-      undo[undo_next].decode(*story, pc, rand_state, memory, stack);
+      undo[undo_next].decode(story, pc, rand_state, memory, stack);
       popContext();
 
       return true;
