@@ -80,17 +80,11 @@ public:
    {
       error = "";
 
-      if (!doc.read(path))
+      if (!doc.read(path, "FORM", "IFZS"))
       {
          error = "Failed to open Quetzal save file '";
          error += path;
          error += "'";
-         return false;
-      }
-
-      if (!doc.isDocType("FORM") || !doc.isFileType("IFZS"))
-      {
-         error = "File is not an IFF FORM of type IFZS";
          return false;
       }
 

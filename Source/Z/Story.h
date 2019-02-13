@@ -41,7 +41,17 @@ public:
    Story() = default;
 
 private:
-   virtual std::string getBlorbId() const override { return "ZCOD"; }
+   virtual bool checkHeader(FILE* fp) override
+   {
+      uint8_t version;
+
+      if (fread(&version, 1, 1, fp) == 1)
+      {
+         return (version >= 1) && (version <= 8);
+      }
+
+      return false;
+   }
 
    virtual bool validateHeader(FILE* fp, size_t& size) override
    {

@@ -35,16 +35,23 @@ class Story : public StoryBase<Glulx::Header>
 public:
    Story() = default;
 
-   virtual std::string getBlorbId() const override { return "GLUL"; }
+   virtual bool checkHeader(FILE* fp) override
+   {
+      uint8_t magic[4];
+
+      if (fread(&magic, 1, 4, fp) == 4)
+      {
+         return isMagic(magic);
+      }
+
+      return false;
+   }
 
    virtual bool validateHeader(FILE* fp, size_t& file_size) override
    {
       const Header* header = getHeader();
 
-      if ((header->magic[0] != 'G') ||
-          (header->magic[0] != 'l') ||
-          (header->magic[0] != 'u') ||
-          (header->magic[0] != 'l'))
+      if (!isMagic(header->magic))
       {
          error = "Invalid Glulx magic key";
          return false;
@@ -69,6 +76,15 @@ public:
       }
 
       return header->checksum == checksum;
+   }
+
+private:
+   bool isMagic(const uint8_t* magic)
+   {
+      return (magic[0] == 'G') &&
+             (magic[1] == 'l') &&
+             (magic[2] == 'u') &&
+             (magic[3] == 'l');
    }
 };
 

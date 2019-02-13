@@ -28,8 +28,6 @@
 #include <string>
 #include <vector>
 
-#include "Blorb.h"
-
 //! Base class for story image objects
 template <typename HEADER>
 class StoryBase
@@ -67,8 +65,23 @@ public:
       filename = "";
    }
 
+   bool isRecognised(const std::string& path)
+   {
+      FILE* fp = fopen(path.c_str(), "r");
+      if (fp == nullptr)
+      {
+         return false;
+      }
+
+      bool recognised = checkHeader(fp);
+
+      fclose(fp);
+
+      return recognised;
+   }
+
    //! Load story from file
-   bool load(const std::string& path)
+   bool load(const std::string& path, size_t offset = 0)
    {
       clear();
 
@@ -83,7 +96,7 @@ public:
 
       bool ok = false;
 
-      if (!seekToHeader(fp, path))
+      if (fseek(fp, offset, SEEK_SET) != 0)
       {
          error = "Failed to seek to header";
       }
@@ -133,13 +146,13 @@ protected:
    std::vector<uint8_t> image;
    std::string          error{};
 
-   //! Get image Blorb Id 
-   virtual std::string getBlorbId() const = 0;
+   //! Check header is the right format
+   virtual bool checkHeader(FILE* fp) = 0;
 
-   //! Check header and return story size
+   //! Validate header and return story size
    virtual bool validateHeader(FILE* fp, size_t& size) = 0;
 
-   //! Check loaded image matches the checksum in the header
+   //! Validate loaded image 
    virtual bool validateImage() const = 0;
 
    //! Return pointer to header
@@ -148,24 +161,6 @@ protected:
 private:
    bool        is_valid{false};
    std::string filename{};
-
-   bool seekToHeader(FILE* fp, const std::string& path) const
-   {
-      if (path.find("blorb") != std::string::npos)
-      {
-         Blorb       blorb{};
-         std::string type;
-         uint32_t    offset{0};
-
-         if (blorb.findResource(path, Blorb::Resource::EXEC, /* index */ 0, type, offset) &&
-             (type == getBlorbId()))
-         {
-            return fseek(fp, offset, SEEK_SET) == 0;
-         }
-      }
-
-      return true;
-   }
 
    void extractFilename(const std::string& path)
    {

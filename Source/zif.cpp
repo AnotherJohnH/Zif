@@ -24,6 +24,7 @@
 #include "Options.h"
 #include "Z/ZMachine.h"
 #include "Glulx/Machine.h"
+#include "share/Blorb.h"
 
 #include "TRM/Launcher.h"
 
@@ -45,26 +46,52 @@ private:
    {
       ConsoleImpl console(term, options);
 
-      Z::Story z_story;
-      if (z_story.load(story_file))
+      Blorb       blorb;
+      std::string exec_type;
+      uint32_t    exec_offset{0};
+
+      if (!blorb.findResource(story_file,
+                              Blorb::Resource::EXEC,
+                              /* index */ 0,
+                              exec_type,
+                              exec_offset))
       {
-         ZMachine machine(console, options, z_story);
-         return machine.play() ? 0 : 1;
+         exec_type   = "?";
+         exec_offset = 0;
       }
-      else
+
+      Z::Story z_story;
+      if ((exec_type == "ZCOD") || z_story.isRecognised(story_file))
       {
-         Glulx::Story glulx_story;
-         if (glulx_story.load(story_file))
+         if (z_story.load(story_file, exec_offset))
+         {
+            ZMachine machine(console, options, z_story);
+            return machine.play() ? 0 : 1;
+         }
+         else
+         {
+            console.error(z_story.getLastError());
+            return 1;
+         }
+      }
+
+      Glulx::Story glulx_story;
+      if ((exec_type == "GLUL") || glulx_story.isRecognised(story_file))
+      {
+         if (glulx_story.load(story_file, exec_offset))
          {
             Glulx::Machine machine(console, options, glulx_story);
             return machine.play() ? 0 : 1;
          }
-
-         console.error(z_story.getLastError());
-         console.waitForKey();
+         else
+         {
+            console.error(glulx_story.getLastError());
+            return 1;
+         }
       }
 
-      return 0;
+      console.error("Story file format not recognised");
+      return 1;
    }
 
 public:
