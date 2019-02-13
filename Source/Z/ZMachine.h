@@ -53,20 +53,20 @@ private:
 
    static const unsigned MAX_OPERANDS = 8;
 
-   Options&       options;
-   Z::Story&      story;
-   ZState         state;
-   Log            trace{"trace.log"};
-   ZDisassembler  dis;
-   Console&       console;
-   ZStream        stream;
-   ZScreen        screen;
-   ZObject        object;
-   ZText          text;
-   ZParser        parser;
-   ZHeader*       header{};
-   uint32_t       inst_addr;
-   unsigned       num_arg;
+   Console&        console;
+   const Options&  options;
+   const Z::Story& story;
+   ZState          state;
+   Log             trace{"trace.log"};
+   ZDisassembler   dis;
+   ZStream         stream;
+   ZScreen         screen;
+   ZObject         object;
+   ZText           text;
+   ZParser         parser;
+   ZHeader*        header{};
+   uint32_t        inst_addr;
+   unsigned        num_arg;
    union
    {
       uint16_t uarg[MAX_OPERANDS];
@@ -1459,11 +1459,11 @@ private:
    }
 
 public:
-   ZMachine(Console& console_, Options& options_, Z::Story& story_)
-      : options(options_)
+   ZMachine(Console& console_, const Options& options_, const Z::Story& story_)
+      : console(console_)
+      , options(options_)
       , story(story_)
       , state((const char*)options.save_dir, options.undo, options.seed)
-      , console(console_)
       , stream(console, options_, state.memory)
       , screen(console, stream)
       , object(state.memory)

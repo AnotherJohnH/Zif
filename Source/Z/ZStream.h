@@ -43,7 +43,7 @@ public:
       ERROR
    };
 
-   ZStream(Console& console_, Options& options_, ZMemory& memory_)
+   ZStream(Console& console_, const Options& options_, ZMemory& memory_)
       : console(console_)
       , memory(memory_)
    {

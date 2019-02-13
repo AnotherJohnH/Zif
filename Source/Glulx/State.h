@@ -32,6 +32,11 @@ public:
    State()
    {
    }
+
+//private:
+   uint32_t pc{0};
+   uint32_t stack_ptr{0};
+   uint32_t frame_ptr{0};
 };
 
 } // namespace Glulx

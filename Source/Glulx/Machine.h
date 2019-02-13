@@ -32,20 +32,27 @@ namespace Glulx {
 class Machine
 {
 public:
-   Machine(Console& console_, Options& options_, Glulx::Story& story_)
+   Machine(Console& console_, const Options& options_, const Glulx::Story& story_)
       : console(console_)
+      , options(options_)
+      , story(story_)
    {
    }
 
    bool play()
    {
+      (void) options;
+      (void) story;
       console.error("Glulx games are not currently supported");
       console.waitForKey();
       return false;
    }
 
 private:
-   Console& console;
+   Console&       console;
+   const Options& options;
+   const Story&   story;
+   State          state;
 };
 
 } // namespace Glulx
