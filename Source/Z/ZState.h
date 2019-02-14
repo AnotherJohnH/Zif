@@ -103,7 +103,10 @@ public:
    {
       do_quit = false;
 
-      random.seed(initial_rand_seed);
+      if (initial_rand_seed != 0)
+      {
+         random.seed(initial_rand_seed);
+      }
 
       jump(story.getHeader()->getEntryPoint());
 

@@ -60,7 +60,10 @@ public:
 
       quit = false;
 
-      random.seed(initial_rand_seed);
+      if (initial_rand_seed != 0)
+      {
+         random.seed(initial_rand_seed);
+      }
 
       pc        = header->start_func;
       frame_ptr = 0;

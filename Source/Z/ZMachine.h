@@ -1419,12 +1419,9 @@ private:
       }
    }
 
-
    //! Reset machine state to intial conditions
    void start(bool restore_save)
    {
-      state.reset();
-
       if((version() >= 3) && !story.isValid())
       {
          if (version() == 3)
@@ -1437,6 +1434,8 @@ private:
             warning("Checksum fail");
          }
       }
+
+      state.reset();
 
       if (restore_save)
       {
