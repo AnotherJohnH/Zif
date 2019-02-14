@@ -40,12 +40,18 @@ public:
       const Header* header = story.getHeader();
 
       memory.resize(header->end_mem);
+      stack.reserve(header->stack_size);
    }
 
+   //! Return whether the machine should stop
+   bool isQuitRequested() const { return quit; }
+
+   //! Reset the dynamic state to the initial conditions.
    void reset()
    {
       const Header* header = story.getHeader();
 
+      quit      = false;
       pc        = header->start_func;
       frame_ptr = 0;
 
@@ -56,7 +62,11 @@ public:
    }
 
 private:
+   // Static configuration
    const Story&         story;
+
+   // Dynamic state
+   bool                 quit{false};
    uint32_t             pc{0};
    uint32_t             frame_ptr{0};
    std::vector<uint8_t> memory;
