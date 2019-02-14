@@ -23,30 +23,35 @@
 #ifndef RANDOM_H
 #define RANDOM_H
 
+#include <cstdint>
+
 //! Pseudo random number generator
 class Random
 {
 public:
    Random()
    {
-      setRandomSeed();
+      unpredictableSeed();
    }
 
-   uint32_t& getState() { return state; }
+   //! Access to internal state
+   uint32_t& internalState() { return state; }
 
-   void setSeed(uint32_t seed_)
+   //! Seed the random number generator
+   void seed(uint32_t seed_)
    {
-      state = seed_;
+      state = seed_ == 0 ? 1 : seed_;
    }
 
-   void setRandomSeed()
+   //! Set an unpredictable seed
+   void unpredictableSeed()
    {
-      // TODO re-seed with and unpredictable value
-      state = 1;
+      // TODO seed with an unpredictable value
+      seed(1);
    }
 
-   //! Get a random value
-   uint32_t getNext() const
+   //! Get the next random value
+   uint32_t get()
    {
       // use xorshift, it's fast and simple
       state ^= state << 13;

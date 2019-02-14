@@ -627,7 +627,7 @@ private:
 
    void opV_print_char()     { stream.writeChar(uarg[0]); }
    void opV_print_num()      { stream.writeNumber(sarg[0]); }
-   void opV_random()         { state.varWrite(state.fetchByte(), state.random(sarg[0])); }
+   void opV_random()         { state.varWrite(state.fetchByte(), state.randomOp(sarg[0])); }
    void opV_push()           { state.push(uarg[0]); }
 
    void opV_pull_v1()

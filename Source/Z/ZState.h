@@ -27,6 +27,7 @@
 #include "PLT/File.h"
 
 #include "share/Error.h"
+#include "share/Random.h"
 
 #include "ZHeader.h"
 #include "ZMemory.h"
@@ -54,7 +55,7 @@ private:
    unsigned              undo_next{0};
 
    // Dynamic state
-   uint32_t rand_state{1};
+   Random   random;
    uint32_t pc{0};
    uint16_t frame_ptr{0};
    ZStack   stack;
@@ -102,7 +103,7 @@ public:
    {
       do_quit = false;
 
-      random(-(initial_rand_seed & 0x7FFF));
+      random.seed(initial_rand_seed);
 
       jump(story.getHeader()->getEntryPoint());
 
@@ -117,7 +118,7 @@ public:
    bool save(const std::string& name)
    {
       pushContext();
-      save_file.encode(story, pc, rand_state, memory, stack);
+      save_file.encode(story, pc, random.internalState(), memory, stack);
       popContext();
 
       // Make sure the save directory exists
@@ -140,7 +141,7 @@ public:
       path += ".qzl";
 
       if (save_file.read(path) &&
-          save_file.decode(story, pc, rand_state, memory, stack))
+          save_file.decode(story, pc, random.internalState(), memory, stack))
       {
          validatePC();
          popContext();
@@ -156,7 +157,7 @@ public:
       if (undo.size() == 0) return false;
 
       pushContext();
-      undo[undo_next].encode(story, pc, rand_state, memory, stack);
+      undo[undo_next].encode(story, pc, random.internalState(), memory, stack);
       popContext();
 
       undo_next = (undo_next + 1) % undo.size();
@@ -176,7 +177,7 @@ public:
       undo_next = undo_next == 0 ? undo.size() - 1
                                  : undo_next - 1;
 
-      undo[undo_next].decode(story, pc, rand_state, memory, stack);
+      undo[undo_next].decode(story, pc, random.internalState(), memory, stack);
       popContext();
 
       return true;
@@ -305,22 +306,22 @@ public:
       return pop();
    }
 
-   //! Get a random value
-   uint16_t random(int16_t arg)
+   //! Implement random op
+   uint16_t randomOp(int16_t arg)
    {
-      if(arg <= 0)
+      if(arg == 0)
       {
-         rand_state = arg == 0 ? randomSeed() : -arg;
+         random.unpredictableSeed();
+         return 0;
+      }
+      else if(arg < 0)
+      {
+         random.seed(-arg);
          return 0;
       }
       else
       {
-         // use xorshift, it's fast and simple
-         rand_state ^= rand_state << 13;
-         rand_state ^= rand_state >> 17;
-         rand_state ^= rand_state << 5;
-
-         uint16_t value = (rand_state >> 16) & 0x7FFF;
+         uint16_t value = (random.get() >> 16) & 0x7FFF;
          return (value % arg) + 1;
       }
    }
@@ -412,12 +413,6 @@ private:
    {
       uint32_t value = pop() << 16;
       return value | pop();
-   }
-
-   uint32_t randomSeed()
-   {
-      // TODO re-seed with an unpredictable value
-      return 1;
    }
 };
 
