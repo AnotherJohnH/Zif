@@ -28,8 +28,9 @@
 
 #include "STB/Endian.h"
 
+#include "share/Console.h"
+
 #include "ZConfig.h"
-#include "Console.h"
 
 //! Overlay for a Z story header
 struct ZHeader

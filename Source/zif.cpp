@@ -20,9 +20,8 @@
 // SOFTWARE.
 //------------------------------------------------------------------------------
 
-#include "ConsoleImpl.h"
-#include "Options.h"
-
+#include "share/ConsoleImpl.h"
+#include "share/Options.h"
 #include "share/Blorb.h"
 
 #include "Z/ZMachine.h"

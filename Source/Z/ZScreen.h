@@ -23,7 +23,8 @@
 #ifndef Z_SCREEN_H
 #define Z_SCREEN_H
 
-#include "Console.h"
+#include "share/Console.h"
+
 #include "ZStream.h"
 
 #define DBGF if (0) printf

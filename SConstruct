@@ -3,7 +3,7 @@ binaries = ['zif','zdmp', 'zcrape']
 app      = 'Zif'
 version  = '0.5.7-Beta'
 
-source  = ['Source/ConsoleImpl.cpp',
+source  = ['Source/share/ConsoleImpl.cpp',
            'Source/Z/ZStream.cpp']
 
 # Get a build environment

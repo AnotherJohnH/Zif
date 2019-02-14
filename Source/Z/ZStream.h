@@ -25,9 +25,9 @@
 
 #include <cassert>
 
-#include "Console.h"
-#include "Log.h"
-#include "Options.h"
+#include "share/Console.h"
+#include "share/Log.h"
+#include "share/Options.h"
 
 #include "ZMemory.h"
 

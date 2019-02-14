@@ -26,7 +26,7 @@
 #include "STB/Stack.h"
 #include "PLT/File.h"
 
-#include "Error.h"
+#include "share/Error.h"
 
 #include "ZHeader.h"
 #include "ZMemory.h"

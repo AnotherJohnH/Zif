@@ -31,8 +31,8 @@
 #include <cstring>
 #include <string>
 
-#include "Options.h"
-#include "Log.h"
+#include "share/Options.h"
+#include "share/Log.h"
 
 #include "ZConfig.h"
 #include "ZDisassembler.h"
