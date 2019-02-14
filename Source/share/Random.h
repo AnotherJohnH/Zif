@@ -34,8 +34,8 @@ public:
       unpredictableSeed();
    }
 
-   //! Access to internal state
-   uint32_t& internalState() { return state; }
+   //! Access to internal state for save/restore
+   uint64_t& internalState() { return state; }
 
    //! Seed the random number generator
    void seed(uint32_t seed_)
@@ -50,18 +50,18 @@ public:
       seed(1);
    }
 
-   //! Get the next random value
+   //! Get the next pseudo random value
    uint32_t get()
    {
-      // use xorshift, it's fast and simple
-      state ^= state << 13;
-      state ^= state >> 17;
-      state ^= state << 5;
+      // use basic xorshift, it's fast and simple
+      state ^= uint32_t(state << 13);
+      state ^= uint32_t(state >> 17);
+      state ^= uint32_t(state << 5);
       return state;
    }
 
 private:
-   uint32_t state{1};
+   uint64_t state{1};
 };
 
 #endif

@@ -54,7 +54,7 @@ private:
    ZQuetzal    quetzal;
 
    uint32_t    pc;
-   uint32_t    rand_state;
+   uint64_t    rand_state;
    ZMemory     memory;
    ZStack      stack;
 

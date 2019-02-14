@@ -43,7 +43,7 @@ public:
    //! Save the ZMachine state in this Quetzal object
    void encode(const Z::Story& story,
                uint32_t        pc,
-               uint32_t        rand_num_state,
+               uint64_t        rand_num_state,
                const ZMemory&  memory,
                const ZStack&   stack)
    {
@@ -56,7 +56,7 @@ public:
    //! Restore the ZMachine state from this Quetzal object
    bool decode(const Z::Story& story,
                uint32_t&       pc,
-               uint32_t&       rand_num_state,
+               uint64_t&       rand_num_state,
                ZMemory&        memory,
                ZStack&         stack)
    {
@@ -94,7 +94,7 @@ public:
 private:
    struct ZifHeader
    {
-      STB::Big32 rand_num_state;
+      STB::Big64 rand_num_state;
    };
 
    struct IFhd
@@ -110,7 +110,7 @@ private:
    std::string        error{};
 
    //! Prepare ZifH chunk
-   void encodeZifHeader(uint32_t rand_num_state)
+   void encodeZifHeader(uint64_t rand_num_state)
    {
       STB::IFF::Chunk* zifh_chunk = doc.newChunk("ZifH", sizeof(ZifHeader));
       ZifHeader        zifh;
@@ -184,7 +184,7 @@ private:
    }
 
    //! Decode ZifH chunk
-   void decodeZifHeader(uint32_t& rand_num_state)
+   void decodeZifHeader(uint64_t& rand_num_state)
    {
        const ZifHeader* zifh = doc.load<ZifHeader>("ZifH");
        if (zifh == nullptr)
