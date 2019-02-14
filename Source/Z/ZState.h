@@ -44,7 +44,7 @@ private:
    // Static configuration
    const Z::Story&  story;
    std::string      save_dir;
-   uint16_t         initial_rand_seed{0};
+   uint32_t         initial_rand_seed{0};
    uint32_t         game_end{0};
    uint32_t         global_base{0};
 
@@ -71,7 +71,7 @@ public:
    ZState(const Z::Story&    story_,
           const std::string& save_dir_,
           unsigned           num_undo,
-          uint16_t           initial_rand_seed_)
+          uint32_t           initial_rand_seed_)
       : story(story_)
       , save_dir(save_dir_)
       , initial_rand_seed(initial_rand_seed_)

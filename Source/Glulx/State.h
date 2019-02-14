@@ -26,6 +26,8 @@
 #include <cstring>
 #include <vector>
 
+#include "share/Random.h"
+
 #include "Glulx/Story.h"
 
 namespace Glulx {
@@ -34,8 +36,13 @@ namespace Glulx {
 class State
 {
 public:
-   State(const Story& story_)
+   State(const Story&       story_,
+         const std::string& save_dir_,
+         unsigned           num_undo,
+         uint32_t           initial_rand_seed_)
       : story(story_)
+      , save_dir(save_dir_)
+      , initial_rand_seed(initial_rand_seed_)
    {
       const Header* header = story.getHeader();
 
@@ -51,7 +58,10 @@ public:
    {
       const Header* header = story.getHeader();
 
-      quit      = false;
+      quit = false;
+
+      random.seed(initial_rand_seed);
+
       pc        = header->start_func;
       frame_ptr = 0;
 
@@ -64,9 +74,12 @@ public:
 private:
    // Static configuration
    const Story&         story;
+   std::string          save_dir;
+   uint32_t             initial_rand_seed{0};
 
    // Dynamic state
    bool                 quit{false};
+   Random               random;
    uint32_t             pc{0};
    uint32_t             frame_ptr{0};
    std::vector<uint8_t> memory;

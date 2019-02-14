@@ -36,7 +36,7 @@ public:
       : console(console_)
       , options(options_)
       , story(story_)
-      , state(story_)
+      , state(story_, (const char*)options.save_dir, options.undo, options.seed)
    {
    }
 
