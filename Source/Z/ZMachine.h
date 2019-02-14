@@ -325,23 +325,23 @@ private:
    void op0_nop() {}
 
    //! v1 save ?(label)
-   void op0_save_v1() { branch(state.save(story.getFilename())); }
+   void op0_save_v1() { branch(state.save()); }
 
    //! v4 save -> (result)
    void op0_save_v4()
    {
       uint8_t ret = state.fetchByte();
       state.varWrite(ret, 2);
-      state.varWrite(ret, state.save(story.getFilename()) ? 1 : 0);
+      state.varWrite(ret, state.save() ? 1 : 0);
    }
 
    //! v1 restore ?(label)
-   void op0_restore_v1() { branch(state.restore(story.getFilename())); }
+   void op0_restore_v1() { branch(state.restore()); }
 
    //! v4 restore -> (result)
    void op0_restore_v4()
    {
-      if(!state.restore(story.getFilename())) state.varWrite(state.fetchByte(), 0);
+      if(!state.restore()) state.varWrite(state.fetchByte(), 0);
    }
 
    //! restart
@@ -832,7 +832,7 @@ private:
 
       uint8_t ret = state.fetchByte();
       state.varWrite(ret, 2);
-      state.varWrite(ret, state.save(story.getFilename()) ? 1 : 0);
+      state.varWrite(ret, state.save() ? 1 : 0);
    }
 
    void opE_restore_table()
@@ -845,7 +845,7 @@ private:
       (void)bytes;
       (void)name; // TODO use supplied parameters
 
-      if(!state.restore(story.getFilename())) state.varWrite(state.fetchByte(), 0);
+      if(!state.restore()) state.varWrite(state.fetchByte(), 0);
    }
 
    void opE_log_shift()
@@ -1440,7 +1440,7 @@ private:
 
       if (restore_save)
       {
-         state.restore(story.getFilename());
+         state.restore();
       }
    }
 

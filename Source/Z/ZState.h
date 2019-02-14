@@ -115,7 +115,7 @@ public:
    }
 
    //! Save the dynamic state to a file
-   bool save(const std::string& name)
+   bool save(const std::string& name = "")
    {
       pushContext();
       save_file.encode(story, pc, random.internalState(), memory, stack);
@@ -126,18 +126,18 @@ public:
 
       std::string path = save_dir;
       path += '/';
-      path += name;
+      path += name == "" ? story.getFilename() : name;
       path += ".qzl";
 
       return save_file.write(path);
    }
 
    //! Restore the dynamic state from a save file
-   bool restore(const std::string& name)
+   bool restore(const std::string& name = "")
    {
       std::string path = save_dir;
       path += '/';
-      path += name;
+      path += name == "" ? story.getFilename() : name;
       path += ".qzl";
 
       if (save_file.read(path) &&
