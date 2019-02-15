@@ -67,6 +67,39 @@ public:
       return true;
    }
 
+   //! Encode Quetzal header chunk
+   virtual void encodeQuetzalHeader(STB::IFF::Document& doc, uint32_t /* pc */) const override
+   {
+      // TODO do the right thing here
+
+      STB::IFF::Chunk* ifhd_chunk = doc.newChunk("IFhd", 4);
+
+      ifhd_chunk->push(getHeader(), 4);
+   }
+
+   //! Decode Quetzal header chunk
+   virtual bool decodeQuetzalHeader(STB::IFF::Document& doc, uint32_t& pc) const override
+   {
+       const void* ifhd = doc.load<void>("IFhd");
+       if (ifhd == nullptr)
+       {
+          error = "IFhd chunk not found";
+          return false;
+       }
+
+      // TODO do the right thing here
+
+       if (memcmp(ifhd, getHeader(), 4) != 0)
+       {
+          error = "IFhd mismatch";
+          return false;
+       }
+
+       pc = 0;
+
+       return true;
+   }
+
 private:
    bool isMagic(const uint8_t* magic)
    {

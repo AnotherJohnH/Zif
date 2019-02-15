@@ -27,7 +27,9 @@
 
 #include "STB/IFF.h"
 
-#include "Z/Story.h"
+#include "share/Random.h"
+#include "share/StoryBase.h"
+
 #include "ZStack.h"
 #include "ZMemory.h"
 
@@ -40,32 +42,37 @@ public:
    //! Get error message for the last error
    const std::string& getLastError() const { return error; }
 
-   //! Save the ZMachine state in this Quetzal object
-   void encode(const Z::Story& story,
+   //! Save the Machine state in this Quetzal object
+   void encode(const ::Story&  story,
                uint32_t        pc,
-               uint64_t        rand_num_state,
                const ZMemory&  memory,
-               const ZStack&   stack)
+               const ZStack&   stack,
+               const Random&   random)
    {
-      encodeHeader(story, pc);
+      story.encodeQuetzalHeader(doc, pc);
+
       encodeMemory(story, memory);
       encodeStacks(stack);
-      encodeZifHeader(rand_num_state);
+      encodeZifHeader(random);
    }
 
    //! Restore the ZMachine state from this Quetzal object
-   bool decode(const Z::Story& story,
+   bool decode(const ::Story&  story,
                uint32_t&       pc,
-               uint64_t&       rand_num_state,
                ZMemory&        memory,
-               ZStack&         stack)
+               ZStack&         stack,
+               Random&         random)
    {
+      decodeZifHeader(random);
+
+      if (!story.decodeQuetzalHeader(doc, pc))
+      {
+         error = story.getLastError();
+         return false;
+      }
+
       error = "";
-
-      decodeZifHeader(rand_num_state);
-
-      return decodeHeader(story, pc) &&
-             decodeMemory(story, memory) &&
+      return decodeMemory(story, memory) &&
              decodeStacks(stack);
    }
 
@@ -97,48 +104,23 @@ private:
       STB::Big64 rand_num_state;
    };
 
-   struct IFhd
-   {
-      STB::Big16 release;
-      uint8_t    serial[6];
-      STB::Big16 checksum;
-      uint8_t    initial_pc[3];
-   };
-
    STB::IFF::Document doc{"FORM", "IFZS"};
    std::string        path{};
    std::string        error{};
 
    //! Prepare ZifH chunk
-   void encodeZifHeader(uint64_t rand_num_state)
+   void encodeZifHeader(const Random& random)
    {
       STB::IFF::Chunk* zifh_chunk = doc.newChunk("ZifH", sizeof(ZifHeader));
       ZifHeader        zifh;
 
-      zifh.rand_num_state = rand_num_state;
+      zifh.rand_num_state = random.internalState();
 
       zifh_chunk->push(zifh);
    }
 
-   //! Prepare IFhd chunk
-   void encodeHeader(const Z::Story& story, uint32_t pc)
-   {
-      STB::IFF::Chunk* ifhd_chunk = doc.newChunk("IFhd", 13);
-      const ZHeader*   header     = story.getHeader();
-      IFhd             ifhd;
-
-      ifhd.release       = header->release;
-      memcpy(ifhd.serial, header->serial, 6);
-      ifhd.checksum      = header->checksum;
-      ifhd.initial_pc[0] = pc >> 16;
-      ifhd.initial_pc[1] = pc >> 8;
-      ifhd.initial_pc[2] = pc;
-
-      ifhd_chunk->push(&ifhd, 13);
-   }
-
    //! Prepare CMem chunk
-   void encodeMemory(const Z::Story&  story, const ZMemory& memory)
+   void encodeMemory(const ::Story&  story, const ZMemory& memory)
    {
       STB::IFF::Chunk* cmem = doc.newChunk("CMem");
 
@@ -184,7 +166,7 @@ private:
    }
 
    //! Decode ZifH chunk
-   void decodeZifHeader(uint64_t& rand_num_state)
+   void decodeZifHeader(Random& random)
    {
        const ZifHeader* zifh = doc.load<ZifHeader>("ZifH");
        if (zifh == nullptr)
@@ -193,40 +175,11 @@ private:
           return;
        }
 
-       rand_num_state = zifh->rand_num_state;
-   }
-
-   //! Decode IFhd chunk
-   bool decodeHeader(const Z::Story& story, uint32_t& pc)
-   {
-       const IFhd* ifhd = doc.load<IFhd>("IFhd");
-       if (ifhd == nullptr)
-       {
-          error = "IFhd chunk not found";
-          return false;
-       }
-
-       const ZHeader* header = story.getHeader();
-
-       // Verify story version matches
-       if ((ifhd->release != header->release) ||
-           (memcmp(ifhd->serial, header->serial, 6) != 0) ||
-           (ifhd->checksum != header->checksum))
-       {
-          error = "IFhd mismatch";
-          return false;
-       }
-
-       // Extract PC
-       pc = (ifhd->initial_pc[0]<<16) |
-            (ifhd->initial_pc[1]<<8)  |
-             ifhd->initial_pc[2];
-
-       return true;
+       random.internalState() = zifh->rand_num_state;
    }
 
    //! Read and decode CMem or UMem chunk
-   bool decodeMemory(const Z::Story& story, ZMemory& memory)
+   bool decodeMemory(const ::Story& story, ZMemory& memory)
    {
       uint32_t size = 0;
 

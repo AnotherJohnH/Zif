@@ -28,18 +28,17 @@
 #include <string>
 #include <vector>
 
-//! Base class for story image objects
-template <typename HEADER>
-class StoryBase
+#include "STB/IFF.h"
+
+namespace {
+
+class Story
 {
 public:
-   StoryBase() = default;
+   Story() = default;
 
    //! Get error message for the last error
    const std::string& getLastError() const { return error; }
-
-   //! Return pointer to initial state of header
-   const HEADER* getHeader() const { return reinterpret_cast<const HEADER*>(image.data()); }
 
    //! Return true if previous load() was successful
    bool isLoadedOk() const { return !image.empty(); }
@@ -102,9 +101,9 @@ public:
       }
       else
       {
-         image.resize(sizeof(HEADER));
+         image.resize(getSizeOfHeader());
 
-         if (fread(image.data(), sizeof(HEADER), 1, fp) != 1)
+         if (fread(image.data(), getSizeOfHeader(), 1, fp) != 1)
          {
             error = "Failed to read header";
          }
@@ -116,7 +115,7 @@ public:
             {
                image.resize(file_size);
 
-               if (fread(&image[BODY_START], file_size - BODY_START, 1, fp) != 1)
+               if (fread(&image[getSizeOfHeader()], file_size - getSizeOfHeader(), 1, fp) != 1)
                {
                   error = "Failed to read body";
                }
@@ -140,11 +139,11 @@ public:
       return ok;
    }
 
-protected:
-   static const uint32_t BODY_START = sizeof(HEADER);
+   //! Validate loaded image 
+   virtual bool validateImage() const = 0;
 
-   std::vector<uint8_t> image;
-   std::string          error{};
+   //! Get size of header (bytes)
+   virtual size_t getSizeOfHeader() const  = 0;
 
    //! Check header is the right format
    virtual bool checkHeader(FILE* fp) = 0;
@@ -152,11 +151,15 @@ protected:
    //! Validate header and return story size
    virtual bool validateHeader(FILE* fp, size_t& size) = 0;
 
-   //! Validate loaded image 
-   virtual bool validateImage() const = 0;
+   //! Encode Quetzal header chunk 
+   virtual void encodeQuetzalHeader(STB::IFF::Document& doc, uint32_t pc) const = 0;
 
-   //! Return pointer to header
-   HEADER* getHeader() { return reinterpret_cast<HEADER*>(image.data()); }
+   //! Decode Quetzal header chunk 
+   virtual bool decodeQuetzalHeader(STB::IFF::Document& doc, uint32_t& pc) const = 0;
+
+protected:
+   std::vector<uint8_t> image;
+   mutable std::string  error{};
 
 private:
    bool        is_valid{false};
@@ -175,5 +178,23 @@ private:
       }
    }
 };
+
+//! Base class for story image objects
+template <typename HEADER>
+class StoryBase : public Story
+{
+public:
+   //! Get size of header (bytes)
+   virtual size_t getSizeOfHeader() const override { return sizeof(HEADER); }
+
+   //! Return pointer to initial state of header
+   const HEADER* getHeader() const { return reinterpret_cast<const HEADER*>(image.data()); }
+
+protected:
+   //! Return pointer to header
+   HEADER* getHeader() { return reinterpret_cast<HEADER*>(image.data()); }
+};
+
+}
 
 #endif

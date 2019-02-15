@@ -37,6 +37,9 @@ public:
    //! Access to internal state for save/restore
    uint64_t& internalState() { return state; }
 
+   //! Access to internal state for save/restore
+   const uint64_t& internalState() const { return state; }
+
    //! Seed the random number generator
    void seed(uint32_t seed_)
    {

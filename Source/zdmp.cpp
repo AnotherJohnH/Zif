@@ -54,9 +54,9 @@ private:
    ZQuetzal    quetzal;
 
    uint32_t    pc;
-   uint64_t    rand_state;
    ZMemory     memory;
    ZStack      stack;
+   Random      random;
 
    int error(const std::string& message)
    {
@@ -192,13 +192,13 @@ private:
             return error(quetzal.getLastError());
          }
 
-         if (!quetzal.decode(story, pc, rand_state, memory, stack))
+         if (!quetzal.decode(story, pc, memory, stack, random))
          {
             return error(quetzal.getLastError());
          }
 
          attr("PC", pc);
-         attr("randState", rand_state);
+         attr("randState", random.internalState());
       }
       else
       {

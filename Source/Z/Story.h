@@ -25,6 +25,7 @@
 
 #include <cstdio>
 #include <cstdint>
+#include <cstring>
 #include <string>
 #include <vector>
 
@@ -41,6 +42,14 @@ public:
    Story() = default;
 
 private:
+   struct IFhd
+   {
+      STB::Big16 release;
+      uint8_t    serial[6];
+      STB::Big16 checksum;
+      uint8_t    initial_pc[3];
+   };
+
    virtual bool checkHeader(FILE* fp) override
    {
       uint8_t version;
@@ -66,7 +75,7 @@ private:
 
       if (header->getStorySize() == 0)
       {
-         // Some older Z files had a zerp file size in the header
+         // Some older Z files had a zero file size in the header
          if (fseek(fp, 0, SEEK_END) == 0)
          {
             long file_size = ftell(fp);
@@ -97,12 +106,59 @@ private:
 
       uint16_t checksum = 0;
 
-      for(uint32_t i = BODY_START; i < header->getStorySize(); ++i)
+      for(uint32_t i = getSizeOfHeader(); i < header->getStorySize(); ++i)
       {
          checksum += image[i];
       }
 
       return header->checksum == checksum;
+   }
+
+public:
+   //! Encode Quetzal header chunk
+   virtual void encodeQuetzalHeader(STB::IFF::Document& doc, uint32_t pc) const override
+   {
+      STB::IFF::Chunk* ifhd_chunk = doc.newChunk("IFhd", 13);
+      const ZHeader*   header     = getHeader();
+      IFhd             ifhd;
+
+      ifhd.release       = header->release;
+      memcpy(ifhd.serial, header->serial, 6);
+      ifhd.checksum      = header->checksum;
+      ifhd.initial_pc[0] = pc >> 16;
+      ifhd.initial_pc[1] = pc >> 8;
+      ifhd.initial_pc[2] = pc;
+
+      ifhd_chunk->push(&ifhd, 13);
+   }
+
+   //! Decode Quetzal header chunk
+   virtual bool decodeQuetzalHeader(STB::IFF::Document& doc, uint32_t& pc) const override
+   {
+       const IFhd* ifhd = doc.load<IFhd>("IFhd");
+       if (ifhd == nullptr)
+       {
+          error = "IFhd chunk not found";
+          return false;
+       }
+
+       const ZHeader* header = getHeader();
+
+       // Verify story version matches
+       if ((ifhd->release != header->release) ||
+           (memcmp(ifhd->serial, header->serial, 6) != 0) ||
+           (ifhd->checksum != header->checksum))
+       {
+          error = "IFhd mismatch";
+          return false;
+       }
+
+       // Extract PC
+       pc = (ifhd->initial_pc[0]<<16) |
+            (ifhd->initial_pc[1]<<8)  |
+             ifhd->initial_pc[2];
+
+       return true;
    }
 };
 

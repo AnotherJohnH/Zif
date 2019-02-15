@@ -71,11 +71,42 @@ public:
       for(size_t i=0; i<header->ext_start; i+= 4)
       {
          const uint32_t& word = (const uint32_t&) image[i];
+
          // XXX assuming the host machine is little endian
          checksum += STB::endianSwap(word);
       }
 
       return header->checksum == checksum;
+   }
+
+   //! Encode Quetzal header chunk
+   virtual void encodeQuetzalHeader(STB::IFF::Document& doc, uint32_t /* pc */) const override
+   {
+      STB::IFF::Chunk* ifhd_chunk = doc.newChunk("IFhd", 128);
+
+      ifhd_chunk->push(getHeader(), 128);
+   }
+
+   //! Decode Quetzal header chunk
+   virtual bool decodeQuetzalHeader(STB::IFF::Document& doc, uint32_t& pc) const override
+   {
+       const void* ifhd = doc.load<void>("IFhd");
+       if (ifhd == nullptr)
+       {
+          error = "IFhd chunk not found";
+          return false;
+       }
+
+       if (memcmp(ifhd, getHeader(), 128) != 0)
+       {
+          error = "IFhd mismatch";
+          return false;
+       }
+
+       // PC is (very sensibly) stored on the stack
+       pc = 0;
+
+       return true;
    }
 
 private:

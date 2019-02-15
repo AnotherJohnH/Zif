@@ -121,7 +121,7 @@ public:
    bool save(const std::string& name = "")
    {
       pushContext();
-      save_file.encode(story, pc, random.internalState(), memory, stack);
+      save_file.encode(story, pc, memory, stack, random);
       popContext();
 
       // Make sure the save directory exists
@@ -144,7 +144,7 @@ public:
       path += ".qzl";
 
       if (save_file.read(path) &&
-          save_file.decode(story, pc, random.internalState(), memory, stack))
+          save_file.decode(story, pc, memory, stack, random))
       {
          validatePC();
          popContext();
@@ -160,7 +160,7 @@ public:
       if (undo.size() == 0) return false;
 
       pushContext();
-      undo[undo_next].encode(story, pc, random.internalState(), memory, stack);
+      undo[undo_next].encode(story, pc, memory, stack, random);
       popContext();
 
       undo_next = (undo_next + 1) % undo.size();
@@ -180,7 +180,7 @@ public:
       undo_next = undo_next == 0 ? undo.size() - 1
                                  : undo_next - 1;
 
-      undo[undo_next].decode(story, pc, random.internalState(), memory, stack);
+      undo[undo_next].decode(story, pc, memory, stack, random);
       popContext();
 
       return true;
