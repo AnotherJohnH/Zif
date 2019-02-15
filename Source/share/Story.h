@@ -20,8 +20,8 @@
 // SOFTWARE.
 //------------------------------------------------------------------------------
 
-#ifndef STORY_BASE_H
-#define STORY_BASE_H
+#ifndef STORY_H
+#define STORY_H
 
 #include <cstdint>
 #include <cstdio>

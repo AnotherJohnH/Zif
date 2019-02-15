@@ -28,7 +28,7 @@
 #include "STB/IFF.h"
 
 #include "share/Random.h"
-#include "share/StoryBase.h"
+#include "share/Story.h"
 
 #include "ZStack.h"
 #include "ZMemory.h"
