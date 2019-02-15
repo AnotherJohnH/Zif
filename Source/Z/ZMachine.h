@@ -55,7 +55,7 @@ private:
 
    Console&        console;
    const Options&  options;
-   const Z::Story& story;
+   bool            story_is_valid;
    ZState          state;
    Log             trace{"trace.log"};
    ZDisassembler   dis;
@@ -366,7 +366,7 @@ private:
    void op0_show_status() { showStatus(); }
 
    //! verify ?(label)
-   void op0_verify() { branch(story.isValid()); }
+   void op0_verify() { branch(story_is_valid); }
 
    //! piracy ?(label)
    void op0_piracy() { branch(true); }
@@ -1422,7 +1422,7 @@ private:
    //! Reset machine state to intial conditions
    void start(bool restore_save)
    {
-      if((version() >= 3) && !story.isValid())
+      if((version() >= 3) && !story_is_valid)
       {
          if (version() == 3)
          {
@@ -1461,7 +1461,7 @@ public:
    ZMachine(Console& console_, const Options& options_, const Z::Story& story_)
       : console(console_)
       , options(options_)
-      , story(story_)
+      , story_is_valid(story_.isValid())
       , state(story_, (const char*)options.save_dir, options.undo, options.seed)
       , stream(console, options_, state.memory)
       , screen(console, stream)
