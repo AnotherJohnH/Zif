@@ -123,7 +123,7 @@ private:
          {
             if ((addr + i) < memory.size())
             {
-               *out << " " << std::setw(2) << unsigned(memory.readByte(addr + i));
+               *out << " " << std::setw(2) << unsigned(memory.read8(addr + i));
             }
          }
 
@@ -133,7 +133,7 @@ private:
          {
             if ((addr + i) < memory.size())
             {
-               uint8_t ch = memory.readByte(addr + i);
+               uint8_t ch = memory.read8(addr + i);
                if (isprint(ch))
                {
                   *out << ch;

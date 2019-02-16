@@ -229,7 +229,7 @@ private:
       {
          for(uint32_t addr=0; addr<size; addr++)
          {
-            memory.setByte(addr, umem[addr]);
+            memory.set8(addr, umem[addr]);
          }
          return true;
       }
@@ -252,11 +252,11 @@ private:
 
       if (addr < ref_size)
       {
-         memory.setByte(addr, ref[addr] ^ byte);
+         memory.set8(addr, ref[addr] ^ byte);
       }
       else
       {
-         memory.setByte(addr, byte);
+         memory.set8(addr, byte);
       }
 
       return true;

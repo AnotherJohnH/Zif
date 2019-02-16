@@ -208,14 +208,14 @@ public:
    uint8_t fetchByte()
    {
       assert(validatePC());
-      return memory.codeByte(pc++);
+      return memory.fetch8(pc++);
    }
 
    //! Fetch an instruction word
    uint16_t fetchWord()
    {
       assert(validatePC());
-      uint16_t word = memory.codeWord(pc);
+      uint16_t word = memory.fetch16(pc);
       pc += 2;
       return word;
    }
@@ -312,7 +312,7 @@ public:
       else
       {
          uint32_t addr = global_base + (index - 16) * 2;
-         return validateAddr(addr) ? memory.readWord(addr)
+         return validateAddr(addr) ? memory.read16(addr)
                                    : 0;
       }
    }
@@ -336,7 +336,7 @@ public:
       {
          uint32_t addr = global_base + (index - 16) * 2;
          if(!validateAddr(addr)) return;
-         memory.writeWord(addr, value);
+         memory.write16(addr, value);
       }
    }
 

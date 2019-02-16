@@ -172,7 +172,7 @@ public:
       memory_width   = width_;
       memory_enable  = true;
 
-      memory.writeWord(memory_len_ptr, 0);
+      memory.write16(memory_len_ptr, 0);
    }
 
    //! Read ZSCII character
@@ -202,8 +202,8 @@ public:
    {
       if(memory_enable)
       {
-         memory.writeWord(memory_len_ptr, memory.readWord(memory_len_ptr) + 1);
-         memory.writeByte(memory_ptr++, zscii);
+         memory.write16(memory_len_ptr, memory.read16(memory_len_ptr) + 1);
+         memory.write8(memory_ptr++, zscii);
       }
       else if(buffer_enable)
       {

@@ -23,7 +23,6 @@
 #ifndef IF_MEMORY_H
 #define IF_MEMORY_H
 
-#include <cassert>
 #include <cstdint>
 #include <vector>
 
@@ -46,10 +45,10 @@ public:
    //! Get read-only pointer to raw memory
    const uint8_t* data() const { return raw.data(); }
 
-   //! Get address of first writable memory location
+   //! Get address of first writable byte
    Address getWriteStart() const { return write_start; }
 
-   //! Get address of memory location after the last writable
+   //! Get address of last writable byte
    Address getWriteEnd() const { return write_end_incl; }
 
    //! Set memory size (bytes)
@@ -63,63 +62,125 @@ public:
  
    void limitCode(Address start, Address end_incl)
    {
+      if ((end_incl >= size()) || (start > end_incl)) throw "memory map fault";
       code_start    = start;
       code_end_incl = end_incl;
    }
 
    void limitWrite(Address start, Address end_incl)
    {
+      if ((end_incl >= size()) || (start > end_incl)) throw "memory map fault";
       write_start    = start;
       write_end_incl = end_incl;
    }
 
    //! Read byte from memory
-   uint8_t readByte(Address addr) const
+   uint8_t read8(Address addr) const
    {
-      assert(addr < size());
+      if (addr >= size()) throw "memory read fault";
       return raw[addr];
    }
 
    //! Read 16-bit word from memory
-   uint16_t readWord(Address addr) const
+   uint16_t read16(Address addr) const
    {
-      uint16_t msb = readByte(addr);
-      return (msb << 8) | readByte(addr + 1);
+      if (addr >= (size() - 1)) throw "memory read fault";
+      return (uint16_t(raw[addr]) << 8) |
+                       raw[addr + 1];
    }
 
-   //! Read byte from code memory
-   uint8_t codeByte(Address addr) const
+   //! Read 24-bit word from memory
+   uint32_t read24(Address addr) const
    {
-      assert((addr >= code_start) && (addr <= code_end_incl));
-      return readByte(addr);
+      if (addr >= (size() - 2)) throw "memory read fault";
+      return (uint32_t(raw[addr    ]) << 16) |
+             (uint32_t(raw[addr + 1]) <<  8) |
+                       raw[addr + 2];
    }
 
-   //! Read 16-bit word from code memory
-   uint16_t codeWord(Address addr) const
+   //! Read 32-bit word from memory
+   uint32_t read32(Address addr) const
    {
-      uint16_t msb = codeByte(addr);
-      return (msb << 8) | codeByte(addr + 1);
+      if (addr >= (size() - 3)) throw "memory read fault";
+      return (uint32_t(raw[addr    ]) << 24) |
+             (uint32_t(raw[addr + 1]) << 16) |
+             (uint32_t(raw[addr + 2]) <<  8) |
+                       raw[addr + 3];
+   }
+
+   //! Fetch byte from code memory
+   uint8_t fetch8(Address addr) const
+   {
+      if((addr < code_start) || (addr > code_end_incl)) throw "memory fetch fault";
+      return raw[addr];
+   }
+
+   //! Fetch 16-bit word from code memory
+   uint16_t fetch16(Address addr) const
+   {
+      if((addr < code_start) || (addr > (code_end_incl - 1))) throw "memory fetch fault";
+      return (uint16_t(raw[addr]) << 8) |
+                       raw[addr + 1];
+   }
+
+   //! Fetch 24-bit word from code memory
+   uint16_t fetch24(Address addr) const
+   {
+      if((addr < code_start) || (addr > (code_end_incl - 2))) throw "memory fetch fault";
+      return (uint32_t(raw[addr    ]) << 16) |
+             (uint32_t(raw[addr + 1]) <<  8) |
+                       raw[addr + 2];
+   }
+
+   //! Fetch 32-bit word from code memory
+   uint32_t fetch32(Address addr) const
+   {
+      if((addr < code_start) || (addr > (code_end_incl - 3))) throw "memory fetch fault";
+      return (uint32_t(raw[addr    ]) << 24) |
+             (uint32_t(raw[addr + 1]) << 16) |
+             (uint32_t(raw[addr + 2]) <<  8) |
+                       raw[addr + 3];
    }
 
    //! Set byte in any part of memory
-   void setByte(Address addr, uint8_t byte)
+   void set8(Address addr, uint8_t byte)
    {
-      assert(addr < size());
+      if (addr >= size()) throw "memory set fault";
       raw[addr] = byte;
    }
 
    //! Write byte to writable memory
-   void writeByte(Address addr, uint8_t byte)
+   void write8(Address addr, uint8_t byte)
    {
-      assert((addr >= write_start) && (addr <= write_end_incl));
-      setByte(addr, byte);
+      if((addr < write_start) || (addr > write_end_incl)) throw "memory write fault";
+      raw[addr] = byte;
    }
 
    //! Write 16-bit word to writable memory
-   void writeWord(Address addr, uint16_t word)
+   void write16(Address addr, uint16_t word)
    {
-      writeByte(addr,     word >> 8);
-      writeByte(addr + 1, word & 0xFF);
+      if((addr < write_start) || (addr > (write_end_incl - 1))) throw "memory write fault";
+      raw[addr    ] = word >> 8;
+      raw[addr + 1] = uint8_t(word);
+   }
+
+   //! Write 24-bit word to writable memory
+   void write24(Address addr, uint32_t word)
+   {
+      if((addr < write_start) || (addr > (write_end_incl - 2))) throw "memory write fault";
+      raw[addr    ] = uint8_t(word >> 16);
+      raw[addr + 1] = uint8_t(word >>  8);
+      raw[addr + 2] = uint8_t(word);
+   }
+
+   //! Write 32-bit word to writable memory
+   void write32(Address addr, uint32_t word)
+   {
+      if((addr < write_start) || (addr > (write_end_incl - 3))) throw "memory write fault";
+      raw[addr    ] = uint8_t(word >> 24);
+      raw[addr + 1] = uint8_t(word >> 16);
+      raw[addr + 2] = uint8_t(word >>  8);
+      raw[addr + 3] = uint8_t(word);
    }
 
 protected:

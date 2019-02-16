@@ -128,7 +128,7 @@ private:
    {
       for(unsigned i = 0; i < zword.size(); i++)
       {
-         if(memory.readWord(entry_addr + i * 2) != zword[i]) return -1;
+         if(memory.read16(entry_addr + i * 2) != zword[i]) return -1;
       }
 
       return 0;
@@ -141,12 +141,12 @@ public:
    void tokenise(ZMemory& memory, uint32_t out, uint32_t in, uint32_t dict, bool partial)
    {
       uint8_t  max_word_len = version <= 4 ? 6 : 9;
-      uint8_t  num_sep      = memory.codeByte(dict);
-      uint8_t  entry_length = memory.codeByte(dict + 1 + num_sep);
-      uint16_t num_entry    = memory.codeWord(dict + 1 + num_sep + 1);
+      uint8_t  num_sep      = memory.fetch8(dict);
+      uint8_t  entry_length = memory.fetch8(dict + 1 + num_sep);
+      uint16_t num_entry    = memory.fetch16(dict + 1 + num_sep + 1);
       uint32_t first        = dict + 1 + num_sep + 3;
 
-      unsigned max_num_word = memory.readByte(out);
+      unsigned max_num_word = memory.read8(out);
       uint8_t  num_word     = 0;
 
       uint8_t  word_len = 0;
@@ -155,7 +155,7 @@ public:
 
       for(unsigned i = 0; i < 256; i++)
       {
-         uint8_t ch = memory.readByte(in + i);
+         uint8_t ch = memory.read8(in + i);
 
          // Check for default seperator and terminator
          bool is_sep = (ch == ' ') || (ch == '\0');
@@ -163,7 +163,7 @@ public:
          // Check for custom seperators
          for(uint8_t j = 0; !is_sep && (j < num_sep); j++)
          {
-            is_sep = (memory.codeByte(dict + 1 + j) == ch);
+            is_sep = (memory.fetch8(dict + 1 + j) == ch);
          }
 
          if(!is_sep)
@@ -203,9 +203,9 @@ public:
 
             if((entry != 0) || !partial)
             {
-               memory.writeWord(out + 2 + num_word * 4, entry);
-               memory.writeByte(out + 2 + num_word * 4 + 2, word_len);
-               memory.writeByte(out + 2 + num_word * 4 + 3, start);
+               memory.write16(out + 2 + num_word * 4, entry);
+               memory.write8(out + 2 + num_word * 4 + 2, word_len);
+               memory.write8(out + 2 + num_word * 4 + 3, start);
             }
 
             num_word++;
@@ -216,7 +216,7 @@ public:
          if((ch == '\0') || (num_word == max_num_word)) break;
       }
 
-      memory.writeByte(out + 1, num_word);
+      memory.write8(out + 1, num_word);
    }
 };
 

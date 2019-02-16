@@ -73,7 +73,7 @@ private:
    void decodeAbbr(const Writer& writer, unsigned index)
    {
       uint8_t save_shift = shift_lock;
-      uint32_t abbr_addr = memory.codeWord(abbr_table + index * 2) * 2;
+      uint32_t abbr_addr = memory.fetch16(abbr_table + index * 2) * 2;
 
       decodeText(writer, IN_ABBR, abbr_addr);
       reset(NORMAL, save_shift);
@@ -191,7 +191,7 @@ private:
    }
 
    //! Decode text packed into a 16bit word
-   bool decodeWord(const Writer& writer, uint16_t word)
+   bool defetch16(const Writer& writer, uint16_t word)
    {
       decodeZChar(writer, (word >> 10) & 0x1F);
       decodeZChar(writer, (word >>  5) & 0x1F);
@@ -207,7 +207,7 @@ private:
       // Start with alphabet A0 [3.2.1]
       reset(state_, /* alphabet */ 0);
 
-      while(decodeWord(writer, memory.codeWord(addr)))
+      while(defetch16(writer, memory.fetch16(addr)))
       {
           addr += 2;
       }
@@ -267,7 +267,7 @@ public:
       {
          for(unsigned col = 0; col < width; col++)
          {
-            writer(memory.codeByte(addr++));
+            writer(memory.fetch8(addr++));
          }
 
          addr += skip;
@@ -279,13 +279,13 @@ public:
    {
       while(true)
       {
-         uint16_t length = memory.codeWord(addr);
+         uint16_t length = memory.fetch16(addr);
          if (length == 0) break;
          addr += 2;
 
          for(unsigned i=0; i<length; i++)
          {
-            writer(memory.codeByte(addr++));
+            writer(memory.fetch8(addr++));
          }
       }
    }

@@ -49,7 +49,7 @@ private:
    {
       assert((index > 0) && (index <= getMaxProps()));
 
-      return memory.readWord(obj_table + (index - 1) * sizeof(uint16_t));
+      return memory.read16(obj_table + (index - 1) * sizeof(uint16_t));
    }
 
    //! Return the address for the given object index
@@ -67,9 +67,9 @@ private:
 
       uint32_t addr = getObjAddress(obj) + (getMaxAttr() / 8);
       if(small)
-         return memory.readByte(addr + n);
+         return memory.read8(addr + n);
       else
-         return memory.readWord(addr + n * sizeof(uint16_t));
+         return memory.read16(addr + n * sizeof(uint16_t));
    }
 
    //! Set the nth object link (0=>parent, 1=>sibling, 2=>child)
@@ -77,14 +77,14 @@ private:
    {
       uint32_t addr = getObjAddress(obj) + (getMaxAttr() / 8);
       if(small)
-         memory.writeByte(addr + n, link);
+         memory.write8(addr + n, link);
       else
-         memory.writeWord(addr + n * sizeof(uint16_t), link);
+         memory.write16(addr + n * sizeof(uint16_t), link);
    }
 
    unsigned fetchPropInfo(uint32_t& addr, unsigned& index) const
    {
-      uint8_t id = memory.readByte(addr++);
+      uint8_t id = memory.read8(addr++);
       if(id == 0)
       {
          index = 0;
@@ -103,7 +103,7 @@ private:
       {
          if(id & (1 << 7))
          {
-            size = memory.readByte(addr++) & 0x3F;
+            size = memory.read8(addr++) & 0x3F;
             if(size == 0)
             {
                size = 0x40;
@@ -125,7 +125,7 @@ private:
       uint32_t addr = getPropTableAddress(obj);
 
       // Skip object name
-      uint8_t name_len = memory.readByte(addr++);
+      uint8_t name_len = memory.read8(addr++);
       addr += name_len * 2;
 
       while(true)
@@ -174,7 +174,7 @@ public:
 
       uint32_t addr = getObjAddress(obj) + (attr / 8);
       unsigned bit  = 7 - (attr & 7);
-      uint8_t  byte = memory.readByte(addr);
+      uint8_t  byte = memory.read8(addr);
       return (byte & (1 << bit)) != 0;
    }
 
@@ -187,12 +187,12 @@ public:
 
       uint32_t addr = getObjAddress(obj) + (attr / 8);
       unsigned bit  = 7 - (attr & 7);
-      uint8_t  byte = memory.readByte(addr);
+      uint8_t  byte = memory.read8(addr);
       if(set)
          byte |= 1 << bit;
       else
          byte &= ~(1 << bit);
-      memory.writeByte(addr, byte);
+      memory.write8(addr, byte);
    }
 
    uint16_t getParent(uint16_t obj)  const { return getObjLink(obj, 0); }
@@ -207,8 +207,8 @@ public:
    uint32_t getPropTableAddress(uint16_t obj) const
    {
       uint32_t addr = getObjAddress(obj);
-      return small ? memory.readWord(addr + 7)
-                   : memory.readWord(addr + 12);
+      return small ? memory.read16(addr + 7)
+                   : memory.read16(addr + 12);
    }
 
    //! Get property name
@@ -234,7 +234,7 @@ public:
       uint32_t addr = getPropTableAddress(obj);
 
       // Skip object name
-      uint8_t name_len = memory.readByte(addr++);
+      uint8_t name_len = memory.read8(addr++);
       addr += name_len * 2;
 
       if(prop == 0)
@@ -269,7 +269,7 @@ public:
       --addr;
       if(!small)
       {
-         uint8_t id = memory.readByte(addr);
+         uint8_t id = memory.read8(addr);
          if((id & (1 << 7)) != 0)
          {
             --addr;
@@ -289,8 +289,8 @@ public:
       switch(size)
       {
       case 0:  return getDefaultProp(prop);
-      case 1:  return memory.readByte(addr);
-      default: return memory.readWord(addr);
+      case 1:  return memory.read8(addr);
+      default: return memory.read16(addr);
       }
       return 0;
    }
@@ -305,8 +305,8 @@ public:
       switch(size)
       {
       case 0:  assert(!"property not found"); break;
-      case 1:  memory.writeByte(addr, uint8_t(value)); break;
-      case 2:  memory.writeWord(addr, value); break;
+      case 1:  memory.write8(addr, uint8_t(value)); break;
+      case 2:  memory.write16(addr, value); break;
       default: assert(!"property size must be 1 or 2"); break;
       }
    }

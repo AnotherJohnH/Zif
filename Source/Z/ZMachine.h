@@ -462,7 +462,7 @@ private:
    //! 2OP:15 0F loadw array word_index -> (result)
    void op2_loadw()
    {
-      state.varWrite(state.fetchByte(), state.memory.readWord(uarg[0]+2*uarg[1]));
+      state.varWrite(state.fetchByte(), state.memory.read16(uarg[0]+2*uarg[1]));
    }
 
    //! 2OP:16 10 loadb array byte_index -> (result)
@@ -470,7 +470,7 @@ private:
    //  which must lie in static or dynamic memory)
    void op2_loadb()
    {
-      state.varWrite(state.fetchByte(), state.memory.readByte(uarg[0] + uarg[1]));
+      state.varWrite(state.fetchByte(), state.memory.read8(uarg[0] + uarg[1]));
    }
 
    void op2_get_prop()      { state.varWrite(state.fetchByte(), object.getProp(uarg[0], uarg[1])); }
@@ -519,8 +519,8 @@ private:
    void opV_not()            { state.varWrite(state.fetchByte(), ~uarg[0]); }
    void opV_call_vn()        { subCall(1, uarg[0], num_arg-1, &uarg[1]); }
    void opV_call_vn2()       { opV_call_vn(); }
-   void opV_storew()         { state.memory.writeWord(uarg[0] + 2*uarg[1], uarg[2]); }
-   void opV_storeb()         { state.memory.writeByte(uarg[0] + uarg[1], uarg[2]); }
+   void opV_storew()         { state.memory.write16(uarg[0] + 2*uarg[1], uarg[2]); }
+   void opV_storeb()         { state.memory.write8(uarg[0] + uarg[1], uarg[2]); }
    void opV_put_prop()       { object.setProp(uarg[0], uarg[1], uarg[2]); }
 
    //! V1 sread text parse
@@ -535,7 +535,7 @@ private:
 
       if(SHOW_STATUS) showStatus();
 
-      uint8_t  max   = state.memory.readByte(buffer++) - 1;
+      uint8_t  max   = state.memory.read8(buffer++) - 1;
       uint16_t start = buffer;
 
       for(uint8_t len = 0; len < max; len++)
@@ -559,12 +559,12 @@ private:
          }
          else if(ch == '\n')
          {
-            state.memory.writeByte(buffer, '\0');
+            state.memory.write8(buffer, '\0');
             break;
          }
          else
          {
-            state.memory.writeByte(buffer++, tolower(ch));
+            state.memory.write8(buffer++, tolower(ch));
          }
       }
 
@@ -579,8 +579,8 @@ private:
       uint16_t timeout = num_arg >= 3 ? uarg[2] : 0;
       uint16_t routine = num_arg >= 4 ? uarg[3] : 0;
 
-      uint8_t max = state.memory.readByte(buffer++);
-      uint8_t len = state.memory.readByte(buffer++);
+      uint8_t max = state.memory.read8(buffer++);
+      uint8_t len = state.memory.read8(buffer++);
 
       uint16_t start  = buffer;
       uint8_t  status = 0;
@@ -606,14 +606,14 @@ private:
          }
          else if(ch == '\n')
          {
-            state.memory.writeByte(buffer, '\0');
-            state.memory.writeByte(start - 1, len);
+            state.memory.write8(buffer, '\0');
+            state.memory.write8(start - 1, len);
             status = ch;
             break;
          }
          else
          {
-            state.memory.writeByte(buffer++, ch);
+            state.memory.write8(buffer++, ch);
          }
       }
 
@@ -642,9 +642,9 @@ private:
       {
          // User stack
          uint16_t st  = uarg[0];
-         uint16_t ptr = state.memory.readWord(st);
-         state.memory.writeWord(st, ++ptr);
-         value = state.memory.readWord(ptr + 2 * ptr);
+         uint16_t ptr = state.memory.read16(st);
+         state.memory.write16(st, ++ptr);
+         value = state.memory.read16(ptr + 2 * ptr);
       }
       else
       {
@@ -689,8 +689,8 @@ private:
       screen.getCursor(row, col);
 
       uint16_t array = uarg[0];
-      state.memory.writeWord(array + 0, row);
-      state.memory.writeWord(array + 2, col);
+      state.memory.write16(array + 0, row);
+      state.memory.write16(array + 2, col);
    }
 
    void opV_set_text_style() { stream.setFontStyle(uarg[0]); }
@@ -747,8 +747,8 @@ private:
 
       for(uint16_t i = 0; i < len; ++i)
       {
-         uint16_t v = (form & 0x80) ? state.memory.readWord(table)
-                                    : state.memory.readByte(table);
+         uint16_t v = (form & 0x80) ? state.memory.read16(table)
+                                    : state.memory.read8(table);
 
          if(v == x)
          {
@@ -786,21 +786,21 @@ private:
       {
          for(int16_t i = 0; i<size; i++)
          {
-            state.memory.writeByte(from + i, 0);
+            state.memory.write8(from + i, 0);
          }
       }
       else if((size < 0) || (from > to))
       {
          for(int16_t i = 0; i < abs(size); i++)
          {
-            state.memory.writeByte(to + i, state.memory.readByte(from + i));
+            state.memory.write8(to + i, state.memory.read8(from + i));
          }
       }
       else
       {
          for(int16_t i = size - 1; i >= 0; i--)
          {
-            state.memory.writeByte(to + i, state.memory.readByte(from + i));
+            state.memory.write8(to + i, state.memory.read8(from + i));
          }
       }
    }
@@ -976,8 +976,8 @@ private:
       //    valid  = true;
       // }
 
-      state.memory.writeWord(array + 0, value1);
-      state.memory.writeWord(array + 2, value2);
+      state.memory.write16(array + 0, value1);
+      state.memory.write16(array + 2, value2);
 
       branch(valid);
    }
@@ -1044,11 +1044,11 @@ private:
       if (num_arg == 1)
       {
          uint16_t stack = uarg[1];
-         uint16_t size  = state.memory.readWord(stack);
+         uint16_t size  = state.memory.read16(stack);
 
          size += items;
 
-         state.memory.writeWord(stack, size);
+         state.memory.write16(stack, size);
       }
       else
       {
@@ -1067,13 +1067,13 @@ private:
    {
       uint16_t value = uarg[0];
       uint16_t stack = uarg[1];
-      uint16_t size  = state.memory.readWord(stack);
+      uint16_t size  = state.memory.read16(stack);
 
       if (size != 0)
       {
-         state.memory.writeWord(stack + 2*size, value);
+         state.memory.write16(stack + 2*size, value);
          --size;
-         state.memory.writeWord(stack, size);
+         state.memory.write16(stack, size);
       }
 
       branch(size != 0);
