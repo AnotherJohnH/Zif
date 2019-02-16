@@ -50,7 +50,7 @@ private:
    std::string filename;
    Z::Story    story;
    IF::Quetzal quetzal;
-   IF::State   state{"", 0, 2048};
+   IF::State   state{story, 0, 2048};
 
    int error(const std::string& message)
    {

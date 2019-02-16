@@ -27,124 +27,24 @@
 #include "PLT/File.h"
 
 #include "share/Error.h"
-#include "share/State.h"
-#include "share/Quetzal.h"
+#include "share/SavableState.h"
 
 #include "ZHeader.h"
 #include "Z/Story.h"
 
 //! Z machine state
-class ZState : public IF::State
+class ZState : public IF::SavableState
 {
-private:
-   static const uint32_t GAME_START = sizeof(ZHeader);
-
-   // Static configuration
-   const Z::Story&  story;
-   uint32_t         game_end{0};
-   uint32_t         global_base{0};
-
-   // Saved state
-   IF::Quetzal              save_file;
-   std::vector<IF::Quetzal> undo;
-   unsigned                 undo_oldest{0};
-   unsigned                 undo_next{0};
-
-   // Terminal state
-   mutable Error exit_code{Error::NONE};
-
 public:
    ZState(const Z::Story&    story_,
           const std::string& save_dir_,
-          unsigned           num_undo,
+          unsigned           num_undo_,
           uint32_t           initial_rand_seed_)
-      : IF::State(save_dir_, initial_rand_seed_, 2048)
-      , story(story_)
+      : IF::SavableState(story_, save_dir_, num_undo_, initial_rand_seed_, 2048)
    {
-      undo.resize(num_undo);
-
-      const ZHeader* header = story.getHeader();
+      const ZHeader* header = story_.getHeader();
       game_end    = header->getStorySize();
       global_base = header->glob;
-
-      story.prepareMemory(memory);
-   }
-
-   //! Reset the dynamic state to the initial conditions.
-   void reset()
-   {
-      IF::State::reset(story.getHeader()->getEntryPoint());
-
-      story.resetMemory(memory);
-   }
-
-   //! Save the dynamic state to a file
-   bool save(const std::string& name = "")
-   {
-      pushContext();
-      save_file.encode(story, *this);
-      popContext();
-
-      // Make sure the save directory exists
-      (void) PLT::File::createDir(save_dir.c_str());
-
-      std::string path = save_dir;
-      path += '/';
-      path += name == "" ? story.getFilename() : name;
-      path += ".qzl";
-
-      return save_file.write(path);
-   }
-
-   //! Restore the dynamic state from a save file
-   bool restore(const std::string& name = "")
-   {
-      std::string path = save_dir;
-      path += '/';
-      path += name == "" ? story.getFilename() : name;
-      path += ".qzl";
-
-      if (save_file.read(path) &&
-          save_file.decode(story, *this))
-      {
-         validatePC();
-         popContext();
-         return true;
-      }
-
-      return false;
-   }
-
-   //! Save the dynamic state into the undo buffer
-   bool saveUndo()
-   {
-      if (undo.size() == 0) return false;
-
-      pushContext();
-      undo[undo_next].encode(story, *this);
-      popContext();
-
-      undo_next = (undo_next + 1) % undo.size();
-      if (undo_next == undo_oldest)
-      {
-         undo_oldest = (undo_oldest + 1) % undo.size();
-      }
-
-      return true;
-   }
-
-   //! Restore the dynamic state from the undo buffer
-   bool restoreUndo()
-   {
-      if (undo_next == undo_oldest) return false;
-
-      undo_next = undo_next == 0 ? undo.size() - 1
-                                 : undo_next - 1;
-
-      undo[undo_next].decode(story, *this);
-      popContext();
-
-      return true;
    }
 
    //! Report an error, terminates the machine
@@ -309,17 +209,27 @@ private:
    }
 
    //! Save dynamic registers on the stack
-   void pushContext()
+   virtual void pushContext() override
    {
       stack.push16(frame_ptr);
    }
 
    //! Restore dynamic registers from the stack
-   void popContext()
+   virtual void popContext() override
    {
       frame_ptr = stack.pop16();
       validateFramePtr();
    }
+
+private:
+   static const uint32_t GAME_START = sizeof(ZHeader);
+
+   // Static configuration
+   uint32_t         game_end{0};
+   uint32_t         global_base{0};
+
+   // Terminal state
+   mutable Error exit_code{Error::NONE};
 };
 
 #endif

@@ -67,6 +67,8 @@ public:
       return true;
    }
 
+   virtual IF::Memory::Address getEntryPoint() const override { return 0; }
+
    //! Encode Quetzal header chunk
    virtual void encodeQuetzalHeader(STB::IFF::Document& doc, uint32_t /* pc */) const override
    {

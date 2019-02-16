@@ -79,6 +79,11 @@ public:
       return header->checksum == checksum;
    }
 
+   virtual IF::Memory::Address getEntryPoint() const override
+   {
+      return getHeader()->start_func;
+   }
+
    //! Encode Quetzal header chunk
    virtual void encodeQuetzalHeader(STB::IFF::Document& doc, uint32_t /* pc */) const override
    {

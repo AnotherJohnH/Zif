@@ -23,43 +23,34 @@
 #ifndef GLULX_STATE_H
 #define GLULX_STATE_H
 
-#include <cstring>
-#include <vector>
-
-#include "share/Memory.h"
-#include "share/State.h"
+#include "share/SavableState.h"
 
 #include "Glulx/Story.h"
 
 namespace Glulx {
 
 //! Glulx machine implementation
-class State : public IF::State
+class State : public IF::SavableState
 {
 public:
    State(const Story&       story_,
          const std::string& save_dir_,
-         unsigned           num_undo,
+         unsigned           num_undo_,
          uint32_t           initial_rand_seed_)
-      : IF::State(save_dir_, initial_rand_seed_, story.getHeader()->stack_size)
-      , story(story_)
+      : IF::SavableState(story_,
+                         save_dir_,
+                         num_undo_,
+                         initial_rand_seed_,
+                         story_.getHeader()->stack_size)
    {
-      story.prepareMemory(memory);
-   }
-
-   //! Reset the dynamic state to the initial conditions.
-   void reset()
-   {
-      const Header* header = story.getHeader();
-      IF::State::reset(header->start_func);
    }
 
 private:
-   // Static configuration
-   const Story&  story;
+   virtual void pushContext() override
+   {}
 
-   // Dynamic state
-   IF::Memory    memory;
+   virtual void popContext() override
+   {}
 };
 
 } // namespace Glulx

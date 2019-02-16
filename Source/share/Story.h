@@ -160,6 +160,9 @@ public:
    //! Reset VM memory for this Z-story image
    virtual void resetMemory(IF::Memory& memory) const = 0;
 
+   //! Return the initial PC for the story
+   virtual Memory::Address getEntryPoint() const = 0;
+
    //! Encode Quetzal header chunk 
    virtual void encodeQuetzalHeader(STB::IFF::Document& doc, uint32_t pc) const = 0;
 

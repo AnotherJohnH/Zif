@@ -26,6 +26,7 @@
 #include <cstdint>
 #include <string>
 
+#include "share/Story.h"
 #include "share/Memory.h"
 #include "share/Stack.h"
 #include "share/Random.h"
@@ -36,13 +37,14 @@ namespace IF {
 class State
 {
 public:
-   State(const std::string& save_dir_,
+   State(const IF::Story&   story_,
          uint32_t           initial_rand_seed_,
          Stack::Address     stack_size_)
-      : save_dir(save_dir_)
+      : story(story_)
       , initial_rand_seed(initial_rand_seed_)
       , stack(stack_size_)
    {
+      story_.prepareMemory(memory);
    }
 
    //! Return whether the machine should stop
@@ -55,11 +57,13 @@ public:
    Stack::Address getFramePtr() const { return frame_ptr; }
 
    //! Reset the dynamic state to the initial conditions
-   void reset(Memory::Address pc_)
+   void reset()
    {
       do_quit   = false;
-      pc        = pc_;
+      pc        = story.getEntryPoint();
       frame_ptr = 0;
+
+      story.resetMemory(memory);
 
       stack.clear();
 
@@ -80,14 +84,13 @@ public:
 
 protected:
    // Configuration
-   std::string save_dir;
-   uint32_t    initial_rand_seed{0};
+   const IF::Story& story;
+   const uint32_t   initial_rand_seed{0};
 
    // Dynamic state
    bool            do_quit{false};
    Memory::Address pc{0};
    Stack::Address  frame_ptr{0};
-
 public:
    IF::Memory      memory;
    IF::Stack       stack;
