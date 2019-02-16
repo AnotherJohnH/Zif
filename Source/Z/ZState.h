@@ -55,12 +55,12 @@ private:
    unsigned              undo_next{0};
 
    // Dynamic state
-   Random    random;
-   uint32_t  pc{0};
-   uint16_t  frame_ptr{0};
-   IF::Stack stack{2048};
+   IF::Random random;
+   uint32_t   pc{0};
+   uint16_t   frame_ptr{0};
+   IF::Stack  stack{2048};
 public:
-   ZMemory  memory;
+   ZMemory    memory;
 
 private:
    // Terminal state

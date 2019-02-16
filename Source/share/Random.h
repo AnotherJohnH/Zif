@@ -20,12 +20,14 @@
 // SOFTWARE.
 //------------------------------------------------------------------------------
 
-#ifndef RANDOM_H
-#define RANDOM_H
+#ifndef IF_RANDOM_H
+#define IF_RANDOM_H
 
 #include <cstdint>
 
-//! Pseudo random number generator
+namespace IF {
+
+//! Pseudo random number generator for interactive fiction VM
 class Random
 {
 public:
@@ -68,5 +70,7 @@ public:
 private:
    uint64_t state{1};
 };
+
+} // namespace IF
 
 #endif

@@ -87,7 +87,7 @@ private:
    uint32_t             frame_ptr{0};
    IF::Memory           memory;
    std::vector<uint8_t> stack;
-   Random               random;
+   IF::Random           random;
 };
 
 } // namespace Glulx

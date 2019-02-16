@@ -47,7 +47,7 @@ public:
                uint32_t          pc,
                const IF::Memory& memory,
                const IF::Stack&  stack,
-               const Random&     random)
+               const IF::Random& random)
    {
       story.encodeQuetzalHeader(doc, pc);
 
@@ -61,7 +61,7 @@ public:
                uint32_t&        pc,
                IF::Memory&      memory,
                IF::Stack&       stack,
-               Random&          random)
+               IF::Random&      random)
    {
       decodeZifHeader(random);
 
@@ -109,7 +109,7 @@ private:
    std::string        error{};
 
    //! Prepare ZifH chunk
-   void encodeZifHeader(const Random& random)
+   void encodeZifHeader(const IF::Random& random)
    {
       STB::IFF::Chunk* zifh_chunk = doc.newChunk("ZifH", sizeof(ZifHeader));
       ZifHeader        zifh;
@@ -162,7 +162,7 @@ private:
    }
 
    //! Decode ZifH chunk
-   void decodeZifHeader(Random& random)
+   void decodeZifHeader(IF::Random& random)
    {
        const ZifHeader* zifh = doc.load<ZifHeader>("ZifH");
        if (zifh == nullptr)
