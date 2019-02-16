@@ -33,7 +33,9 @@ namespace IF {
 class Stack
 {
 public:
-   Stack(size_t max_size_)
+   using Address = uint16_t;
+
+   Stack(Address max_size_)
       : max_size(max_size_)
    {
       raw.reserve(max_size);
@@ -43,20 +45,20 @@ public:
    bool empty() const { return raw.empty(); }
 
    //! Get memory size (bytes)
-   size_t size() const { return raw.size(); }
+   Address size() const { return raw.size(); }
 
    //! Pointer to raw stack contents
    const uint8_t* data() const { return raw.data(); }
 
    //! Read 8-bit value from an absolute offset into the stack
-   uint8_t read8(size_t offset) const
+   uint8_t read8(Address offset) const
    {
       if (offset >= size()) throw "stack fault";
       return raw[offset];
    }
 
    //! Read 16-bit value from an absolute offset into the stack
-   uint16_t read16(size_t offset) const
+   uint16_t read16(Address offset) const
    {
       if ((size() < 2) || (offset > (size() - 2))) throw "stack fault";
       return (raw[offset    ] << 8) |
@@ -64,7 +66,7 @@ public:
    }
 
    //! Read 24-bit value from an absolute offset into the stack
-   uint32_t read24(size_t offset) const
+   uint32_t read24(Address offset) const
    {
       if ((size() < 3) || (offset > (size() - 3))) throw "stack fault";
       return (raw[offset    ] << 16) | 
@@ -73,7 +75,7 @@ public:
    }
 
    //! Read 32-bit value from an absolute offset into the stack
-   uint32_t read32(size_t offset) const
+   uint32_t read32(Address offset) const
    {
       if ((size() < 4) || (offset > (size() - 4))) throw "stack fault";
       return (raw[offset    ] << 24) | 
@@ -83,14 +85,14 @@ public:
    }
 
    //! Write an 8-bit value at an absolute offset into the stack
-   void write8(size_t offset, uint8_t value)
+   void write8(Address offset, uint8_t value)
    {
       if (offset >= size()) throw "stack fault";
       raw[offset] = value;
    }
 
    //! Write a 16-bit value at an absolute offset into the stack
-   void write16(size_t offset, uint16_t value)
+   void write16(Address offset, uint16_t value)
    {
       if ((size() < 2) || (offset > (size() - 2))) throw "stack fault";
       raw[offset    ] = uint8_t(value >> 8);
@@ -98,7 +100,7 @@ public:
    }
 
    //! Write a 24-bit value at an absolute offset into the stack
-   void write24(size_t offset, uint32_t value)
+   void write24(Address offset, uint32_t value)
    {
       if ((size() < 3) || (offset > (size() - 3))) throw "stack fault";
       raw[offset    ] = uint8_t(value >> 16);
@@ -107,7 +109,7 @@ public:
    }
 
    //! Write a 32-bit value at an absolute offset into the stack
-   void write32(size_t offset, uint32_t value)
+   void write32(Address offset, uint32_t value)
    {
       if ((size() < 4) || (offset > (size() - 4))) throw "stack fault";
       raw[offset    ] = uint8_t(value >> 24);
@@ -132,7 +134,7 @@ public:
    void clear() { return raw.clear(); }
 
    //! Shrink the stack to a new size
-   void shrink(size_t new_size)
+   void shrink(Address new_size)
    {
       if (new_size >= size()) throw "stack overflow";
       return raw.resize(new_size);
@@ -197,7 +199,7 @@ public:
    }
 
 protected:
-   size_t               max_size;
+   Address              max_size;
    std::vector<uint8_t> raw;
 };
 

@@ -27,6 +27,7 @@
 #include "PLT/File.h"
 
 #include "share/Error.h"
+#include "share/State.h"
 #include "share/Random.h"
 #include "share/Stack.h"
 
@@ -36,15 +37,13 @@
 #include "Z/Story.h"
 
 //! Z machine state
-class ZState
+class ZState : public IF::State
 {
 private:
    static const uint32_t GAME_START = sizeof(ZHeader);
 
    // Static configuration
    const Z::Story&  story;
-   std::string      save_dir;
-   uint32_t         initial_rand_seed{0};
    uint32_t         game_end{0};
    uint32_t         global_base{0};
 
@@ -54,17 +53,11 @@ private:
    unsigned              undo_oldest{0};
    unsigned              undo_next{0};
 
-   // Dynamic state
-   IF::Random random;
-   uint32_t   pc{0};
-   uint16_t   frame_ptr{0};
-   IF::Stack  stack{2048};
 public:
    ZMemory    memory;
 
 private:
    // Terminal state
-   mutable bool   do_quit{false};
    mutable Error exit_code{Error::NONE};
 
 public:
@@ -72,9 +65,8 @@ public:
           const std::string& save_dir_,
           unsigned           num_undo,
           uint32_t           initial_rand_seed_)
-      : story(story_)
-      , save_dir(save_dir_)
-      , initial_rand_seed(initial_rand_seed_)
+      : IF::State(save_dir_, initial_rand_seed_, 2048)
+      , story(story_)
    {
       undo.resize(num_undo);
 
@@ -89,30 +81,10 @@ public:
       }
    }
 
-   //! Return whether the machine should stop
-   bool isQuitRequested() const { return do_quit; }
-
-   //! Current value of the program counter
-   uint32_t getPC() const { return pc; }
-
-   //! Current value of the frame pointer
-   uint16_t getFramePtr() const { return frame_ptr; }
-
    //! Reset the dynamic state to the initial conditions.
    void reset()
    {
-      do_quit = false;
-
-      if (initial_rand_seed != 0)
-      {
-         random.seed(initial_rand_seed);
-      }
-
-      jump(story.getHeader()->getEntryPoint());
-
-      frame_ptr = 0;
-
-      stack.clear();
+      IF::State::reset(story.getHeader()->getEntryPoint());
 
       memory.reset(story);
    }
@@ -186,8 +158,6 @@ public:
       return true;
    }
 
-   void quit() const { do_quit = true; }
-
    //! Report an error, terminates the machine
    bool error(Error err_) const
    {
@@ -195,7 +165,7 @@ public:
       if(!isError(exit_code))
       {
          exit_code = err_;
-         quit();
+         ((State*)this)->quit();
       }
 
       return false;

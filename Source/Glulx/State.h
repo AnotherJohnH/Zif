@@ -27,67 +27,44 @@
 #include <vector>
 
 #include "share/Memory.h"
-#include "share/Random.h"
+#include "share/State.h"
 
 #include "Glulx/Story.h"
 
 namespace Glulx {
 
 //! Glulx machine implementation
-class State
+class State : public IF::State
 {
 public:
    State(const Story&       story_,
          const std::string& save_dir_,
          unsigned           num_undo,
          uint32_t           initial_rand_seed_)
-      : story(story_)
-      , save_dir(save_dir_)
-      , initial_rand_seed(initial_rand_seed_)
+      : IF::State(save_dir_, initial_rand_seed_, story.getHeader()->stack_size)
+      , story(story_)
    {
       const Header* header = story.getHeader();
-
       memory.resize(header->end_mem);
-      stack.reserve(header->stack_size);
    }
-
-   //! Return whether the machine should stop
-   bool isQuitRequested() const { return quit; }
 
    //! Reset the dynamic state to the initial conditions.
    void reset()
    {
       const Header* header = story.getHeader();
 
-      quit = false;
-
-      if (initial_rand_seed != 0)
-      {
-         random.seed(initial_rand_seed);
-      }
-
-      pc        = header->start_func;
-      frame_ptr = 0;
+      IF::State::reset(header->start_func);
 
       memcpy(memory.data(), story.data(), story.size());
       memset(memory.data() + header->ext_start, 0, header->end_mem - header->ext_start);
-
-      stack.clear();
    }
 
 private:
    // Static configuration
-   const Story&         story;
-   std::string          save_dir;
-   uint32_t             initial_rand_seed{0};
+   const Story&  story;
 
    // Dynamic state
-   bool                 quit{false};
-   uint32_t             pc{0};
-   uint32_t             frame_ptr{0};
-   IF::Memory           memory;
-   std::vector<uint8_t> stack;
-   IF::Random           random;
+   IF::Memory    memory;
 };
 
 } // namespace Glulx
