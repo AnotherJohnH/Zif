@@ -85,7 +85,7 @@ private:
    bool                 quit{false};
    uint32_t             pc{0};
    uint32_t             frame_ptr{0};
-   Memory               memory;
+   IF::Memory           memory;
    std::vector<uint8_t> stack;
    Random               random;
 };

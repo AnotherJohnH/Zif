@@ -30,7 +30,7 @@
 namespace Glulx {
 
 //! Manage Glulx story image
-class Story : public StoryBase<Glulx::Header>
+class Story : public IF::StoryBase<Glulx::Header>
 {
 public:
    Story() = default;

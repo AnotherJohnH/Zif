@@ -20,15 +20,16 @@
 // SOFTWARE.
 //------------------------------------------------------------------------------
 
-#ifndef MEMORY_H
-#define MEMORY_H
+#ifndef IF_MEMORY_H
+#define IF_MEMORY_H
 
 #include <cassert>
 #include <cstdint>
 #include <vector>
 
-namespace {
+namespace IF {
 
+//! Memory implementation for an interactive fiction VM
 class Memory
 {
 public:
@@ -129,6 +130,6 @@ protected:
    std::vector<uint8_t> raw;
 };
 
-}
+} // namespace IF
 
 #endif

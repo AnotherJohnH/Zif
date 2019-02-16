@@ -43,11 +43,11 @@ public:
    const std::string& getLastError() const { return error; }
 
    //! Save the Machine state in this Quetzal object
-   void encode(const ::Story&  story,
-               uint32_t        pc,
-               const ::Memory& memory,
-               const ::Stack&  stack,
-               const Random&   random)
+   void encode(const IF::Story&  story,
+               uint32_t          pc,
+               const IF::Memory& memory,
+               const IF::Stack&  stack,
+               const Random&     random)
    {
       story.encodeQuetzalHeader(doc, pc);
 
@@ -57,11 +57,11 @@ public:
    }
 
    //! Restore the ZMachine state from this Quetzal object
-   bool decode(const ::Story&  story,
-               uint32_t&       pc,
-               ::Memory&       memory,
-               ::Stack&        stack,
-               Random&         random)
+   bool decode(const IF::Story& story,
+               uint32_t&        pc,
+               IF::Memory&      memory,
+               IF::Stack&       stack,
+               Random&          random)
    {
       decodeZifHeader(random);
 
@@ -120,7 +120,7 @@ private:
    }
 
    //! Prepare CMem chunk
-   void encodeMemory(const ::Story&  story, const ::Memory& memory)
+   void encodeMemory(const IF::Story&  story, const IF::Memory& memory)
    {
       STB::IFF::Chunk* cmem = doc.newChunk("CMem");
 
@@ -154,7 +154,7 @@ private:
    }
 
    //! Prepare Stks chunk
-   void encodeStacks(const ::Stack& stack)
+   void encodeStacks(const IF::Stack& stack)
    {
       // Stacks (store as Big endian)
       STB::IFF::Chunk* stks = doc.newChunk("Stks");
@@ -175,7 +175,7 @@ private:
    }
 
    //! Read and decode CMem or UMem chunk
-   bool decodeMemory(const ::Story& story, ::Memory& memory)
+   bool decodeMemory(const IF::Story& story, IF::Memory& memory)
    {
       uint32_t size = 0;
 
@@ -239,7 +239,7 @@ private:
       return false;
    }
 
-   bool decodeByte(::Memory&      memory,
+   bool decodeByte(IF::Memory& memory,
                    const uint8_t* ref,
                    uint32_t       ref_size,
                    uint32_t       addr,
@@ -263,7 +263,7 @@ private:
    }
 
    //! Read and decode Stks chunk
-   bool decodeStacks(Stack& stack)
+   bool decodeStacks(IF::Stack& stack)
    {
        uint32_t stack_size = 0;
        const uint8_t* bytes = doc.load<uint8_t>("Stks", &stack_size);

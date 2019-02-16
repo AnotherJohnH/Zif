@@ -20,8 +20,8 @@
 // SOFTWARE.
 //------------------------------------------------------------------------------
 
-#ifndef ZMEMORY_H
-#define ZMEMORY_H
+#ifndef Z_MEMORY_H
+#define Z_MEMORY_H
 
 #include <cstring>
 
@@ -30,7 +30,7 @@
 #include "Z/Story.h"
 
 //! Z machine memory
-class ZMemory : public ::Memory
+class ZMemory : public IF::Memory
 {
 public:
    ZMemory() = default;
@@ -53,7 +53,7 @@ public:
    }
 
    //! Reset memory from game image
-   void reset(const ::Story& story)
+   void reset(const IF::Story& story)
    {
       // TODO the header should be reset (only bits 0 and 1 from Flags 2
       //      shoud be preserved)

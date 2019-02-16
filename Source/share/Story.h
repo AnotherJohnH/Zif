@@ -20,8 +20,8 @@
 // SOFTWARE.
 //------------------------------------------------------------------------------
 
-#ifndef STORY_H
-#define STORY_H
+#ifndef IF_STORY_H
+#define IF_STORY_H
 
 #include <cstdint>
 #include <cstdio>
@@ -30,8 +30,9 @@
 
 #include "STB/IFF.h"
 
-namespace {
+namespace IF {
 
+//! Story base class for an interactive fiction VM
 class Story
 {
 public:
@@ -195,6 +196,6 @@ protected:
    HEADER* getHeader() { return reinterpret_cast<HEADER*>(image.data()); }
 };
 
-}
+} // namespace IF
 
 #endif

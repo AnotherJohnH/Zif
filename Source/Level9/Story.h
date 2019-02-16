@@ -30,7 +30,7 @@
 namespace Level9 {
 
 //! Manage Level9 story image
-class Story : public StoryBase<Level9::Header>
+class Story : public IF::StoryBase<Level9::Header>
 {
 public:
    Story() = default;

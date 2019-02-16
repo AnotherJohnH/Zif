@@ -53,10 +53,10 @@ private:
    Z::Story    story;
    ZQuetzal    quetzal;
 
-   uint32_t    pc;
-   ZMemory     memory;
-   Stack       stack{2048};
-   Random      random;
+   uint32_t  pc;
+   ZMemory   memory;
+   IF::Stack stack{2048};
+   Random    random;
 
    int error(const std::string& message)
    {

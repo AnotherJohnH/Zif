@@ -20,15 +20,16 @@
 // SOFTWARE.
 //------------------------------------------------------------------------------
 
-#ifndef STACK_H
-#define STACK_H
+#ifndef IF_STACK_H
+#define IF_STACK_H
 
 #include <cassert>
 #include <cstdint>
 #include <vector>
 
-namespace {
+namespace IF {
 
+//! Stack implementation for an interactive fiction VM
 class Stack
 {
 public:
@@ -200,6 +201,6 @@ protected:
    std::vector<uint8_t> raw;
 };
 
-}
+} // namespace IF
 
 #endif

@@ -36,7 +36,7 @@
 namespace Z {
 
 //! Manage Z story image
-class Story : public StoryBase<ZHeader>
+class Story : public IF::StoryBase<ZHeader>
 {
 public:
    Story() = default;
