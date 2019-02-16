@@ -152,6 +152,12 @@ public:
    //! Validate header and return story size
    virtual bool validateHeader(FILE* fp, size_t& size) = 0;
 
+   //! Prepare VM memory for this Z-story image
+   virtual void prepareMemory(IF::Memory& memory) const = 0;
+
+   //! Reset VM memory for this Z-story image
+   virtual void resetMemory(IF::Memory& memory) const = 0;
+
    //! Encode Quetzal header chunk 
    virtual void encodeQuetzalHeader(STB::IFF::Document& doc, uint32_t pc) const = 0;
 

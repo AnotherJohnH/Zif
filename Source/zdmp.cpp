@@ -182,7 +182,7 @@ private:
          return error(story.getLastError());
       }
 
-      memory.init(story);
+      story.prepareMemory(memory);
 
       if (save_file != nullptr)
       {
@@ -202,7 +202,7 @@ private:
       }
       else
       {
-         memory.reset(story);
+         story.resetMemory(memory);
       }
 
       dumpHeader(memory.getHeader());

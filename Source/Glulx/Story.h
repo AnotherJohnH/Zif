@@ -109,6 +109,21 @@ public:
        return true;
    }
 
+   //! Initialise VM memory for this Z-story image
+   virtual void prepareMemory(IF::Memory& memory) const override
+   {
+      const Header* header = getHeader();
+      memory.resize(header->end_mem);
+   }
+
+   //! Reset VM memory for this Z-story image
+   virtual void resetMemory(IF::Memory& memory) const override
+   {
+      const Header* header = getHeader();
+      memcpy(memory.data(), data(), size());
+      memset(memory.data() + header->ext_start, 0, header->end_mem - header->ext_start);
+   }
+
 private:
    bool isMagic(const uint8_t* magic)
    {

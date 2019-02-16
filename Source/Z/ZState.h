@@ -71,14 +71,10 @@ public:
       undo.resize(num_undo);
 
       const ZHeader* header = story.getHeader();
+      game_end    = header->getStorySize();
+      global_base = header->glob;
 
-      game_end     = header->getStorySize();
-      global_base  = header->glob;
-
-      if (!memory.init(story))
-      {
-         error(Error::BAD_CONFIG);
-      }
+      story.prepareMemory(memory);
    }
 
    //! Reset the dynamic state to the initial conditions.
@@ -86,7 +82,7 @@ public:
    {
       IF::State::reset(story.getHeader()->getEntryPoint());
 
-      memory.reset(story);
+      story.resetMemory(memory);
    }
 
    //! Save the dynamic state to a file

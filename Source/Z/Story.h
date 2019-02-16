@@ -51,6 +51,7 @@ private:
       uint8_t    initial_pc[3];
    };
 
+   //! Check for valid Z story header at the given file pointer
    virtual bool checkHeader(FILE* fp) override
    {
       uint8_t version;
@@ -63,6 +64,7 @@ private:
       return false;
    }
 
+   //! Validate Z-story header
    virtual bool validateHeader(FILE* fp, size_t& size) override
    {
       const ZHeader* header = getHeader();
@@ -126,6 +128,7 @@ private:
       return true;
    }
 
+   //! Validate Z-story image
    virtual bool validateImage() const override
    {
       const ZHeader* header = getHeader();
@@ -141,6 +144,28 @@ private:
    }
 
 public:
+   //! Initialise VM memory for this Z-story image
+   virtual void prepareMemory(IF::Memory& memory) const override
+   {
+      const ZHeader* header = getHeader();
+
+      memory.resize(header->getMemoryLimit());
+      memory.limitWrite(0, header->stat);
+
+      memcpy(memory.data(), header, sizeof(ZHeader));
+   }
+
+   //! Reset VM memory for this Z-story image
+   virtual void resetMemory(IF::Memory& memory) const override
+   {
+      // TODO the header should be reset (only bits 0 and 1 from Flags 2
+      //      shoud be preserved)
+
+      memcpy(memory.data() + sizeof(ZHeader),
+             data() + sizeof(ZHeader),
+             size() - sizeof(ZHeader));
+   }
+
    //! Encode Quetzal header chunk
    virtual void encodeQuetzalHeader(STB::IFF::Document& doc, uint32_t pc) const override
    {

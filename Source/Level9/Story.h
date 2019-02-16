@@ -100,6 +100,16 @@ public:
        return true;
    }
 
+   //! Initialise VM memory for this Z-story image
+   virtual void prepareMemory(IF::Memory& memory) const override
+   {
+   }
+
+   //! Reset VM memory for this Z-story image
+   virtual void resetMemory(IF::Memory& memory) const override
+   {
+   }
+
 private:
    bool isMagic(const uint8_t* magic)
    {

@@ -37,31 +37,6 @@ public:
 
    //! Get writable pointer to header
    ZHeader* getHeader() { return reinterpret_cast<ZHeader*>(raw.data()); }
-
-   //! Configure memory for a game
-   bool init(const Z::Story& story_)
-   {
-      const ZHeader* header = story_.getHeader();
-
-      resize(header->getMemoryLimit());
-
-      limitWrite(0, header->stat);
-
-      memcpy(raw.data(), header, sizeof(ZHeader));
-
-      return true;
-   }
-
-   //! Reset memory from game image
-   void reset(const IF::Story& story)
-   {
-      // TODO the header should be reset (only bits 0 and 1 from Flags 2
-      //      shoud be preserved)
-
-      memcpy(raw.data() + sizeof(ZHeader),
-             story.data() + sizeof(ZHeader),
-             story.size() - sizeof(ZHeader));
-   }
 };
 
 #endif

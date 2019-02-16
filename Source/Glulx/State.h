@@ -44,19 +44,14 @@ public:
       : IF::State(save_dir_, initial_rand_seed_, story.getHeader()->stack_size)
       , story(story_)
    {
-      const Header* header = story.getHeader();
-      memory.resize(header->end_mem);
+      story.prepareMemory(memory);
    }
 
    //! Reset the dynamic state to the initial conditions.
    void reset()
    {
       const Header* header = story.getHeader();
-
       IF::State::reset(header->start_func);
-
-      memcpy(memory.data(), story.data(), story.size());
-      memset(memory.data() + header->ext_start, 0, header->end_mem - header->ext_start);
    }
 
 private:
