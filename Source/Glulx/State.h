@@ -26,6 +26,7 @@
 #include <cstring>
 #include <vector>
 
+#include "share/Memory.h"
 #include "share/Random.h"
 
 #include "Glulx/Story.h"
@@ -82,11 +83,11 @@ private:
 
    // Dynamic state
    bool                 quit{false};
-   Random               random;
    uint32_t             pc{0};
    uint32_t             frame_ptr{0};
-   std::vector<uint8_t> memory;
+   Memory               memory;
    std::vector<uint8_t> stack;
+   Random               random;
 };
 
 } // namespace Glulx

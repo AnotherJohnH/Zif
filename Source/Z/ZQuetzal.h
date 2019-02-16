@@ -31,7 +31,7 @@
 #include "share/Story.h"
 
 #include "ZStack.h"
-#include "ZMemory.h"
+#include "share/Memory.h"
 
 //! Encode/decode game state to/from quetzal format
 class ZQuetzal
@@ -45,7 +45,7 @@ public:
    //! Save the Machine state in this Quetzal object
    void encode(const ::Story&  story,
                uint32_t        pc,
-               const ZMemory&  memory,
+               const ::Memory& memory,
                const ZStack&   stack,
                const Random&   random)
    {
@@ -59,7 +59,7 @@ public:
    //! Restore the ZMachine state from this Quetzal object
    bool decode(const ::Story&  story,
                uint32_t&       pc,
-               ZMemory&        memory,
+               ::Memory&       memory,
                ZStack&         stack,
                Random&         random)
    {
@@ -120,15 +120,15 @@ private:
    }
 
    //! Prepare CMem chunk
-   void encodeMemory(const ::Story&  story, const ZMemory& memory)
+   void encodeMemory(const ::Story&  story, const ::Memory& memory)
    {
       STB::IFF::Chunk* cmem = doc.newChunk("CMem");
 
       const uint8_t* ref = story.data();
-      const uint8_t* mem = memory.getData();
+      const uint8_t* mem = memory.data();
 
       uint32_t run_length = 0;
-      for(uint32_t i=0; i<memory.getStaticStart(); i++)
+      for(uint32_t i=0; i<=memory.getWriteEnd(); i++)
       {
          uint8_t enc_byte = i < story.size() ? ref[i] ^ mem[i]
                                              : mem[i];
@@ -179,7 +179,7 @@ private:
    }
 
    //! Read and decode CMem or UMem chunk
-   bool decodeMemory(const ::Story& story, ZMemory& memory)
+   bool decodeMemory(const ::Story& story, ::Memory& memory)
    {
       uint32_t size = 0;
 
@@ -243,13 +243,13 @@ private:
       return false;
    }
 
-   bool decodeByte(ZMemory&       memory,
+   bool decodeByte(::Memory&      memory,
                    const uint8_t* ref,
                    uint32_t       ref_size,
                    uint32_t       addr,
                    uint8_t        byte)
    {
-      if (addr >= memory.getSize())
+      if (addr >= memory.size())
       {
          return false;
       }

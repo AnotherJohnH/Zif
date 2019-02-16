@@ -1445,7 +1445,7 @@ private:
 
    void printTrace()
    {
-      (void) dis.disassemble(dis_text, state.getPC(), state.memory.getData() + inst_addr);
+      (void) dis.disassemble(dis_text, state.getPC(), state.memory.data() + inst_addr);
 
       // TODO avoid sprintf
       std::string fmt_op_count = "NNNNNN";
@@ -1522,7 +1522,7 @@ public:
       Error exit_code = state.getExitCode();
       if(isError(exit_code))
       {
-         (void) dis.disassemble(dis_text, inst_addr, state.memory.getData() + inst_addr);
+         (void) dis.disassemble(dis_text, inst_addr, state.memory.data() + inst_addr);
          error("PC=%s : %s", dis_text.c_str(), errorString(exit_code));
          return false;
       }

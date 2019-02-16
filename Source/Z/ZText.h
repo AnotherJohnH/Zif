@@ -239,7 +239,7 @@ public:
       else if((version >= 5) && (alpha_table_addr_ != 0))
       {
          // Check header for alternate table [3.5.5]
-         alpha_table = (const char*)memory.getData() + alpha_table_addr_;
+         alpha_table = (const char*)memory.data() + alpha_table_addr_;
       }
       else
       {

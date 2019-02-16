@@ -115,15 +115,15 @@ private:
    {
       *out << "  \"memory\": [" << std::endl;
 
-      for(unsigned addr=0; addr<memory.getSize(); addr += 16)
+      for(unsigned addr=0; addr<memory.size(); addr += 16)
       {
          *out << "    {\"a\": \"" << std::setw(6) << addr << "\", \"b\": \"";
 
          for(unsigned i=0; i<16; i++)
          {
-            if ((addr + i) < memory.getSize())
+            if ((addr + i) < memory.size())
             {
-               *out << " " << std::setw(2) << unsigned(memory.getByte(addr + i));
+               *out << " " << std::setw(2) << unsigned(memory.readByte(addr + i));
             }
          }
 
@@ -131,9 +131,9 @@ private:
 
          for(unsigned i=0; i<16; i++)
          {
-            if ((addr + i) < memory.getSize())
+            if ((addr + i) < memory.size())
             {
-               uint8_t ch = memory.getByte(addr + i);
+               uint8_t ch = memory.readByte(addr + i);
                if (isprint(ch))
                {
                   *out << ch;

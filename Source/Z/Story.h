@@ -42,6 +42,7 @@ public:
    Story() = default;
 
 private:
+   //! Quetzal header
    struct IFhd
    {
       STB::Big16 release;
@@ -92,6 +93,31 @@ private:
       if (header->getStorySize() == 0)
       {
          error = "Failed to find file size";
+         return false;
+      }
+
+      // Validate story size
+      if (header->getStorySize() > header->getMemoryLimit())
+      {
+         error = "Story too big";
+         return false;
+      }
+
+      // Validate static memory region
+      if ((header->stat < sizeof(ZHeader)) ||
+          (header->stat > 0xFFFF) ||
+          (header->stat > header->getStorySize()))
+      {
+         error = "Invalid static region";
+         return false;
+      }
+
+      // Validate hi-memory region
+      if ((header->himem < sizeof(ZHeader)) ||
+          (header->himem > header->getStorySize()) ||
+          (header->himem < header->stat))
+      {
+         error = "Invalid himem region";
          return false;
       }
 
