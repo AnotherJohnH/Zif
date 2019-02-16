@@ -28,11 +28,9 @@
 
 #include "share/Error.h"
 #include "share/State.h"
-#include "share/Random.h"
-#include "share/Stack.h"
+#include "share/Quetzal.h"
 
 #include "ZHeader.h"
-#include "ZQuetzal.h"
 #include "Z/Story.h"
 
 //! Z machine state
@@ -47,10 +45,10 @@ private:
    uint32_t         global_base{0};
 
    // Saved state
-   ZQuetzal              save_file;
-   std::vector<ZQuetzal> undo;
-   unsigned              undo_oldest{0};
-   unsigned              undo_next{0};
+   IF::Quetzal              save_file;
+   std::vector<IF::Quetzal> undo;
+   unsigned                 undo_oldest{0};
+   unsigned                 undo_next{0};
 
    // Terminal state
    mutable Error exit_code{Error::NONE};
@@ -168,14 +166,12 @@ public:
    //! Fetch an instruction byte
    uint8_t fetchByte()
    {
-      assert(validatePC());
       return memory.fetch8(pc++);
    }
 
    //! Fetch an instruction word
    uint16_t fetchWord()
    {
-      assert(validatePC());
       uint16_t word = memory.fetch16(pc);
       pc += 2;
       return word;

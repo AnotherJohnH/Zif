@@ -20,8 +20,8 @@
 // SOFTWARE.
 //------------------------------------------------------------------------------
 
-#ifndef ZQUETZAL_H
-#define ZQUETZAL_H
+#ifndef IF_QUETZAL_H
+#define IF_QUETZAL_H
 
 #include <cstring>
 
@@ -30,18 +30,20 @@
 #include "share/Story.h"
 #include "share/State.h"
 
+namespace IF {
+
 //! Encode/decode game state to/from quetzal format
-class ZQuetzal
+class Quetzal
 {
 public:
-   ZQuetzal() = default;
+   Quetzal() = default;
 
    //! Get error message for the last error
    const std::string& getLastError() const { return error; }
 
    //! Save the Machine state in this Quetzal object
-   void encode(const IF::Story&  story,
-               const IF::State&  state)
+   void encode(const Story& story,
+               const State& state)
    {
       story.encodeQuetzalHeader(doc, state.getPC());
 
@@ -51,12 +53,12 @@ public:
    }
 
    //! Restore the ZMachine state from this Quetzal object
-   bool decode(const IF::Story& story,
-               IF::State&       state)
+   bool decode(const Story& story,
+               State&       state)
    {
       decodeZifHeader(state.random);
 
-      IF::Memory::Address pc;
+      Memory::Address pc;
       if (!story.decodeQuetzalHeader(doc, pc))
       {
          error = story.getLastError();
@@ -103,7 +105,7 @@ private:
    std::string        error{};
 
    //! Prepare ZifH chunk
-   void encodeZifHeader(const IF::Random& random)
+   void encodeZifHeader(const Random& random)
    {
       STB::IFF::Chunk* zifh_chunk = doc.newChunk("ZifH", sizeof(ZifHeader));
       ZifHeader        zifh;
@@ -114,7 +116,7 @@ private:
    }
 
    //! Prepare CMem chunk
-   void encodeMemory(const IF::Story&  story, const IF::Memory& memory)
+   void encodeMemory(const Story& story, const Memory& memory)
    {
       STB::IFF::Chunk* cmem = doc.newChunk("CMem");
 
@@ -148,7 +150,7 @@ private:
    }
 
    //! Prepare Stks chunk
-   void encodeStacks(const IF::Stack& stack)
+   void encodeStacks(const Stack& stack)
    {
       // Stacks (store as Big endian)
       STB::IFF::Chunk* stks = doc.newChunk("Stks");
@@ -156,7 +158,7 @@ private:
    }
 
    //! Decode ZifH chunk
-   void decodeZifHeader(IF::Random& random)
+   void decodeZifHeader(Random& random)
    {
        const ZifHeader* zifh = doc.load<ZifHeader>("ZifH");
        if (zifh == nullptr)
@@ -169,7 +171,7 @@ private:
    }
 
    //! Read and decode CMem or UMem chunk
-   bool decodeMemory(const IF::Story& story, IF::Memory& memory)
+   bool decodeMemory(const Story& story, Memory& memory)
    {
       uint32_t size = 0;
 
@@ -233,7 +235,7 @@ private:
       return false;
    }
 
-   bool decodeByte(IF::Memory& memory,
+   bool decodeByte(Memory&        memory,
                    const uint8_t* ref,
                    uint32_t       ref_size,
                    uint32_t       addr,
@@ -257,7 +259,7 @@ private:
    }
 
    //! Read and decode Stks chunk
-   bool decodeStacks(IF::Stack& stack)
+   bool decodeStacks(Stack& stack)
    {
        uint32_t stack_size = 0;
        const uint8_t* bytes = doc.load<uint8_t>("Stks", &stack_size);
@@ -275,5 +277,7 @@ private:
        return true;
    }
 };
+
+} // namespace IF
 
 #endif

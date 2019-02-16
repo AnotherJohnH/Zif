@@ -20,8 +20,7 @@
 // SOFTWARE.
 //------------------------------------------------------------------------------
 
-#include "Z/ZQuetzal.h"
-#include "share/Stack.h"
+#include "share/Quetzal.h"
 #include "Z/Story.h"
 
 #include "STB/ConsoleApp.h"
@@ -50,7 +49,7 @@ private:
 
    std::string filename;
    Z::Story    story;
-   ZQuetzal    quetzal;
+   IF::Quetzal quetzal;
    IF::State   state{"", 0, 2048};
 
    int error(const std::string& message)
