@@ -43,38 +43,7 @@ public:
       : IF::SavableState(story_, save_dir_, num_undo_, initial_rand_seed_, 2048)
    {
       const ZHeader* header = story_.getHeader();
-      game_end    = header->getStorySize();
       global_base = header->glob;
-   }
-
-   //! Report an error, terminates the machine
-   bool error(Error err_) const
-   {
-      // Only the first error is recorded
-      if(!isError(exit_code))
-      {
-         exit_code = err_;
-         ((State*)this)->quit();
-      }
-
-      return false;
-   }
-
-   //! Get the first error code reported
-   Error getExitCode() const { return exit_code; }
-
-   //! Fetch an instruction byte
-   uint8_t fetchByte()
-   {
-      return memory.fetch8(pc++);
-   }
-
-   //! Fetch an instruction word
-   uint16_t fetchWord()
-   {
-      uint16_t word = memory.fetch16(pc);
-      pc += 2;
-      return word;
    }
 
 
@@ -87,18 +56,7 @@ public:
 
    uint16_t getNumFrameArgs() const
    {
-      return validateFramePtr() ? stack.read16(frame_ptr)
-                                : 0;
-   }
-
-
-   //! Jump relative to the current PC
-   void branch(int16_t offset_)
-   {
-      pc += offset_;
-
-      // Check PC here to catch current instruction address
-      validatePC();
+      return stack.read16(frame_ptr);
    }
 
    //! Call a routine
@@ -116,8 +74,6 @@ public:
    //! Return from the given frame (usually the current frame)
    uint8_t returnFromFrame(uint32_t frame_ptr_)
    {
-      if(!validateFramePtr()) return /* bad_call_type*/ 3;
-
       stack.shrink(frame_ptr_);
 
       frame_ptr = stack.pop16();
@@ -154,14 +110,11 @@ public:
       }
       else if(index < 16)
       {
-         return validateFramePtr(index) ? stack.read16(frame_ptr + 2*index)
-                                        : 0;
+         return stack.read16(frame_ptr + 2*index);
       }
       else
       {
-         uint32_t addr = global_base + (index - 16) * 2;
-         return validateAddr(addr) ? memory.read16(addr)
-                                   : 0;
+         return memory.read16(global_base + (index - 16) * 2);
       }
    }
 
@@ -177,37 +130,15 @@ public:
       }
       else if(index < 16)
       {
-         if(!validateFramePtr(index)) return;
          stack.write16(frame_ptr + 2*index, value);
       }
       else
       {
-         uint32_t addr = global_base + (index - 16) * 2;
-         if(!validateAddr(addr)) return;
-         memory.write16(addr, value);
+         memory.write16(global_base + (index - 16) * 2, value);
       }
    }
 
 private:
-   //! Range check PC
-   bool validatePC() const
-   {
-      return (pc >= GAME_START) && (pc < game_end) ? true : error(Error::BAD_PC);
-   }
-
-   //! Range check frame pointer
-   bool validateFramePtr(uint16_t offset = 0) const
-   {
-      return (frame_ptr > 0) && ((frame_ptr + offset) < stack.size()) ? true
-                                                                      : error(Error::BAD_FRAME_PTR);
-   }
-
-   //! Range check address
-   bool validateAddr(uint32_t addr) const
-   {
-      return addr < game_end ? true : error(Error::BAD_ADDRESS);
-   }
-
    //! Save dynamic registers on the stack
    virtual void pushContext() override
    {
@@ -218,18 +149,11 @@ private:
    virtual void popContext() override
    {
       frame_ptr = stack.pop16();
-      validateFramePtr();
    }
 
 private:
-   static const uint32_t GAME_START = sizeof(ZHeader);
-
    // Static configuration
-   uint32_t         game_end{0};
-   uint32_t         global_base{0};
-
-   // Terminal state
-   mutable Error exit_code{Error::NONE};
+   uint32_t global_base{0};
 };
 
 #endif

@@ -126,14 +126,14 @@ private:
    //! Conditional branch (4.7)
    void branch(bool cond)
    {
-      uint8_t type           = state.fetchByte();
+      uint8_t type           = state.fetch8();
       bool    branch_if_true = (type & (1 << 7)) != 0;
       bool    long_branch    = (type & (1 << 6)) == 0;
       int16_t offset         = type & 0x3F;
 
       if(long_branch)
       {
-         offset = (offset << 8) | state.fetchByte();
+         offset = (offset << 8) | state.fetch8();
          // Sign extend
          offset = int16_t(offset << 2) >> 2;
       }
@@ -165,7 +165,7 @@ private:
          // this is legal, just return false
          switch(call_type)
          {
-         case 0:  state.varWrite(state.fetchByte(), 0); break;
+         case 0:  state.varWrite(state.fetch8(), 0); break;
          case 1:  /* throw return value away */ break;
          case 2:  state.push(0); break;
          default: state.error(Error::BAD_CALL_TYPE); break;
@@ -175,7 +175,7 @@ private:
 
       state.call(call_type, target);
 
-      uint8_t num_locals = state.fetchByte();
+      uint8_t num_locals = state.fetch8();
 
       state.push(argc);
 
@@ -185,7 +185,7 @@ private:
 
          if(version() <= 4)
          {
-            value = state.fetchWord();
+            value = state.fetch16();
          }
 
          if(i < argc)
@@ -209,7 +209,7 @@ private:
 
       switch(call_type)
       {
-      case 0: state.varWrite(state.fetchByte(), value); break;
+      case 0: state.varWrite(state.fetch8(), value); break;
       case 1: /* throw return value away */ break;
       case 2: state.push(value);            break;
 
@@ -330,7 +330,7 @@ private:
    //! v4 save -> (result)
    void op0_save_v4()
    {
-      uint8_t ret = state.fetchByte();
+      uint8_t ret = state.fetch8();
       state.varWrite(ret, 2);
       state.varWrite(ret, state.save() ? 1 : 0);
    }
@@ -341,7 +341,7 @@ private:
    //! v4 restore -> (result)
    void op0_restore_v4()
    {
-      if(!state.restore()) state.varWrite(state.fetchByte(), 0);
+      if(!state.restore()) state.varWrite(state.fetch8(), 0);
    }
 
    //! restart
@@ -354,7 +354,7 @@ private:
    void op0_pop() { state.pop(); }
 
    //! catch -> (result)
-   void op0_catch() { state.varWrite(state.fetchByte(), state.getFramePtr()); }
+   void op0_catch() { state.varWrite(state.fetch8(), state.getFramePtr()); }
 
    //! quit
    void op0_quit() { state.quit(); }
@@ -379,24 +379,24 @@ private:
    void op1_get_sibling()
    {
       uint16_t obj = object.getSibling(uarg[0]);
-      state.varWrite(state.fetchByte(), obj);
+      state.varWrite(state.fetch8(), obj);
       branch(obj != 0);
    }
 
    void op1_get_parent()
    {
       uint16_t obj = object.getParent(uarg[0]);
-      state.varWrite(state.fetchByte(), obj);
+      state.varWrite(state.fetch8(), obj);
    }
 
    void op1_get_child()
    {
       uint16_t obj = object.getChild(uarg[0]);
-      state.varWrite(state.fetchByte(), obj);
+      state.varWrite(state.fetch8(), obj);
       branch(obj != 0);
    }
 
-   void op1_get_prop_len()  { state.varWrite(state.fetchByte(), object.propSize(uarg[0])); }
+   void op1_get_prop_len()  { state.varWrite(state.fetch8(), object.propSize(uarg[0])); }
 
    void op1_inc()           { state.varWrite(uarg[0], state.varRead(uarg[0]) + 1); }
 
@@ -416,7 +416,7 @@ private:
 
    void op1_print_paddr()   { streamText(header->unpackAddr(uarg[0], /* routine */false)); }
 
-   void op1_load()          { state.varWrite(state.fetchByte(), state.varRead(uarg[0], true)); }
+   void op1_load()          { state.varWrite(state.fetch8(), state.varRead(uarg[0], true)); }
 
    void op1_not()           { state.varWrite(uarg[0], ~uarg[0]); }
 
@@ -451,8 +451,8 @@ private:
 
    void op2_jin()           { branch(object.getParent(uarg[0]) == uarg[1]); }
    void op2_test_bitmap()   { branch((uarg[0] & uarg[1]) == uarg[1]); }
-   void op2_or()            { state.varWrite(state.fetchByte(), uarg[0] | uarg[1]); }
-   void op2_and()           { state.varWrite(state.fetchByte(), uarg[0] & uarg[1]); }
+   void op2_or()            { state.varWrite(state.fetch8(), uarg[0] | uarg[1]); }
+   void op2_and()           { state.varWrite(state.fetch8(), uarg[0] & uarg[1]); }
    void op2_test_attr()     { branch(object.getAttr(uarg[0], uarg[1])); }
    void op2_set_attr()      { object.setAttr(uarg[0], uarg[1], true); }
    void op2_clear_attr()    { object.setAttr(uarg[0], uarg[1], false); }
@@ -462,7 +462,7 @@ private:
    //! 2OP:15 0F loadw array word_index -> (result)
    void op2_loadw()
    {
-      state.varWrite(state.fetchByte(), state.memory.read16(uarg[0]+2*uarg[1]));
+      state.varWrite(state.fetch8(), state.memory.read16(uarg[0]+2*uarg[1]));
    }
 
    //! 2OP:16 10 loadb array byte_index -> (result)
@@ -470,15 +470,15 @@ private:
    //  which must lie in static or dynamic memory)
    void op2_loadb()
    {
-      state.varWrite(state.fetchByte(), state.memory.read8(uarg[0] + uarg[1]));
+      state.varWrite(state.fetch8(), state.memory.read8(uarg[0] + uarg[1]));
    }
 
-   void op2_get_prop()      { state.varWrite(state.fetchByte(), object.getProp(uarg[0], uarg[1])); }
-   void op2_get_prop_addr() { state.varWrite(state.fetchByte(), object.getPropAddr(uarg[0], uarg[1])); }
-   void op2_get_next_prop() { state.varWrite(state.fetchByte(), object.getPropNext(uarg[0], uarg[1])); }
-   void op2_add()           { state.varWrite(state.fetchByte(), sarg[0] + sarg[1]); }
-   void op2_sub()           { state.varWrite(state.fetchByte(), sarg[0] - sarg[1]); }
-   void op2_mul()           { state.varWrite(state.fetchByte(), sarg[0] * sarg[1]); }
+   void op2_get_prop()      { state.varWrite(state.fetch8(), object.getProp(uarg[0], uarg[1])); }
+   void op2_get_prop_addr() { state.varWrite(state.fetch8(), object.getPropAddr(uarg[0], uarg[1])); }
+   void op2_get_next_prop() { state.varWrite(state.fetch8(), object.getPropNext(uarg[0], uarg[1])); }
+   void op2_add()           { state.varWrite(state.fetch8(), sarg[0] + sarg[1]); }
+   void op2_sub()           { state.varWrite(state.fetch8(), sarg[0] - sarg[1]); }
+   void op2_mul()           { state.varWrite(state.fetch8(), sarg[0] * sarg[1]); }
 
    void op2_div()
    {
@@ -487,7 +487,7 @@ private:
          state.error(Error::DIV_BY_ZERO);
          return;
       }
-      state.varWrite(state.fetchByte(), sarg[0] / sarg[1]);
+      state.varWrite(state.fetch8(), sarg[0] / sarg[1]);
    }
 
    void op2_mod()
@@ -497,7 +497,7 @@ private:
          state.error(Error::DIV_BY_ZERO);
          return;
       }
-      state.varWrite(state.fetchByte(), sarg[0] % sarg[1]);
+      state.varWrite(state.fetch8(), sarg[0] % sarg[1]);
    }
 
    void op2_call_2s()           { subCall(0, uarg[0], 1, &uarg[1]); }
@@ -510,13 +510,13 @@ private:
    void opV_call()
    {
       if (uarg[0] == 0)
-         state.varWrite(state.fetchByte(), 0);
+         state.varWrite(state.fetch8(), 0);
       else
          subCall(0, uarg[0], num_arg-1, &uarg[1]);
    }
 
    void opV_call_vs()        { opV_call(); }
-   void opV_not()            { state.varWrite(state.fetchByte(), ~uarg[0]); }
+   void opV_not()            { state.varWrite(state.fetch8(), ~uarg[0]); }
    void opV_call_vn()        { subCall(1, uarg[0], num_arg-1, &uarg[1]); }
    void opV_call_vn2()       { opV_call_vn(); }
    void opV_storew()         { state.memory.write16(uarg[0] + 2*uarg[1], uarg[2]); }
@@ -617,7 +617,7 @@ private:
          }
       }
 
-      state.varWrite(state.fetchByte(), status);
+      state.varWrite(state.fetch8(), status);
 
       if(parse != 0)
       {
@@ -627,7 +627,7 @@ private:
 
    void opV_print_char()     { stream.writeChar(uarg[0]); }
    void opV_print_num()      { stream.writeNumber(sarg[0]); }
-   void opV_random()         { state.varWrite(state.fetchByte(), state.randomOp(sarg[0])); }
+   void opV_random()         { state.varWrite(state.fetch8(), state.randomOp(sarg[0])); }
    void opV_push()           { state.push(uarg[0]); }
 
    void opV_pull_v1()
@@ -651,7 +651,7 @@ private:
          value = state.pop();
       }
 
-      state.varWrite(state.fetchByte(), value, true);
+      state.varWrite(state.fetch8(), value, true);
    }
 
    void opV_split_window()   { screen.splitWindow(uarg[0]); }
@@ -733,7 +733,7 @@ private:
 
       if(readChar(timeout, routine, ch))
       {
-         state.varWrite(state.fetchByte(), ch);
+         state.varWrite(state.fetch8(), ch);
       }
    }
 
@@ -759,7 +759,7 @@ private:
          table += form & 0x7F;
       }
 
-      state.varWrite(state.fetchByte(), result);
+      state.varWrite(state.fetch8(), result);
 
       branch(result != 0);
    }
@@ -830,7 +830,7 @@ private:
       (void)bytes;
       (void)name; // TODO use supplied parameters
 
-      uint8_t ret = state.fetchByte();
+      uint8_t ret = state.fetch8();
       state.varWrite(ret, 2);
       state.varWrite(ret, state.save() ? 1 : 0);
    }
@@ -845,28 +845,28 @@ private:
       (void)bytes;
       (void)name; // TODO use supplied parameters
 
-      if(!state.restore()) state.varWrite(state.fetchByte(), 0);
+      if(!state.restore()) state.varWrite(state.fetch8(), 0);
    }
 
    void opE_log_shift()
    {
       if(sarg[1] < 0)
-         state.varWrite(state.fetchByte(), uarg[0] >> -sarg[1]);
+         state.varWrite(state.fetch8(), uarg[0] >> -sarg[1]);
       else
-         state.varWrite(state.fetchByte(), uarg[0] << sarg[1]);
+         state.varWrite(state.fetch8(), uarg[0] << sarg[1]);
    }
 
    void opE_art_shift()
    {
       if(sarg[1] < 0)
-         state.varWrite(state.fetchByte(), sarg[0] >> -sarg[1]);
+         state.varWrite(state.fetch8(), sarg[0] >> -sarg[1]);
       else
-         state.varWrite(state.fetchByte(), sarg[0] << sarg[1]);
+         state.varWrite(state.fetch8(), sarg[0] << sarg[1]);
    }
 
    void opE_save_undo()
    {
-      uint8_t ret = state.fetchByte();
+      uint8_t ret = state.fetch8();
       state.varWrite(ret, 2);
       state.varWrite(ret, state.saveUndo() ? 1 : 0);
    }
@@ -875,7 +875,7 @@ private:
    {
       if(!state.restoreUndo())
       {
-         state.varWrite(state.fetchByte(), 0);
+         state.varWrite(state.fetch8(), 0);
       }
    }
 
@@ -948,7 +948,7 @@ private:
          }
       }
 
-      state.varWrite(state.fetchByte(), bit_mask);
+      state.varWrite(state.fetch8(), bit_mask);
    }
 
    void opE_draw_picture() { TODO_WARN("op draw_picture unimplemented"); }
@@ -991,7 +991,7 @@ private:
    void opE_set_font()
    {
       bool ok = stream.setFont(uarg[0]);
-      state.varWrite(state.fetchByte(), ok);
+      state.varWrite(state.fetch8(), ok);
    }
 
    void opE_move_window()
@@ -1026,7 +1026,7 @@ private:
       uint16_t wind = uarg[0];
       uint16_t prop = uarg[1];
 
-      state.varWrite(state.fetchByte(), screen.getWindowProp(wind, prop));
+      state.varWrite(state.fetch8(), screen.getWindowProp(wind, prop));
    }
 
    void opE_scroll_window()
@@ -1293,9 +1293,9 @@ private:
 
       switch(type)
       {
-      case OP_LARGE_CONST: operand = state.fetchWord();          break;
-      case OP_SMALL_CONST: operand = state.fetchByte();          break;
-      case OP_VARIABLE:    operand = state.varRead(state.fetchByte()); break;
+      case OP_LARGE_CONST: operand = state.fetch16();               break;
+      case OP_SMALL_CONST: operand = state.fetch8();                break;
+      case OP_VARIABLE:    operand = state.varRead(state.fetch8()); break;
       default: assert(!"bad operand type"); return;
       }
 
@@ -1310,13 +1310,13 @@ private:
 
       if(n == 4)
       {
-         op_types = state.fetchByte() << 8;
+         op_types = state.fetch8() << 8;
       }
       else
       {
          assert(n == 8);
 
-         op_types = state.fetchWord();
+         op_types = state.fetch16();
       }
 
       // Unpack the type of the operands
@@ -1378,7 +1378,7 @@ private:
 
    void fetchDecodeExecute()
    {
-      uint8_t opcode = state.fetchByte();
+      uint8_t opcode = state.fetch8();
 
       clearOperands();
 
@@ -1399,7 +1399,7 @@ private:
          if(opcode == 0xBE)
          {
             // 10111110
-            doOpE(state.fetchByte());
+            doOpE(state.fetch8());
          }
          else
          {
@@ -1495,25 +1495,33 @@ public:
 
       start(options.restore);
 
-      if(options.trace)
+      try
       {
-         while(!state.isQuitRequested())
+         if(options.trace)
          {
-            inst_addr = state.getPC();
-            printTrace();
-            fetchDecodeExecute();
+            while(!state.isQuitRequested())
+            {
+               inst_addr = state.getPC();
+               printTrace();
+               fetchDecodeExecute();
+            }
          }
-      }
-      else
-      {
-         while(!state.isQuitRequested())
+         else
          {
-            inst_addr = state.getPC();
-            fetchDecodeExecute();
+            while(!state.isQuitRequested())
+            {
+               inst_addr = state.getPC();
+               fetchDecodeExecute();
+            }
          }
-      }
 
-      if (version() <= 3) showStatus();
+         if (version() <= 3) showStatus();
+      }
+      catch(const std::string& message)
+      {
+         error(message.c_str());
+         return false;
+      }
 
       console.waitForKey();
 

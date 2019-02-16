@@ -26,10 +26,11 @@
 #include <cstdint>
 #include <string>
 
-#include "share/Story.h"
+#include "share/Error.h"
 #include "share/Memory.h"
-#include "share/Stack.h"
 #include "share/Random.h"
+#include "share/Stack.h"
+#include "share/Story.h"
 
 namespace IF {
 
@@ -73,14 +74,61 @@ public:
       }
    }
 
-   //! Signal exit
-   void quit() { do_quit = true; }
+   //! Fetch an instruction byte
+   uint8_t fetch8()
+   {
+      return memory.fetch8(pc++);
+   }
+
+   //! Fetch a 16-bit instruction word
+   uint16_t fetch16()
+   {
+      uint16_t word = memory.fetch16(pc);
+      pc += 2;
+      return word;
+   }
+
+   //! Fetch a 32-bit instruction word
+   uint32_t fetch32()
+   {
+      uint32_t word = memory.fetch32(pc);
+      pc += 4;
+      return word;
+   }
 
    //! Absolute jump to given target address
    void jump(Memory::Address target)
    {
       pc = target;
    }
+
+   //! Jump relative to the current PC
+   void branch(signed offset)
+   {
+      pc += offset;
+   }
+
+   //! Report an error, terminates the machine
+   bool error(Error err_) const
+   {
+      // Only the first error is recorded
+      if(!isError(exit_code))
+      {
+         exit_code = err_;
+         ((State*)this)->quit();
+      }
+
+      return false;
+   }
+
+   //! Signal exit
+   void quit()
+   {
+      do_quit = true;
+   }
+
+   //! Get the first error code reported
+   Error getExitCode() const { return exit_code; }
 
 protected:
    // Configuration
@@ -89,6 +137,7 @@ protected:
 
    // Dynamic state
    bool            do_quit{false};
+   mutable Error   exit_code{Error::NONE};
    Memory::Address pc{0};
    Stack::Address  frame_ptr{0};
 public:
