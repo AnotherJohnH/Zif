@@ -32,7 +32,6 @@
 #include "share/Stack.h"
 
 #include "ZHeader.h"
-#include "ZMemory.h"
 #include "ZQuetzal.h"
 #include "Z/Story.h"
 
@@ -53,10 +52,6 @@ private:
    unsigned              undo_oldest{0};
    unsigned              undo_next{0};
 
-public:
-   ZMemory    memory;
-
-private:
    // Terminal state
    mutable Error exit_code{Error::NONE};
 

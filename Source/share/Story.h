@@ -30,6 +30,8 @@
 
 #include "STB/IFF.h"
 
+#include "share/Memory.h"
+
 namespace IF {
 
 //! Story base class for an interactive fiction VM

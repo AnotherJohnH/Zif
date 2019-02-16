@@ -1478,7 +1478,7 @@ public:
       config.interp_major_version = 1;
       config.interp_minor_version = 0;
 
-      header = state.memory.getHeader();
+      header = (ZHeader*)state.memory.data();
       header->init(console, config);
 
       stream.init(header->version);

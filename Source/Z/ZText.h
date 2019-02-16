@@ -26,7 +26,8 @@
 #include <cstdint>
 #include <functional>
 
-#include "ZMemory.h"
+#include "share/Memory.h"
+
 #include "ZStream.h"
 
 // See the Z specification section 3.
@@ -50,7 +51,7 @@ private:
    };
 
    // Linkage
-   const ZMemory& memory;
+   const IF::Memory& memory;
 
    // Configuration
    uint8_t     version{0};
@@ -216,7 +217,7 @@ private:
    }
 
 public:
-   ZText(ZMemory& memory_)
+   ZText(IF::Memory& memory_)
       : memory(memory_)
    {
    }

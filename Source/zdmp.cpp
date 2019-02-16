@@ -20,7 +20,6 @@
 // SOFTWARE.
 //------------------------------------------------------------------------------
 
-#include "Z/ZMemory.h"
 #include "Z/ZQuetzal.h"
 #include "share/Stack.h"
 #include "Z/Story.h"
@@ -53,10 +52,10 @@ private:
    Z::Story    story;
    ZQuetzal    quetzal;
 
-   uint32_t   pc;
-   ZMemory    memory;
-   IF::Stack  stack{2048};
-   IF::Random random;
+   uint32_t    pc;
+   IF::Memory  memory;
+   IF::Stack   stack{2048};
+   IF::Random  random;
 
    int error(const std::string& message)
    {
@@ -205,7 +204,7 @@ private:
          story.resetMemory(memory);
       }
 
-      dumpHeader(memory.getHeader());
+      dumpHeader((const ZHeader*)memory.data());
 
       if (dump_mem)
       {

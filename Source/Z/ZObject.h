@@ -25,7 +25,7 @@
 
 #include <cassert>
 
-#include "ZMemory.h"
+#include "share/Memory.h"
 
 //! Z machine object directory
 class ZObject
@@ -34,9 +34,9 @@ private:
    const unsigned SMALL_PROP_BITS = 5;
    const unsigned LARGE_PROP_BITS = 6;
 
-   ZMemory& memory;
-   uint16_t obj_table{0}; //!< Address of object table
-   bool     small{true};  //!< true => Small table v1 to v3
+   IF::Memory& memory;
+   uint16_t    obj_table{0}; //!< Address of object table
+   bool        small{true};  //!< true => Small table v1 to v3
 
    unsigned getPropBits() const { return small ? SMALL_PROP_BITS : LARGE_PROP_BITS; }
    unsigned getMaxProps() const { return (1 << getPropBits()) - 1; }
@@ -153,7 +153,7 @@ private:
    }
 
 public:
-   ZObject(ZMemory& memory_)
+   ZObject(IF::Memory& memory_)
       : memory(memory_)
    {
    }

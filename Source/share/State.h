@@ -81,7 +81,11 @@ protected:
    bool            do_quit{false};
    Memory::Address pc{0};
    Stack::Address  frame_ptr{0};
-   //IF::Memory      memory;
+
+public:
+   IF::Memory      memory;
+
+protected:
    IF::Stack       stack;
    IF::Random      random;
 };

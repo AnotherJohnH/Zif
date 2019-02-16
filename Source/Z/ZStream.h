@@ -28,8 +28,7 @@
 #include "share/Console.h"
 #include "share/Log.h"
 #include "share/Options.h"
-
-#include "ZMemory.h"
+#include "share/Memory.h"
 
 
 //! Input/output stream handler
@@ -43,7 +42,7 @@ public:
       ERROR
    };
 
-   ZStream(Console& console_, const Options& options_, ZMemory& memory_)
+   ZStream(Console& console_, const Options& options_, IF::Memory& memory_)
       : console(console_)
       , memory(memory_)
    {
@@ -431,11 +430,11 @@ private:
    Log      printer{"print.log"};
 
    // Memory stream state
-   bool     memory_enable{false};
-   int16_t  memory_width;
-   uint32_t memory_len_ptr;
-   uint32_t memory_ptr;
-   ZMemory& memory;
+   bool        memory_enable{false};
+   int16_t     memory_width;
+   uint32_t    memory_len_ptr;
+   uint32_t    memory_ptr;
+   IF::Memory& memory;
 
    // Input snooper stream state
    bool snooper_enable{false};

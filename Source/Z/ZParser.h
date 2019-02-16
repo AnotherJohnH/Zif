@@ -124,7 +124,7 @@ private:
       zword.terminate();
    }
 
-   int compare(ZMemory& memory, uint32_t entry_addr, ZWord& zword)
+   int compare(IF::Memory& memory, uint32_t entry_addr, ZWord& zword)
    {
       for(unsigned i = 0; i < zword.size(); i++)
       {
@@ -138,7 +138,7 @@ public:
    void init(unsigned version_) { version = version_; }
 
    //! Translate input command into list of tokens in memory
-   void tokenise(ZMemory& memory, uint32_t out, uint32_t in, uint32_t dict, bool partial)
+   void tokenise(IF::Memory& memory, uint32_t out, uint32_t in, uint32_t dict, bool partial)
    {
       uint8_t  max_word_len = version <= 4 ? 6 : 9;
       uint8_t  num_sep      = memory.fetch8(dict);
