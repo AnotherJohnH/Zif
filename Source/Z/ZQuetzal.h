@@ -28,9 +28,9 @@
 #include "STB/IFF.h"
 
 #include "share/Random.h"
+#include "share/Stack.h"
 #include "share/Story.h"
 
-#include "ZStack.h"
 #include "share/Memory.h"
 
 //! Encode/decode game state to/from quetzal format
@@ -46,7 +46,7 @@ public:
    void encode(const ::Story&  story,
                uint32_t        pc,
                const ::Memory& memory,
-               const ZStack&   stack,
+               const ::Stack&  stack,
                const Random&   random)
    {
       story.encodeQuetzalHeader(doc, pc);
@@ -60,7 +60,7 @@ public:
    bool decode(const ::Story&  story,
                uint32_t&       pc,
                ::Memory&       memory,
-               ZStack&         stack,
+               ::Stack&        stack,
                Random&         random)
    {
       decodeZifHeader(random);
@@ -154,15 +154,11 @@ private:
    }
 
    //! Prepare Stks chunk
-   void encodeStacks(const ZStack& stack)
+   void encodeStacks(const ::Stack& stack)
    {
       // Stacks (store as Big endian)
-      STB::IFF::Chunk* stks = doc.newChunk("Stks", stack.size() * 2);
-      for(uint16_t i=0; i<stack.size(); i++)
-      {
-         STB::Big16 word = stack[i];
-         stks->push(word);
-      }
+      STB::IFF::Chunk* stks = doc.newChunk("Stks");
+      stks->push(stack.data(), stack.size());
    }
 
    //! Decode ZifH chunk
@@ -267,19 +263,19 @@ private:
    }
 
    //! Read and decode Stks chunk
-   bool decodeStacks(ZStack& stack)
+   bool decodeStacks(Stack& stack)
    {
        uint32_t stack_size = 0;
-       const STB::Big16* word = doc.load<STB::Big16>("Stks", &stack_size);
-       if (word == nullptr)
+       const uint8_t* bytes = doc.load<uint8_t>("Stks", &stack_size);
+       if (bytes == nullptr)
        {
           error = "Stks chunk not found";
        }
 
        stack.clear();
-       for(uint32_t i=0; i<(stack_size/2); i++)
+       for(uint32_t i=0; i<stack_size; i++)
        {
-          stack.push_back(word[i]);
+          stack.push8(bytes[i]);
        }
 
        return true;

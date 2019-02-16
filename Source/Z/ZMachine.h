@@ -205,7 +205,7 @@ private:
          frame_ptr = state.getFramePtr();
       }
 
-      uint16_t call_type = state.returnFromFrame(frame_ptr);
+      uint8_t call_type = state.returnFromFrame(frame_ptr);
 
       switch(call_type)
       {

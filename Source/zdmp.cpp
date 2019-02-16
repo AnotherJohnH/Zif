@@ -22,7 +22,7 @@
 
 #include "Z/ZMemory.h"
 #include "Z/ZQuetzal.h"
-#include "Z/ZStack.h"
+#include "share/Stack.h"
 #include "Z/Story.h"
 
 #include "STB/ConsoleApp.h"
@@ -55,7 +55,7 @@ private:
 
    uint32_t    pc;
    ZMemory     memory;
-   ZStack      stack;
+   Stack       stack{2048};
    Random      random;
 
    int error(const std::string& message)
@@ -157,7 +157,7 @@ private:
 
       for(unsigned i=0; i<stack.size(); i++)
       {
-         *out << "    \"0x" << std::setw(4) << stack[i] << "\"," << std::endl;
+         *out << "    \"0x" << std::setw(4) << stack.data()[i] << "\"," << std::endl;
       }
 
       *out << "  ]" << std::endl;

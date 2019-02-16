@@ -28,11 +28,11 @@
 
 #include "share/Error.h"
 #include "share/Random.h"
+#include "share/Stack.h"
 
 #include "ZHeader.h"
 #include "ZMemory.h"
 #include "ZQuetzal.h"
-#include "ZStack.h"
 #include "Z/Story.h"
 
 //! Z machine state
@@ -58,7 +58,7 @@ private:
    Random   random;
    uint32_t pc{0};
    uint16_t frame_ptr{0};
-   ZStack   stack;
+   Stack    stack{2048};
 public:
    ZMemory  memory;
 
@@ -222,47 +222,15 @@ public:
 
 
    //! Push a word onto the stack
-   void push(uint16_t value)
-   {
-      if(stack.full())
-      {
-         error(Error::STACK_OVERFLOW);
-         return;
-      }
-
-      stack.push_back(value);
-   }
+   void push(uint16_t value) { stack.push16(value); }
 
    //! Pop a word from the stack
-   uint16_t pop()
-   {
-      if(stack.empty())
-      {
-         error(Error::STACK_UNDERFLOW);
-         return 0;
-      }
+   uint16_t pop() { return stack.pop16(); }
 
-      uint16_t value = stack.back();
-      stack.pop_back();
-      return value;
-   }
-
-   //! Peep word at the top of the stack
-   uint16_t& peek()
-   {
-      if(stack.empty())
-      {
-         static uint16_t dummy;
-         error(Error::STACK_EMPTY);
-         return dummy;
-      }
-
-      return stack.back();
-   }
 
    uint16_t getNumFrameArgs() const
    {
-      return validateFramePtr() ? stack[frame_ptr]
+      return validateFramePtr() ? stack.read16(frame_ptr)
                                 : 0;
    }
 
@@ -286,11 +254,11 @@ public:
    }
 
    //! Call a routine
-   void call(uint16_t call_type, uint32_t target)
+   void call(uint8_t call_type, uint32_t target)
    {
-      push(call_type);
-      push32(pc);
-      push(frame_ptr);
+      stack.push8(call_type);
+      stack.push24(pc);
+      stack.push16(frame_ptr);
 
       frame_ptr = stack.size();
 
@@ -298,15 +266,15 @@ public:
    }
 
    //! Return from the given frame (usually the current frame)
-   uint16_t returnFromFrame(uint32_t frame_ptr_)
+   uint8_t returnFromFrame(uint32_t frame_ptr_)
    {
       if(!validateFramePtr()) return /* bad_call_type*/ 3;
 
-      stack.resize(frame_ptr_);
+      stack.shrink(frame_ptr_);
 
-      frame_ptr = pop();
-      jump(pop32());
-      return pop();
+      frame_ptr = stack.pop16();
+      jump(stack.pop24());
+      return stack.pop8();
    }
 
    //! Implement random op
@@ -334,11 +302,11 @@ public:
    {
       if(index == 0)
       {
-         return do_peek ? peek() : pop();
+         return do_peek ? stack.peek16() : stack.pop16();
       }
       else if(index < 16)
       {
-         return validateFramePtr(index) ? stack[frame_ptr + index]
+         return validateFramePtr(index) ? stack.read16(frame_ptr + 2*index)
                                         : 0;
       }
       else
@@ -355,14 +323,14 @@ public:
       if(index == 0)
       {
          if(do_peek)
-            peek() = value;
+            stack.write16(stack.size() - 2, value);
          else
             push(value);
       }
       else if(index < 16)
       {
          if(!validateFramePtr(index)) return;
-         stack[frame_ptr + index] = value;
+         stack.write16(frame_ptr + 2*index, value);
       }
       else
       {
@@ -395,27 +363,14 @@ private:
    //! Save dynamic registers on the stack
    void pushContext()
    {
-      push(frame_ptr);
+      stack.push16(frame_ptr);
    }
 
    //! Restore dynamic registers from the stack
    void popContext()
    {
-      frame_ptr = pop();
-
+      frame_ptr = stack.pop16();
       validateFramePtr();
-   }
-
-   void push32(uint32_t value)
-   {
-      push(uint16_t(value));
-      push(uint16_t(value >> 16));
-   }
-
-   uint32_t pop32()
-   {
-      uint32_t value = pop() << 16;
-      return value | pop();
    }
 };
 
