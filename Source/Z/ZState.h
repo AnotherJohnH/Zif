@@ -84,7 +84,7 @@ public:
    bool save(const std::string& name = "")
    {
       pushContext();
-      save_file.encode(story, pc, memory, stack, random);
+      save_file.encode(story, *this);
       popContext();
 
       // Make sure the save directory exists
@@ -107,7 +107,7 @@ public:
       path += ".qzl";
 
       if (save_file.read(path) &&
-          save_file.decode(story, pc, memory, stack, random))
+          save_file.decode(story, *this))
       {
          validatePC();
          popContext();
@@ -123,7 +123,7 @@ public:
       if (undo.size() == 0) return false;
 
       pushContext();
-      undo[undo_next].encode(story, pc, memory, stack, random);
+      undo[undo_next].encode(story, *this);
       popContext();
 
       undo_next = (undo_next + 1) % undo.size();
@@ -143,7 +143,7 @@ public:
       undo_next = undo_next == 0 ? undo.size() - 1
                                  : undo_next - 1;
 
-      undo[undo_next].decode(story, pc, memory, stack, random);
+      undo[undo_next].decode(story, *this);
       popContext();
 
       return true;
@@ -195,15 +195,6 @@ public:
                                 : 0;
    }
 
-
-   //! Absolute jump to given target address
-   void jump(uint32_t target_)
-   {
-      pc = target_;
-
-      // Check PC here to catch current instruction address
-      validatePC();
-   }
 
    //! Jump relative to the current PC
    void branch(int16_t offset_)

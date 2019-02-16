@@ -27,11 +27,8 @@
 
 #include "STB/IFF.h"
 
-#include "share/Random.h"
-#include "share/Stack.h"
 #include "share/Story.h"
-
-#include "share/Memory.h"
+#include "share/State.h"
 
 //! Encode/decode game state to/from quetzal format
 class ZQuetzal
@@ -44,36 +41,33 @@ public:
 
    //! Save the Machine state in this Quetzal object
    void encode(const IF::Story&  story,
-               uint32_t          pc,
-               const IF::Memory& memory,
-               const IF::Stack&  stack,
-               const IF::Random& random)
+               const IF::State&  state)
    {
-      story.encodeQuetzalHeader(doc, pc);
+      story.encodeQuetzalHeader(doc, state.getPC());
 
-      encodeMemory(story, memory);
-      encodeStacks(stack);
-      encodeZifHeader(random);
+      encodeMemory(story, state.memory);
+      encodeStacks(state.stack);
+      encodeZifHeader(state.random);
    }
 
    //! Restore the ZMachine state from this Quetzal object
    bool decode(const IF::Story& story,
-               uint32_t&        pc,
-               IF::Memory&      memory,
-               IF::Stack&       stack,
-               IF::Random&      random)
+               IF::State&       state)
    {
-      decodeZifHeader(random);
+      decodeZifHeader(state.random);
 
+      IF::Memory::Address pc;
       if (!story.decodeQuetzalHeader(doc, pc))
       {
          error = story.getLastError();
          return false;
       }
 
+      state.jump(pc);
+
       error = "";
-      return decodeMemory(story, memory) &&
-             decodeStacks(stack);
+      return decodeMemory(story, state.memory) &&
+             decodeStacks(state.stack);
    }
 
    //! Write Quetzal object to a file

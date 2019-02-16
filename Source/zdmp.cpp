@@ -51,11 +51,7 @@ private:
    std::string filename;
    Z::Story    story;
    ZQuetzal    quetzal;
-
-   uint32_t    pc;
-   IF::Memory  memory;
-   IF::Stack   stack{2048};
-   IF::Random  random;
+   IF::State   state{"", 0, 2048};
 
    int error(const std::string& message)
    {
@@ -114,15 +110,15 @@ private:
    {
       *out << "  \"memory\": [" << std::endl;
 
-      for(unsigned addr=0; addr<memory.size(); addr += 16)
+      for(unsigned addr=0; addr<state.memory.size(); addr += 16)
       {
          *out << "    {\"a\": \"" << std::setw(6) << addr << "\", \"b\": \"";
 
          for(unsigned i=0; i<16; i++)
          {
-            if ((addr + i) < memory.size())
+            if ((addr + i) < state.memory.size())
             {
-               *out << " " << std::setw(2) << unsigned(memory.read8(addr + i));
+               *out << " " << std::setw(2) << unsigned(state.memory.read8(addr + i));
             }
          }
 
@@ -130,9 +126,9 @@ private:
 
          for(unsigned i=0; i<16; i++)
          {
-            if ((addr + i) < memory.size())
+            if ((addr + i) < state.memory.size())
             {
-               uint8_t ch = memory.read8(addr + i);
+               uint8_t ch = state.memory.read8(addr + i);
                if (isprint(ch))
                {
                   *out << ch;
@@ -154,9 +150,9 @@ private:
    {
       *out << "  \"stack\": [" << std::endl;
 
-      for(unsigned i=0; i<stack.size(); i++)
+      for(unsigned i=0; i<state.stack.size(); i++)
       {
-         *out << "    \"0x" << std::setw(4) << stack.data()[i] << "\"," << std::endl;
+         *out << "    \"0x" << std::setw(4) << state.stack.data()[i] << "\"," << std::endl;
       }
 
       *out << "  ]" << std::endl;
@@ -181,7 +177,7 @@ private:
          return error(story.getLastError());
       }
 
-      story.prepareMemory(memory);
+      story.prepareMemory(state.memory);
 
       if (save_file != nullptr)
       {
@@ -191,20 +187,20 @@ private:
             return error(quetzal.getLastError());
          }
 
-         if (!quetzal.decode(story, pc, memory, stack, random))
+         if (!quetzal.decode(story, state))
          {
             return error(quetzal.getLastError());
          }
 
-         attr("PC", pc);
-         attr("randState", random.internalState());
+         attr("PC", state.getPC());
+         attr("randState", state.random.internalState());
       }
       else
       {
-         story.resetMemory(memory);
+         story.resetMemory(state.memory);
       }
 
-      dumpHeader((const ZHeader*)memory.data());
+      dumpHeader((const ZHeader*)state.memory.data());
 
       if (dump_mem)
       {

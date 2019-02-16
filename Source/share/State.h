@@ -72,6 +72,12 @@ public:
    //! Signal exit
    void quit() { do_quit = true; }
 
+   //! Absolute jump to given target address
+   void jump(Memory::Address target)
+   {
+      pc = target;
+   }
+
 protected:
    // Configuration
    std::string save_dir;
@@ -84,8 +90,6 @@ protected:
 
 public:
    IF::Memory      memory;
-
-protected:
    IF::Stack       stack;
    IF::Random      random;
 };
