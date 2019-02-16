@@ -202,7 +202,7 @@ private:
       }
       else
       {
-         memory.reset();
+         memory.reset(story);
       }
 
       dumpHeader(memory.getHeader());

@@ -114,7 +114,7 @@ public:
 
       stack.clear();
 
-      memory.reset();
+      memory.reset(story);
    }
 
    //! Save the dynamic state to a file

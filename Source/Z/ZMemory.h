@@ -41,8 +41,6 @@ public:
    //! Configure memory for a game
    bool init(const Z::Story& story_)
    {
-      story = &story_;
-
       const ZHeader* header = story_.getHeader();
 
       resize(header->getMemoryLimit());
@@ -55,18 +53,15 @@ public:
    }
 
    //! Reset memory from game image
-   void reset()
+   void reset(const ::Story& story)
    {
       // TODO the header should be reset (only bits 0 and 1 from Flags 2
       //      shoud be preserved)
 
       memcpy(raw.data() + sizeof(ZHeader),
-             story->data() + sizeof(ZHeader),
-             story->size() - sizeof(ZHeader));
+             story.data() + sizeof(ZHeader),
+             story.size() - sizeof(ZHeader));
    }
- 
-private:
-   const Z::Story* story{nullptr};
 };
 
 #endif
