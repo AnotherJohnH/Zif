@@ -108,6 +108,22 @@ public:
                        raw[addr + 3];
    }
 
+   //! Read data from memory
+   template <typename TYPE>
+   TYPE read(Address addr)
+   {
+      switch(sizeof(TYPE))
+      {
+      case 1: return read8(addr);
+      case 2: return read16(addr);
+      case 4: return read32(addr);
+
+      default:
+         assert(!"unsupported data size");
+         break;
+      }
+   }
+
    //! Fetch byte from code memory
    uint8_t fetch8(Address addr) const
    {
@@ -181,6 +197,22 @@ public:
       raw[addr + 1] = uint8_t(word >> 16);
       raw[addr + 2] = uint8_t(word >>  8);
       raw[addr + 3] = uint8_t(word);
+   }
+
+   //! Write data to memory
+   template <typename TYPE>
+   void write(Address addr, TYPE data)
+   {
+      switch(sizeof(TYPE))
+      {
+      case 1: write8(addr, data); break;
+      case 2: write16(addr, data); break;
+      case 4: write32(addr, data); break;
+
+      default:
+         assert(!"unsupported data size");
+         break;
+      }
    }
 
 protected:

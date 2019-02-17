@@ -84,6 +84,22 @@ public:
              (raw[offset + 3]);
    }
 
+   //! Read data from memory
+   template <typename TYPE>
+   TYPE read(Address addr)
+   {
+      switch(sizeof(TYPE))
+      {
+      case 1: return read8(addr);
+      case 2: return read16(addr);
+      case 4: return read32(addr);
+
+      default:
+         assert(!"unsupported data size");
+         break;
+      }
+   }
+
    //! Write an 8-bit value at an absolute offset into the stack
    void write8(Address offset, uint8_t value)
    {
@@ -116,6 +132,22 @@ public:
       raw[offset + 1] = uint8_t(value >> 16);
       raw[offset + 2] = uint8_t(value >>  8);
       raw[offset + 3] = uint8_t(value);
+   }
+
+   //! Write data to memory
+   template <typename TYPE>
+   void write(Address addr, TYPE data)
+   {
+      switch(sizeof(TYPE))
+      {
+      case 1: write8(addr, data); break;
+      case 2: write16(addr, data); break;
+      case 4: write32(addr, data); break;
+
+      default:
+         assert(!"unsupported data size");
+         break;
+      }
    }
 
    //! Get 8-bit value at the top of the stack (without poping)
@@ -172,6 +204,7 @@ public:
    //! Remove top 8-bit value from the stack
    uint8_t pop8()
    {
+      if (empty()) throw "stack underflow";
       uint8_t value = raw.back();
       raw.pop_back();
       return value;

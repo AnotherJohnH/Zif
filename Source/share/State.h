@@ -88,6 +88,14 @@ public:
       return word;
    }
 
+   //! Fetch a 24-bit instruction word
+   uint32_t fetch24()
+   {
+      uint32_t word = memory.fetch24(pc);
+      pc += 3;
+      return word;
+   }
+
    //! Fetch a 32-bit instruction word
    uint32_t fetch32()
    {
