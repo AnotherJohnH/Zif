@@ -26,7 +26,6 @@
 #include "STB/Stack.h"
 #include "PLT/File.h"
 
-#include "share/Error.h"
 #include "share/SavableState.h"
 
 #include "ZHeader.h"

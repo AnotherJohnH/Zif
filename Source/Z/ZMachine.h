@@ -168,7 +168,7 @@ private:
          case 0:  state.varWrite(state.fetch8(), 0); break;
          case 1:  /* throw return value away */ break;
          case 2:  state.push(0); break;
-         default: state.error(Error::BAD_CALL_TYPE); break;
+         default: throw "bad call type"; break;
          }
          return;
       }
@@ -213,7 +213,7 @@ private:
       case 1: /* throw return value away */ break;
       case 2: state.push(value);            break;
 
-      default: state.error(Error::BAD_CALL_TYPE);
+      default: throw "bad call type";
       }
    }
 
@@ -296,7 +296,7 @@ private:
       return text.print([this](uint16_t ch){ stream.writeChar(ch); }, addr);
    }
 
-   void ILLEGAL() { state.error(Error::ILLEGAL_OP); }
+   void ILLEGAL() { throw "illegal op"; }
 
    void TODO_ERROR(const char* op) { error(op); }
    void TODO_WARN(const char* op) { warning(op); }
@@ -484,7 +484,7 @@ private:
    {
       if(sarg[1] == 0)
       {
-         state.error(Error::DIV_BY_ZERO);
+         throw "div by zero";
          return;
       }
       state.varWrite(state.fetch8(), sarg[0] / sarg[1]);
@@ -494,7 +494,7 @@ private:
    {
       if(sarg[1] == 0)
       {
-         state.error(Error::DIV_BY_ZERO);
+         throw "div by zero";
          return;
       }
       state.varWrite(state.fetch8(), sarg[0] % sarg[1]);
@@ -712,7 +712,7 @@ private:
          int16_t stream_idx = abs(number);
 
          if(stream_idx > 4)
-            state.error(Error::BAD_STREAM);
+            throw "bad stream";
          else if(number > 0)
             stream.enableStream(stream_idx, true);
          else if(number < 0)
@@ -1531,14 +1531,6 @@ public:
       console.waitForKey();
 
       info("quit");
-
-      Error exit_code = state.getExitCode();
-      if(isError(exit_code))
-      {
-         (void) dis.disassemble(dis_text, inst_addr, state.memory.data() + inst_addr);
-         error("PC=%s : %s", dis_text.c_str(), errorString(exit_code));
-         ok = false;
-      }
 
       return ok;
    }

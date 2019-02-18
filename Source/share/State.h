@@ -26,7 +26,6 @@
 #include <cstdint>
 #include <string>
 
-#include "share/Error.h"
 #include "share/Memory.h"
 #include "share/Random.h"
 #include "share/Stack.h"
@@ -116,27 +115,11 @@ public:
       pc += offset;
    }
 
-   //! Report an error, terminates the machine
-   bool error(Error err_) const
-   {
-      // Only the first error is recorded
-      if(!isError(exit_code))
-      {
-         exit_code = err_;
-         ((State*)this)->quit();
-      }
-
-      return false;
-   }
-
    //! Signal exit
    void quit()
    {
       do_quit = true;
    }
-
-   //! Get the first error code reported
-   Error getExitCode() const { return exit_code; }
 
 protected:
    // Configuration
@@ -145,7 +128,6 @@ protected:
 
    // Dynamic state
    bool            do_quit{false};
-   mutable Error   exit_code{Error::NONE};
    Memory::Address pc{0};
    Stack::Address  frame_ptr{0};
 public:
