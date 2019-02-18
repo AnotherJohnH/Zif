@@ -35,7 +35,7 @@
 #include "share/Log.h"
 
 #include "ZConfig.h"
-#include "ZDisassembler.h"
+#include "Z/Disassembler.h"
 #include "ZHeader.h"
 #include "ZObject.h"
 #include "ZParser.h"
@@ -58,7 +58,7 @@ private:
    bool            story_is_valid;
    ZState          state;
    Log             trace{"trace.log"};
-   ZDisassembler   dis;
+   Z::Disassembler dis;
    ZStream         stream;
    ZScreen         screen;
    ZObject         object;
@@ -1287,15 +1287,15 @@ private:
 
    void clearOperands() { num_arg = 0; }
 
-   void fetchOperand(ZOperandType type)
+   void fetchOperand(Z::OperandType type)
    {
       uint16_t operand;
 
       switch(type)
       {
-      case OP_LARGE_CONST: operand = state.fetch16();               break;
-      case OP_SMALL_CONST: operand = state.fetch8();                break;
-      case OP_VARIABLE:    operand = state.varRead(state.fetch8()); break;
+      case Z::OP_LARGE_CONST: operand = state.fetch16();               break;
+      case Z::OP_SMALL_CONST: operand = state.fetch8();                break;
+      case Z::OP_VARIABLE:    operand = state.varRead(state.fetch8()); break;
       default: assert(!"bad operand type"); return;
       }
 
@@ -1322,9 +1322,9 @@ private:
       // Unpack the type of the operands
       for(unsigned i = 0; i < n; ++i)
       {
-         ZOperandType type = ZOperandType(op_types >> 14);
+         Z::OperandType type = Z::OperandType(op_types >> 14);
 
-         if(type == OP_NONE) return;
+         if(type == Z::OP_NONE) return;
 
          fetchOperand(type);
 
@@ -1337,15 +1337,15 @@ private:
 
    void doOp1(uint8_t op_code)
    {
-      fetchOperand(ZOperandType((op_code >> 4) & 3));
+      fetchOperand(Z::OperandType((op_code >> 4) & 3));
 
       (this->*op1[op_code & 0xF])();
    }
 
    void doOp2(uint8_t op_code)
    {
-      fetchOperand(op_code & (1 << 6) ? OP_VARIABLE : OP_SMALL_CONST);
-      fetchOperand(op_code & (1 << 5) ? OP_VARIABLE : OP_SMALL_CONST);
+      fetchOperand(op_code & (1 << 6) ? Z::OP_VARIABLE : Z::OP_SMALL_CONST);
+      fetchOperand(op_code & (1 << 5) ? Z::OP_VARIABLE : Z::OP_SMALL_CONST);
 
       (this->*op2[op_code & 0x1F])();
    }
@@ -1495,6 +1495,8 @@ public:
 
       start(options.restore);
 
+      bool ok = true;
+
       try
       {
          if(options.trace)
@@ -1517,10 +1519,13 @@ public:
 
          if (version() <= 3) showStatus();
       }
-      catch(const std::string& message)
+      catch(const char* message)
       {
-         error(message.c_str());
-         return false;
+         (void) dis.disassemble(dis_text, inst_addr, state.memory.data() + inst_addr);
+         dis_text += " => ";
+         dis_text += message;
+         console.error(dis_text);
+         ok = false;
       }
 
       console.waitForKey();
@@ -1532,10 +1537,10 @@ public:
       {
          (void) dis.disassemble(dis_text, inst_addr, state.memory.data() + inst_addr);
          error("PC=%s : %s", dis_text.c_str(), errorString(exit_code));
-         return false;
+         ok = false;
       }
 
-      return true;
+      return ok;
    }
 };
 

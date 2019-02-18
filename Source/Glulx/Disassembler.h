@@ -184,7 +184,7 @@ public:
    {
       text = "";
 
-      fmtHex(text, inst_addr);
+      fmtHex(text, inst_addr, 6);
       text += ": ";
 
       // Extract op-code
@@ -277,7 +277,7 @@ public:
 
             case 0x3:
                text += "#";
-               fmtHex(text, addr, 8);
+               fmtHex(text, addr);
                break;
 
             case 0x4: text += "X"; break;
@@ -285,7 +285,7 @@ public:
             case 0x5:
             case 0x6:
             case 0x7:
-               fmtHex(text, addr, 8);
+               fmtHex(text, addr);
                break;
 
             case 0x8: text += "sp"; break;
@@ -294,7 +294,7 @@ public:
             case 0xA:
             case 0xB:
                text += "local+";
-               fmtHex(text, addr, 8);
+               fmtHex(text, addr);
                break;
 
             case 0xC: text += "X"; break;
@@ -303,7 +303,7 @@ public:
             case 0xE:
             case 0xF:
                text += "ram+";
-               fmtHex(text, addr, 8);
+               fmtHex(text, addr);
                break;
             }
 
@@ -373,16 +373,30 @@ private:
 
    // Not entirely sure why I needed to write this!
    template <typename TYPE>
-   static void fmtHex(std::string& text, TYPE value, size_t digits = sizeof(TYPE) * 2)
+   static void fmtHex(std::string& text, TYPE value, size_t digits = 0)
    {
-      for(size_t n = digits - 1; true; n--)
+      static const char pad = '0';
+
+      for(signed n = sizeof(TYPE) * 2 - 1; n >= 0; n--)
       {
-         TYPE digit = (value >> (n * 4)) & 0xF;
+         unsigned digit = (value >> (n * 4)) & 0xF;
 
-         text += digit > 9 ? 'A' + digit - 10
-                           : '0' + digit;
-
-         if (n == 0) break;
+         if ((n != 0) && (digit == 0))
+         {
+            if ((value >> (n * 4)) != 0)
+            {
+               text += '0';
+            }
+            else if (n < digits)
+            {
+               text += pad;
+            }
+         }
+         else
+         {
+            text += digit > 9 ? 'A' + digit - 10
+                              : '0' + digit;
+         }
       }
    }
 };

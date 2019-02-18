@@ -70,8 +70,6 @@ public:
                fetchDecodeExecute();
             }
          }
-
-         console.error("Glulx games are not currently supported");
       }
       catch(const char* message)
       {
@@ -79,11 +77,14 @@ public:
          dis_text += " => ";
          dis_text += message;
          console.error(dis_text);
+         console.waitForKey();
+         return false;
       }
 
+      console.error("Glulx games are not currently supported");
       console.waitForKey();
 
-      return false;
+      return true;
    }
 
 private:
@@ -364,10 +365,10 @@ private:
       case 0x151: /* binsearch  */ fetchA(8); break;
       case 0x152: /* lnksearch  */ fetchA(7); break;
 
-      case 0x160: /* callf      */ fetchA(2); break;
-      case 0x161: /* callfi     */ fetchA(3); break;
-      case 0x162: /* callfii    */ fetchA(4); break;
-      case 0x163: /* callfiii   */ fetchA(5); break;
+      case 0x160: /* callf      */ fetchA(2); call(uLd(0), uLd(1)); break;
+      case 0x161: /* callfi     */ fetchA(3); call(uLd(0), uLd(1)); break;
+      case 0x162: /* callfii    */ fetchA(4); call(uLd(0), uLd(1)); break;
+      case 0x163: /* callfiii   */ fetchA(5); call(uLd(0), uLd(1)); break;
 
       case 0x170: /* mzero      */ fetchA(2); break;
       case 0x171: /* mcopy      */ fetchA(3); break;

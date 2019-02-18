@@ -20,14 +20,16 @@
 // SOFTWARE.
 //------------------------------------------------------------------------------
 
-#ifndef ZDISASSEMBLER_H
-#define ZDISASSEMBLER_H
+#ifndef Z_DISASSEMBLER_H
+#define Z_DISASSEMBLER_H
 
 #include <cstdint>
 #include <cstdio>
 #include <string>
 
-enum ZOperandType : uint8_t
+namespace Z {
+
+enum OperandType : uint8_t
 {
    OP_LARGE_CONST = 0,
    OP_SMALL_CONST = 1,
@@ -36,26 +38,92 @@ enum ZOperandType : uint8_t
 };
 
 
-//! Disassemble a Z op
-class ZDisassembler
+//! Z Disassembler
+class Disassembler
 {
+public:
+   Disassembler(unsigned v = 5)
+   {
+      // Zero operand instructions
+      declOp(0x0, "rtrue", '0');
+      declOp(0x1, "rfalse", '0');
+      declOp(0x2, "print", '0');
+      declOp(0x3, "print_ret", '0');
+      declOp(0x4, "nop", '0');
+      if (v <= 4) declOp(0x5, "save",    '0');
+      if (v <= 4) declOp(0x6, "restore", '0');
+      declOp(0x7, "restart", '0');
+      declOp(0x8, "ret_popped", '0');
+      if (v <= 4) declOp(0x9, "pop", '0'); else declOp(0x9, "catch", '0');
+      declOp(0xA, "quit", '0');
+      declOp(0xB, "new_line", '0');
+      if (v == 3) declOp(0xC, "show_status", '0'); else if (v > 3) declOp(0xC, "nop", '0');
+      if (v >= 3) declOp(0xD, "verify", '0');
+      if (v >= 5) declOp(0xF, "piracy", '0');
+   }
+
+   //! Disassemble a single instruction
+   unsigned disassemble(std::string& text, uint16_t inst_addr, const uint8_t* code)
+   {
+      unsigned n = 0;
+
+      uint8_t opcode = *code;
+      if(opcode < 0x80)
+      {
+         n = disOp2(inst, code);
+      }
+      else if(opcode < 0xB0)
+      {
+         n = disOp1(inst, code);
+      }
+      else if(opcode < 0xC0)
+      {
+         if((opcode & 0xF) == 0xE)
+         {
+            n = disOpE(inst, code);
+         }
+         else
+         {
+            n = disOp0(inst, code);
+         }
+      }
+      else if(opcode < 0xE0)
+      {
+         n = disOp2_var(inst, code);
+      }
+      else
+      {
+         n = disOpV(inst, code);
+      }
+
+      text = "";
+      fmtHex(text, inst_addr, 6);
+      text += "  ";
+
+      for(unsigned i=0; i<10; i++)
+      {
+         if (i < n)
+         {
+            fmtHex(text, code[i], 2);
+            text += " ";
+         }
+         else
+         {
+            text += "   ";
+         }
+      }
+
+      text += inst;
+
+      return n;
+   }
+
 private:
    // Local strings to avoid repeated dynamic allocation
    std::string inst{};
 
-   // Not entirely sure why I needed to write this!
-   template <typename TYPE>
-   static void fmtHex(std::string& text, TYPE value, size_t digits = sizeof(TYPE) * 2)
+   void declOp(uint8_t code, const char* mnemonic, char type)
    {
-      for(size_t n = digits - 1; true; n--)
-      {
-         TYPE digit = (value >> (n * 4)) & 0xF;
-
-         text += digit > 9 ? 'A' + digit - 10
-                           : '0' + digit;
-
-         if (n == 0) break;
-      }
    }
 
    //! Disassemble a variable operand
@@ -107,7 +175,7 @@ private:
       // Unpack the type of the operands
       for(unsigned i = 0; i < n; ++i)
       {
-         ZOperandType type = ZOperandType(op_types >> 14);
+         OperandType type = OperandType(op_types >> 14);
          if(type == OP_NONE) break;
 
          unsigned n = fmtOp(text, type, code);
@@ -171,61 +239,36 @@ private:
       return 2 + fmtOperands(text, 4, code + 2);
    }
 
-public:
-   unsigned disassemble(std::string& text, uint16_t inst_addr, const uint8_t* code)
+   // Not entirely sure why I needed to write this!
+   template <typename TYPE>
+   static void fmtHex(std::string& text, TYPE value, size_t digits = 0)
    {
-      unsigned n = 0;
+      static const char pad = '0';
 
-      uint8_t opcode = *code;
-      if(opcode < 0x80)
+      for(signed n = sizeof(TYPE) * 2 - 1; n >= 0; n--)
       {
-         n = disOp2(inst, code);
-      }
-      else if(opcode < 0xB0)
-      {
-         n = disOp1(inst, code);
-      }
-      else if(opcode < 0xC0)
-      {
-         if((opcode & 0xF) == 0xE)
+         unsigned digit = (value >> (n * 4)) & 0xF;
+
+         if ((n != 0) && (digit == 0))
          {
-            n = disOpE(inst, code);
+            if ((value >> (n * 4)) != 0)
+            {
+               text += '0';
+            }
+            else if (n < digits)
+            {
+               text += pad;
+            }
          }
          else
          {
-            n = disOp0(inst, code);
+            text += digit > 9 ? 'A' + digit - 10
+                              : '0' + digit;
          }
       }
-      else if(opcode < 0xE0)
-      {
-         n = disOp2_var(inst, code);
-      }
-      else
-      {
-         n = disOpV(inst, code);
-      }
-
-      text = "";
-      fmtHex(text, inst_addr, 6);
-      text += "  ";
-
-      for(unsigned i=0; i<10; i++)
-      {
-         if (i < n)
-         {
-            fmtHex(text, code[i], 2);
-            text += " ";
-         }
-         else
-         {
-            text += "   ";
-         }
-      }
-
-      text += inst;
-
-      return n;
    }
 };
+
+} // namespace Z
 
 #endif
