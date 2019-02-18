@@ -59,11 +59,9 @@ public:
    uint32_t get()
    {
       // use basic xorshift, it's fast and simple
-      // TODO change to the 64-bit version for improved
-      //      statistical characteristics for similar cost
-      state ^= uint32_t(state << 13);
-      state ^= uint32_t(state >> 17);
-      state ^= uint32_t(state << 5);
+      state ^= state << 13;
+      state ^= state >> 7;
+      state ^= state << 17;
       return state;
    }
 

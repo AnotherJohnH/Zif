@@ -104,16 +104,6 @@ private:
       va_end(ap);
    }
 
-   void error(const char* format, ...)
-   {
-      va_list ap;
-      va_start(ap, format);
-      stream.vmessage(ZStream::ERROR, format, ap);
-      va_end(ap);
-
-      state.quit();
-   }
-
    unsigned version() const { return header->version; }
 
    //! Check for v3 time games
@@ -298,7 +288,6 @@ private:
 
    void ILLEGAL() { throw "illegal op"; }
 
-   void TODO_ERROR(const char* op) { error(op); }
    void TODO_WARN(const char* op) { warning(op); }
 
    //============================================================================
@@ -720,7 +709,7 @@ private:
       }
    }
 
-   void opV_input_stream() { TODO_ERROR("op input_stream unimplemented"); }
+   void opV_input_stream() { throw "op input_stream unimplemented"; }
 
    void opV_sound_effect() { TODO_WARN("op sound_effect unimplemeneted"); }
 
@@ -774,7 +763,7 @@ private:
       parser.tokenise(state.memory, parse, text + 1, dict, flag);
    }
 
-   void opV_encode_text() { TODO_ERROR("op encode_text unimplemeneted"); }
+   void opV_encode_text() { throw "op encode_text unimplemeneted"; }
 
    void opV_copy_table()
    {
@@ -1059,7 +1048,7 @@ private:
       }
    }
 
-   void opE_read_mouse() { TODO_ERROR("read_mouse unimplemented"); }
+   void opE_read_mouse() { throw "read_mouse unimplemented"; }
 
    void opE_mouse_window() { TODO_WARN("mouse_window unimplemented"); }
 
@@ -1105,7 +1094,7 @@ private:
       (void) number;
       (void) table;
 
-      TODO_ERROR("make_menu unimplemented");
+      throw "make_menu unimplemented";
    }
 
    void opE_picture_table() { TODO_WARN("picture_table unimplemented"); }
