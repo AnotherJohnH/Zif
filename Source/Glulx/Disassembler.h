@@ -233,7 +233,7 @@ public:
          // Pre-fetch operand addresses based on the LS 2 bits of the address mode
          for(unsigned i=0; i<op[code].num_operand; i++)
          {
-            uint32_t addr;
+            uint32_t addr{};
 
             switch(mode[i] & 0b11)
             {
