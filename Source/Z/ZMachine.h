@@ -1250,7 +1250,7 @@ private:
       opE[0x0B] = &ZMachine::opE_print_unicode;
       opE[0x0C] = &ZMachine::opE_check_unicode;
 
-      if(version() < 6) return;
+      if(version() != 6) return;
 
       opE[0x05] = &ZMachine::opE_draw_picture;
       opE[0x06] = &ZMachine::opE_picture_data;
@@ -1293,23 +1293,24 @@ private:
       assert(num_arg <= 8);
    }
 
-   void fetchOperands(unsigned n)
+   //! Fetch variable number of operands
+   void fetchOperands(unsigned max_num_operands)
    {
       uint16_t op_types;
 
-      if(n == 4)
+      if(max_num_operands == 4)
       {
          op_types = state.fetch8() << 8;
       }
       else
       {
-         assert(n == 8);
+         assert(max_num_operands == 8);
 
          op_types = state.fetch16();
       }
 
       // Unpack the type of the operands
-      for(unsigned i = 0; i < n; ++i)
+      for(unsigned i = 0; i < max_num_operands; ++i)
       {
          Z::OperandType type = Z::OperandType(op_types >> 14);
 
@@ -1424,17 +1425,11 @@ private:
          }
       }
 
-      state.reset();
-
-      if (restore_save)
-      {
-         state.restore();
-      }
    }
 
    void printTrace()
    {
-      (void) dis.disassemble(dis_text, state.getPC(), state.memory.data() + inst_addr);
+      (void) dis.disassemble(dis_text, inst_addr, state.memory.data() + inst_addr);
 
       // TODO avoid sprintf
       std::string fmt_op_count = "NNNNNN";
@@ -1482,7 +1477,12 @@ public:
       info("Version  : z%d",  header->version);
       info("Checksum : %04X", header->checksum);
 
-      start(options.restore);
+      state.reset();
+
+      if (options.restore)
+      {
+         state.restore();
+      }
 
       bool ok = true;
 
