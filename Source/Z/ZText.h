@@ -29,6 +29,7 @@
 #include "share/Memory.h"
 
 #include "ZStream.h"
+#include "ZHeader.h"
 
 // See the Z specification section 3.
 
@@ -217,18 +218,11 @@ private:
    }
 
 public:
-   ZText(IF::Memory& memory_)
+   ZText(const ZHeader* header, IF::Memory& memory_)
       : memory(memory_)
    {
-   }
-
-   //! Initialise
-   void init(uint8_t  version_,
-             uint16_t abbr_table_,
-             uint16_t alpha_table_addr_)
-   {
-      version     = version_;
-      abbr_table  = abbr_table_;
+      version    = header->version;
+      abbr_table = header->abbr;
 
       if(version == 1)
       {
@@ -237,10 +231,10 @@ public:
                        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"    // A1
                        " 0123456789.,!?_#'\"/\\<-:()"; // A2
       }
-      else if((version >= 5) && (alpha_table_addr_ != 0))
+      else if((version >= 5) && (header->alphabet_table != 0))
       {
          // Check header for alternate table [3.5.5]
-         alpha_table = (const char*)memory.data() + alpha_table_addr_;
+         alpha_table = (const char*)memory.data() + header->alphabet_table;
       }
       else
       {

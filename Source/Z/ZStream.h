@@ -42,12 +42,19 @@ public:
       ERROR
    };
 
-   ZStream(Console& console_, const Options& options_, IF::Memory& memory_)
+   ZStream(Console&       console_,
+           const Options& options_,
+           unsigned       version_,
+           IF::Memory&    memory_)
       : console(console_)
       , memory(memory_)
    {
-      console_enable = true;
-      printer_enable = options_.print;
+      console_enable                  = true;
+      console_extended_colours_enable = version_ == 6;
+
+      printer_enable     = options_.print;
+      printer_echo_input = version_ <= 5;
+
       memory_enable  = false;
       snooper_enable = options_.key;
 
@@ -78,13 +85,6 @@ public:
 
       default: assert(!"unexpected index"); return false;
       }
-   }
-
-   //! Configure stream for Z-code version
-   void init(uint8_t version)
-   {
-      console_extended_colours_enable = version == 6;
-      printer_echo_input              = version <= 5;
    }
 
    //! Select the current font

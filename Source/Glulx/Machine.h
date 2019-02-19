@@ -25,7 +25,7 @@
 
 #include <cmath>
 
-#include "share/Log.h"
+#include "share/Machine.h"
 
 #include "Glulx/State.h"
 #include "Glulx/Story.h"
@@ -34,12 +34,11 @@
 namespace Glulx {
 
 //! Glulx machine implementation
-class Machine
+class Machine : public IF::Machine
 {
 public:
    Machine(Console& console_, const Options& options_, const Glulx::Story& story_)
-      : console(console_)
-      , options(options_)
+      : IF::Machine(console_, options_)
       , state(story_, (const char*)options.save_dir, options.undo, options.seed)
    {
    }
@@ -90,17 +89,10 @@ public:
 private:
    static const unsigned MAX_OPERAND = 4;
 
-   Console&             console;
-   const Options&       options;
    State                state;
-
    IF::Memory::Address  ramstart{0};
    IF::Stack::Address   local{0};
-
-   Log                  trace{"trace.log"};
-   IF::Memory::Address  inst_addr{0};
    Disassembler         dis;
-   std::string          dis_text;
 
    //! Decoded instruction address modes
    uint8_t  mode[MAX_OPERAND];

@@ -135,7 +135,10 @@ private:
    }
 
 public:
-   void init(unsigned version_) { version = version_; }
+   ZParser(unsigned version_)
+      : version(version_)
+   {
+   }
 
    //! Translate input command into list of tokens in memory
    void tokenise(IF::Memory& memory, uint32_t out, uint32_t in, uint32_t dict, bool partial)

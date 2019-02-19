@@ -41,6 +41,12 @@ class Story : public IF::StoryBase<ZHeader>
 public:
    Story() = default;
 
+   //! Get Z version
+   unsigned getVersion() const
+   {
+      return getHeader()->version;
+   }
+
 private:
    //! Quetzal header
    struct IFhd

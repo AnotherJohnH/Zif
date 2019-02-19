@@ -20,8 +20,8 @@
 // SOFTWARE.
 //------------------------------------------------------------------------------
 
-#ifndef ZMACHINE_H
-#define ZMACHINE_H
+#ifndef Z_MACHINE_H
+#define Z_MACHINE_H
 
 #include <cctype>
 #include <cstdarg>
@@ -31,8 +31,7 @@
 #include <cstring>
 #include <string>
 
-#include "share/Options.h"
-#include "share/Log.h"
+#include "share/Machine.h"
 
 #include "ZConfig.h"
 #include "Z/Disassembler.h"
@@ -42,22 +41,108 @@
 #include "ZState.h"
 #include "ZText.h"
 #include "ZScreen.h"
-
 #include "Z/Story.h"
 
 //! Z machine implementation
-class ZMachine
+class ZMachine : public IF::Machine
 {
+public:
+   ZMachine(Console& console_, const Options& options_, const Z::Story& story_)
+      : IF::Machine(console_, options_)
+      , story_is_valid(story_.isValid())
+      , state(story_, (const char*)options.save_dir, options.undo, options.seed)
+      , stream(console, options_, story_.getVersion(), state.memory)
+      , screen(console, stream, story_.getVersion())
+      , object(state.memory)
+      , text(story_.getHeader(), state.memory)
+      , parser(story_.getVersion())
+   {
+      ZConfig config;
+      config.interp_major_version = 1;
+      config.interp_minor_version = 0;
+
+      header = (ZHeader*)state.memory.data();
+      header->init(console, config);
+
+      object.init(header->obj, header->version);
+
+      initDecoder();
+   }
+
+   //! Play a Z file.
+   //! \return true if there were no errors
+   bool play()
+   {
+      info("Version  : z%d",  header->version);
+      info("Checksum : %04X", header->checksum);
+
+      if((version() >= 3) && !story_is_valid)
+      {
+         if (version() == 3)
+         {
+            // Some v3 games do not have a checksum
+            info("Checksum fail");
+         }
+         else
+         {
+            warning("Checksum fail");
+         }
+      }
+
+      reset();
+
+      if (options.restore)
+      {
+         state.restore();
+      }
+
+      bool ok = true;
+
+      try
+      {
+         if(options.trace)
+         {
+            while(!state.isQuitRequested())
+            {
+               inst_addr = state.getPC();
+               printTrace();
+               fetchDecodeExecute();
+            }
+         }
+         else
+         {
+            while(!state.isQuitRequested())
+            {
+               inst_addr = state.getPC();
+               fetchDecodeExecute();
+            }
+         }
+
+         if (version() <= 3) showStatus();
+      }
+      catch(const char* message)
+      {
+         (void) dis.disassemble(dis_text, inst_addr, state.memory.data() + inst_addr);
+         dis_text += " => ";
+         dis_text += message;
+         console.error(dis_text);
+         ok = false;
+      }
+
+      console.waitForKey();
+
+      info("quit");
+
+      return ok;
+   }
+
 private:
    typedef void (ZMachine::*OpPtr)();
 
    static const unsigned MAX_OPERANDS = 8;
 
-   Console&        console;
-   const Options&  options;
    bool            story_is_valid;
    ZState          state;
-   Log             trace{"trace.log"};
    Z::Disassembler dis;
    ZStream         stream;
    ZScreen         screen;
@@ -65,16 +150,13 @@ private:
    ZText           text;
    ZParser         parser;
    ZHeader*        header{};
-   uint32_t        inst_addr;
+
    unsigned        num_arg;
    union
    {
       uint16_t uarg[MAX_OPERANDS];
       int16_t  sarg[MAX_OPERANDS];
    };
-
-   std::string  dis_text{};
-   unsigned     dis_op_count{0};
 
    // Op-code decoders
    OpPtr op0[0x10];
@@ -83,7 +165,7 @@ private:
    OpPtr opV[0x20];
    OpPtr opE[0x20];
 
-   // string used in multiple places, (possibly overly cautious of
+   // string used in multiple places, (possibly overly cautious
    // of dynamic memory allocation) but use of this string keeps
    // allocations to a minimum
    std::string work_str;
@@ -334,7 +416,7 @@ private:
    }
 
    //! restart
-   void op0_restart() { start(/* restore_save */false); }
+   void op0_restart() { reset(); }
 
    //! ret_popped
    void op0_ret_popped() { subRet(state.pop()); }
@@ -1365,6 +1447,11 @@ private:
       (this->*opE[op_code & 0x1F])();
    }
 
+   void reset()
+   {
+      screen.reset();
+      state.reset();
+   }
 
    void fetchDecodeExecute()
    {
@@ -1409,24 +1496,6 @@ private:
       }
    }
 
-   //! Reset machine state to intial conditions
-   void start(bool restore_save)
-   {
-      if((version() >= 3) && !story_is_valid)
-      {
-         if (version() == 3)
-         {
-            // Some v3 games do not have a checksum
-            info("Checksum fail");
-         }
-         else
-         {
-            warning("Checksum fail");
-         }
-      }
-
-   }
-
    void printTrace()
    {
       (void) dis.disassemble(dis_text, inst_addr, state.memory.data() + inst_addr);
@@ -1440,90 +1509,6 @@ private:
       trace.write(dis_text);
       trace.write('\n');
    }
-
-public:
-   ZMachine(Console& console_, const Options& options_, const Z::Story& story_)
-      : console(console_)
-      , options(options_)
-      , story_is_valid(story_.isValid())
-      , state(story_, (const char*)options.save_dir, options.undo, options.seed)
-      , stream(console, options_, state.memory)
-      , screen(console, stream)
-      , object(state.memory)
-      , text(state.memory)
-   {
-   }
-
-   //! Play a Z file.
-   //! \return true if there were no errors
-   bool play()
-   {
-      ZConfig config;
-      config.interp_major_version = 1;
-      config.interp_minor_version = 0;
-
-      header = (ZHeader*)state.memory.data();
-      header->init(console, config);
-
-      stream.init(header->version);
-      screen.init(header->version);
-      // TODO fix this! and maybe just pass ZHeader* int stream
-      text.init(header->version, header->abbr, header->alphabet_table);
-      parser.init(header->version);
-      object.init(header->obj, header->version);
-
-      initDecoder();
-
-      info("Version  : z%d",  header->version);
-      info("Checksum : %04X", header->checksum);
-
-      state.reset();
-
-      if (options.restore)
-      {
-         state.restore();
-      }
-
-      bool ok = true;
-
-      try
-      {
-         if(options.trace)
-         {
-            while(!state.isQuitRequested())
-            {
-               inst_addr = state.getPC();
-               printTrace();
-               fetchDecodeExecute();
-            }
-         }
-         else
-         {
-            while(!state.isQuitRequested())
-            {
-               inst_addr = state.getPC();
-               fetchDecodeExecute();
-            }
-         }
-
-         if (version() <= 3) showStatus();
-      }
-      catch(const char* message)
-      {
-         (void) dis.disassemble(dis_text, inst_addr, state.memory.data() + inst_addr);
-         dis_text += " => ";
-         dis_text += message;
-         console.error(dis_text);
-         ok = false;
-      }
-
-      console.waitForKey();
-
-      info("quit");
-
-      return ok;
-   }
 };
-
 
 #endif

@@ -64,9 +64,10 @@ private:
    };
 
 public:
-   ZScreen(Console& console_, ZStream& stream_)
+   ZScreen(Console& console_, ZStream& stream_, unsigned version_)
       : console(console_)
       , stream(stream_)
+      , version(version_)
    {
    }
 
@@ -91,12 +92,8 @@ public:
    }
 
    //! Initialise the screen state
-   void init(unsigned version_)
+   void reset()
    {
-      DBGF("Screen::init(%u)\n", version_);
-
-      version = version_;
-
       switch(version)
       {
       case 1:
@@ -444,8 +441,8 @@ public:
 private:
    Console&  console;
    ZStream&  stream;
-   ZWindow   window[MAX_WINDOW];
    unsigned  version{0};
+   ZWindow   window[MAX_WINDOW];
    unsigned  index{LOWER_WINDOW};
 };
 
