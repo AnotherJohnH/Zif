@@ -25,12 +25,14 @@
 
 #include "share/Console.h"
 
-#include "ZStream.h"
+#include "Z/Stream.h"
 
 #define DBGF if (0) printf
 
+namespace Z {
+
 //! Screen model
-class ZScreen
+class Screen
 {
 private:
    static const unsigned LOWER_WINDOW{0};
@@ -64,14 +66,14 @@ private:
    };
 
 public:
-   ZScreen(Console& console_, ZStream& stream_, unsigned version_)
+   Screen(Console& console_, Stream& stream_, unsigned version_)
       : console(console_)
       , stream(stream_)
       , version(version_)
    {
    }
 
-   ~ZScreen()
+   ~Screen()
    {
       // console.waitForKey();
    }
@@ -440,10 +442,12 @@ public:
 
 private:
    Console&  console;
-   ZStream&  stream;
+   Stream&   stream;
    unsigned  version{0};
    ZWindow   window[MAX_WINDOW];
    unsigned  index{LOWER_WINDOW};
 };
+
+} // namespace Z
 
 #endif

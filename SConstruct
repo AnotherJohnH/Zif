@@ -4,7 +4,7 @@ app      = 'Zif'
 version  = '0.5.7-Beta'
 
 source  = ['Source/share/ConsoleImpl.cpp',
-           'Source/Z/ZStream.cpp']
+           'Source/Z/Stream.cpp']
 
 # Get a build environment
 env,libs = SConscript('Platform/build.scons', ['app', 'version'])

@@ -20,21 +20,22 @@
 // SOFTWARE.
 //------------------------------------------------------------------------------
 
-#ifndef ZTEXT_H
-#define ZTEXT_H
+#ifndef Z_TEXT_H
+#define Z_TEXT_H
 
 #include <cstdint>
 #include <functional>
 
 #include "share/Memory.h"
 
-#include "ZStream.h"
-#include "ZHeader.h"
+#include "Z/Header.h"
 
 // See the Z specification section 3.
 
+namespace Z {
+
 //! Decompressor for text
-class ZText
+class Text
 {
 public:
    using Writer = std::function<void(uint16_t)>;
@@ -218,7 +219,7 @@ private:
    }
 
 public:
-   ZText(const ZHeader* header, IF::Memory& memory_)
+   Text(const Header* header, IF::Memory& memory_)
       : memory(memory_)
    {
       version    = header->version;
@@ -285,5 +286,7 @@ public:
       }
    }
 };
+
+} // namespace Z
 
 #endif

@@ -24,11 +24,14 @@
 #define Z_PARSER_H
 
 #include <cstring>
+#include <cstdint>
 
-#include "ZText.h"
+#include "share/Memory.h"
+
+namespace Z {
 
 //! Translator of input commands into tokens
-class ZParser
+class Parser
 {
 private:
    uint8_t version;
@@ -135,7 +138,7 @@ private:
    }
 
 public:
-   ZParser(unsigned version_)
+   Parser(unsigned version_)
       : version(version_)
    {
    }
@@ -222,5 +225,7 @@ public:
       memory.write8(out + 1, num_word);
    }
 };
+
+} // namespace Z
 
 #endif

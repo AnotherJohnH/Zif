@@ -23,10 +23,9 @@
 #include <cstdarg>
 #include <cstdio>
 
-#include "ZStream.h"
+#include "Z//Stream.h"
 
-
-void ZStream::vWritef(const char* format, va_list ap)
+void Z::Stream::vWritef(const char* format, va_list ap)
 {
    char message[256]; // XXX this is unsafe
 

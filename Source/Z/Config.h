@@ -20,13 +20,15 @@
 // SOFTWARE.
 //------------------------------------------------------------------------------
 
-#ifndef ZCONFIG_H
-#define ZCONFIG_H
+#ifndef Z_CONFIG_H
+#define Z_CONFIG_H
 
 #include <cstdint>
 
+namespace Z {
+
 //! Configuration of interpreter features
-struct ZConfig
+struct Config
 {
    uint8_t  interp_major_version{0};
    uint8_t  interp_minor_version{0};
@@ -37,5 +39,7 @@ struct ZConfig
    bool     sounds{false};           //!< sounds available
    bool     transcripting{false};    //!< transcripting starts on
 };
+
+} // namespace Z
 
 #endif

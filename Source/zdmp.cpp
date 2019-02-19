@@ -69,7 +69,7 @@ private:
       *out << "  \"" << name << "\": \"0x" << value << "\"," << std::endl;
    }
 
-   void dumpHeader(const ZHeader* header)
+   void dumpHeader(const Z::Header* header)
    {
       attr("version",          header->version);
       attr("flags1",           header->flags1);
@@ -199,7 +199,7 @@ private:
          story.resetMemory(state.memory);
       }
 
-      dumpHeader((const ZHeader*)state.memory.data());
+      dumpHeader((const Z::Header*)state.memory.data());
 
       if (dump_mem)
       {

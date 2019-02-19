@@ -30,10 +30,12 @@
 
 #include "share/Console.h"
 
-#include "ZConfig.h"
+#include "Z/Config.h"
+
+namespace Z {
 
 //! Overlay for a Z story header
-struct ZHeader
+struct Header
 {
    uint8_t    version;             // $00: Version number
    uint8_t    flags1;              // $01: Flags 1
@@ -74,7 +76,7 @@ public:
    STB::Big16 header_ext;
    uint8_t    pad2[8];
 
-   ZHeader() { assert(sizeof(ZHeader) == 64); }
+   Header() { assert(sizeof(Header) == 64); }
 
    //! Check for supported versions
    bool isVersionValid() const { return (version >= 1) && (version <= 8); }
@@ -175,7 +177,7 @@ public:
    }
 
    //!
-   void init(Console& console, ZConfig& config)
+   void init(Console& console, Config& config)
    {
       if(version <= 3)
       {
@@ -237,5 +239,7 @@ public:
       foreground_colour = 9;
    }
 };
+
+} // namespace Z
 
 #endif

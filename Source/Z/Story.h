@@ -20,8 +20,8 @@
 // SOFTWARE.
 //------------------------------------------------------------------------------
 
-#ifndef ZSTORY_H
-#define ZSTORY_H
+#ifndef Z_STORY_H
+#define Z_STORY_H
 
 #include <cstdio>
 #include <cstdint>
@@ -31,12 +31,12 @@
 
 #include "share/Story.h"
 
-#include "ZHeader.h"
+#include "Z/Header.h"
 
 namespace Z {
 
 //! Manage Z story image
-class Story : public IF::StoryBase<ZHeader>
+class Story : public IF::StoryBase<Header>
 {
 public:
    Story() = default;
@@ -73,7 +73,7 @@ private:
    //! Validate Z-story header
    virtual bool validateHeader(FILE* fp, size_t& size) override
    {
-      const ZHeader* header = getHeader();
+      const Header* header = getHeader();
 
       if (!header->isVersionValid())
       {
@@ -90,7 +90,7 @@ private:
             long file_size = ftell(fp);
             if (file_size > 0)
             {
-               if (fseek(fp, sizeof(ZHeader), SEEK_SET) == 0)
+               if (fseek(fp, sizeof(Header), SEEK_SET) == 0)
                {
                   getHeader()->setStorySize(file_size);
                }
@@ -112,7 +112,7 @@ private:
       }
 
       // Validate static memory region
-      if ((header->stat < sizeof(ZHeader)) ||
+      if ((header->stat < sizeof(Header)) ||
           (header->stat > 0xFFFF) ||
           (header->stat > header->getStorySize()))
       {
@@ -121,7 +121,7 @@ private:
       }
 
       // Validate hi-memory region
-      if ((header->himem < sizeof(ZHeader)) ||
+      if ((header->himem < sizeof(Header)) ||
           (header->himem > header->getStorySize()) ||
           (header->himem < header->stat))
       {
@@ -137,7 +137,7 @@ private:
    //! Validate Z-story image
    virtual bool validateImage() const override
    {
-      const ZHeader* header = getHeader();
+      const Header* header = getHeader();
 
       uint16_t checksum = 0;
 
@@ -153,12 +153,12 @@ public:
    //! Initialise VM memory for this Z-story image
    virtual void prepareMemory(IF::Memory& memory) const override
    {
-      const ZHeader* header = getHeader();
+      const Header* header = getHeader();
 
       memory.resize(header->getMemoryLimit());
       memory.limitWrite(0, header->stat);
 
-      memcpy(memory.data(), header, sizeof(ZHeader));
+      memcpy(memory.data(), header, sizeof(Header));
    }
 
    //! Reset VM memory for this Z-story image
@@ -167,9 +167,9 @@ public:
       // TODO the header should be reset (only bits 0 and 1 from Flags 2
       //      shoud be preserved)
 
-      memcpy(memory.data() + sizeof(ZHeader),
-             data() + sizeof(ZHeader),
-             size() - sizeof(ZHeader));
+      memcpy(memory.data() + sizeof(Header),
+             data() + sizeof(Header),
+             size() - sizeof(Header));
    }
 
    virtual IF::Memory::Address getEntryPoint() const override
@@ -181,7 +181,7 @@ public:
    virtual void encodeQuetzalHeader(STB::IFF::Document& doc, uint32_t pc) const override
    {
       STB::IFF::Chunk* ifhd_chunk = doc.newChunk("IFhd", 13);
-      const ZHeader*   header     = getHeader();
+      const Header*   header     = getHeader();
       IFhd             ifhd;
 
       ifhd.release       = header->release;
@@ -204,7 +204,7 @@ public:
           return false;
        }
 
-       const ZHeader* header = getHeader();
+       const Header* header = getHeader();
 
        // Verify story version matches
        if ((ifhd->release != header->release) ||

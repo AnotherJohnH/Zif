@@ -33,21 +33,24 @@
 
 #include "share/Machine.h"
 
-#include "ZConfig.h"
+#include "Z/Config.h"
 #include "Z/Disassembler.h"
-#include "ZHeader.h"
-#include "ZObject.h"
-#include "ZParser.h"
-#include "ZState.h"
-#include "ZText.h"
-#include "ZScreen.h"
+#include "Z/Header.h"
+#include "Z/Object.h"
+#include "Z/Parser.h"
+#include "Z/State.h"
+#include "Z/Stream.h"
+#include "Z/Text.h"
+#include "Z/Screen.h"
 #include "Z/Story.h"
 
+namespace Z {
+
 //! Z machine implementation
-class ZMachine : public IF::Machine
+class Machine : public IF::Machine
 {
 public:
-   ZMachine(Console& console_, const Options& options_, const Z::Story& story_)
+   Machine(Console& console_, const Options& options_, const Story& story_)
       : IF::Machine(console_, options_)
       , story_is_valid(story_.isValid())
       , state(story_, (const char*)options.save_dir, options.undo, options.seed)
@@ -57,11 +60,11 @@ public:
       , text(story_.getHeader(), state.memory)
       , parser(story_.getVersion())
    {
-      ZConfig config;
+      Config config;
       config.interp_major_version = 1;
       config.interp_minor_version = 0;
 
-      header = (ZHeader*)state.memory.data();
+      header = (Header*)state.memory.data();
       header->init(console, config);
 
       object.init(header->obj, header->version);
@@ -137,21 +140,21 @@ public:
    }
 
 private:
-   typedef void (ZMachine::*OpPtr)();
+   typedef void (Machine::*OpPtr)();
 
    static const unsigned MAX_OPERANDS = 8;
 
-   bool            story_is_valid;
-   ZState          state;
-   Z::Disassembler dis;
-   ZStream         stream;
-   ZScreen         screen;
-   ZObject         object;
-   ZText           text;
-   ZParser         parser;
-   ZHeader*        header{};
+   bool         story_is_valid;
+   State        state;
+   Disassembler dis;
+   Stream       stream;
+   Screen       screen;
+   Object       object;
+   Text         text;
+   Parser       parser;
+   Header*      header{};
 
-   unsigned        num_arg;
+   unsigned     num_arg;
    union
    {
       uint16_t uarg[MAX_OPERANDS];
@@ -174,7 +177,7 @@ private:
    {
       va_list ap;
       va_start(ap, format);
-      stream.vmessage(ZStream::INFO, format, ap);
+      stream.vmessage(Stream::INFO, format, ap);
       va_end(ap);
    }
 
@@ -182,7 +185,7 @@ private:
    {
       va_list ap;
       va_start(ap, format);
-      stream.vmessage(ZStream::WARNING, format, ap);
+      stream.vmessage(Stream::WARNING, format, ap);
       va_end(ap);
    }
 
@@ -1184,189 +1187,189 @@ private:
    void initDecoder()
    {
       // Zero operand instructions
-      op0[0x0] =                  &ZMachine::op0_rtrue;
-      op0[0x1] =                  &ZMachine::op0_rfalse;
-      op0[0x2] =                  &ZMachine::op0_print;
-      op0[0x3] =                  &ZMachine::op0_print_ret;
-      op0[0x4] =                  &ZMachine::op0_nop;
-      op0[0x5] = version() <= 3 ? &ZMachine::op0_save_v1
-               : version() == 4 ? &ZMachine::op0_save_v4
-                                : &ZMachine::ILLEGAL;
-      op0[0x6] = version() <= 3 ? &ZMachine::op0_restore_v1
-               : version() == 4 ? &ZMachine::op0_restore_v4
-                                : &ZMachine::ILLEGAL;
-      op0[0x7] =                  &ZMachine::op0_restart;
-      op0[0x8] =                  &ZMachine::op0_ret_popped;
-      op0[0x9] = version() <= 4 ? &ZMachine::op0_pop
-                                : &ZMachine::op0_catch;
-      op0[0xA] =                  &ZMachine::op0_quit;
-      op0[0xB] =                  &ZMachine::op0_new_line;
-      op0[0xC] = version() <= 2 ? &ZMachine::ILLEGAL
-               : version() == 3 ? &ZMachine::op0_show_status
-                                : &ZMachine::op0_nop;
-      op0[0xD] = version() >= 3 ? &ZMachine::op0_verify
-                                : &ZMachine::ILLEGAL;
-      op0[0xE] =                  &ZMachine::ILLEGAL;   // "extend" decoded elsewhere
-      op0[0xF] = version() >= 5 ? &ZMachine::op0_piracy
-                                : &ZMachine::ILLEGAL;
+      op0[0x0] =                  &Machine::op0_rtrue;
+      op0[0x1] =                  &Machine::op0_rfalse;
+      op0[0x2] =                  &Machine::op0_print;
+      op0[0x3] =                  &Machine::op0_print_ret;
+      op0[0x4] =                  &Machine::op0_nop;
+      op0[0x5] = version() <= 3 ? &Machine::op0_save_v1
+               : version() == 4 ? &Machine::op0_save_v4
+                                : &Machine::ILLEGAL;
+      op0[0x6] = version() <= 3 ? &Machine::op0_restore_v1
+               : version() == 4 ? &Machine::op0_restore_v4
+                                : &Machine::ILLEGAL;
+      op0[0x7] =                  &Machine::op0_restart;
+      op0[0x8] =                  &Machine::op0_ret_popped;
+      op0[0x9] = version() <= 4 ? &Machine::op0_pop
+                                : &Machine::op0_catch;
+      op0[0xA] =                  &Machine::op0_quit;
+      op0[0xB] =                  &Machine::op0_new_line;
+      op0[0xC] = version() <= 2 ? &Machine::ILLEGAL
+               : version() == 3 ? &Machine::op0_show_status
+                                : &Machine::op0_nop;
+      op0[0xD] = version() >= 3 ? &Machine::op0_verify
+                                : &Machine::ILLEGAL;
+      op0[0xE] =                  &Machine::ILLEGAL;   // "extend" decoded elsewhere
+      op0[0xF] = version() >= 5 ? &Machine::op0_piracy
+                                : &Machine::ILLEGAL;
 
       // One operand instructions
-      op1[0x0] =                  &ZMachine::op1_jz;
-      op1[0x1] =                  &ZMachine::op1_get_sibling;
-      op1[0x2] =                  &ZMachine::op1_get_child;
-      op1[0x3] =                  &ZMachine::op1_get_parent;
-      op1[0x4] =                  &ZMachine::op1_get_prop_len;
-      op1[0x5] =                  &ZMachine::op1_inc;
-      op1[0x6] =                  &ZMachine::op1_dec;
-      op1[0x7] =                  &ZMachine::op1_print_addr;
-      op1[0x8] = version() >= 4 ? &ZMachine::op1_call_1s
-                                : &ZMachine::ILLEGAL;
-      op1[0x9] =                  &ZMachine::op1_remove_obj;
-      op1[0xA] =                  &ZMachine::op1_print_obj;
-      op1[0xB] =                  &ZMachine::op1_ret;
-      op1[0xC] =                  &ZMachine::op1_jump;
-      op1[0xD] =                  &ZMachine::op1_print_paddr;
-      op1[0xE] =                  &ZMachine::op1_load;
-      op1[0xF] = version() <= 4 ? &ZMachine::op1_not
-                                : &ZMachine::op1_call_1n;
+      op1[0x0] =                  &Machine::op1_jz;
+      op1[0x1] =                  &Machine::op1_get_sibling;
+      op1[0x2] =                  &Machine::op1_get_child;
+      op1[0x3] =                  &Machine::op1_get_parent;
+      op1[0x4] =                  &Machine::op1_get_prop_len;
+      op1[0x5] =                  &Machine::op1_inc;
+      op1[0x6] =                  &Machine::op1_dec;
+      op1[0x7] =                  &Machine::op1_print_addr;
+      op1[0x8] = version() >= 4 ? &Machine::op1_call_1s
+                                : &Machine::ILLEGAL;
+      op1[0x9] =                  &Machine::op1_remove_obj;
+      op1[0xA] =                  &Machine::op1_print_obj;
+      op1[0xB] =                  &Machine::op1_ret;
+      op1[0xC] =                  &Machine::op1_jump;
+      op1[0xD] =                  &Machine::op1_print_paddr;
+      op1[0xE] =                  &Machine::op1_load;
+      op1[0xF] = version() <= 4 ? &Machine::op1_not
+                                : &Machine::op1_call_1n;
 
       // Two operand instructions
-      op2[0x00] =                  &ZMachine::ILLEGAL;
-      op2[0x01] =                  &ZMachine::op2_je;
-      op2[0x02] =                  &ZMachine::op2_jl;
-      op2[0x03] =                  &ZMachine::op2_jg;
-      op2[0x04] =                  &ZMachine::op2_dec_chk;
-      op2[0x05] =                  &ZMachine::op2_inc_chk;
-      op2[0x06] =                  &ZMachine::op2_jin;
-      op2[0x07] =                  &ZMachine::op2_test_bitmap;
-      op2[0x08] =                  &ZMachine::op2_or;
-      op2[0x09] =                  &ZMachine::op2_and;
-      op2[0x0A] =                  &ZMachine::op2_test_attr;
-      op2[0x0B] =                  &ZMachine::op2_set_attr;
-      op2[0x0C] =                  &ZMachine::op2_clear_attr;
-      op2[0x0D] =                  &ZMachine::op2_store;
-      op2[0x0E] =                  &ZMachine::op2_insert_obj;
-      op2[0x0F] =                  &ZMachine::op2_loadw;
-      op2[0x10] =                  &ZMachine::op2_loadb;
-      op2[0x11] =                  &ZMachine::op2_get_prop;
-      op2[0x12] =                  &ZMachine::op2_get_prop_addr;
-      op2[0x13] =                  &ZMachine::op2_get_next_prop;
-      op2[0x14] =                  &ZMachine::op2_add;
-      op2[0x15] =                  &ZMachine::op2_sub;
-      op2[0x16] =                  &ZMachine::op2_mul;
-      op2[0x17] =                  &ZMachine::op2_div;
-      op2[0x18] =                  &ZMachine::op2_mod;
-      op2[0x19] = version() >= 4 ? &ZMachine::op2_call_2s
-                                 : &ZMachine::ILLEGAL;
-      op2[0x1A] = version() >= 5 ? &ZMachine::op2_call_2n
-                                 : &ZMachine::ILLEGAL;
-      op2[0x1B] = version() >= 5 ? &ZMachine::op2_set_colour
-                                 : &ZMachine::ILLEGAL;
-      op2[0x1C] = version() >= 5 ? &ZMachine::op2_throw
-                                 : &ZMachine::ILLEGAL;
-      op2[0x1D] =                  &ZMachine::ILLEGAL;
-      op2[0x1E] =                  &ZMachine::ILLEGAL;
-      op2[0x1F] =                  &ZMachine::ILLEGAL;
+      op2[0x00] =                  &Machine::ILLEGAL;
+      op2[0x01] =                  &Machine::op2_je;
+      op2[0x02] =                  &Machine::op2_jl;
+      op2[0x03] =                  &Machine::op2_jg;
+      op2[0x04] =                  &Machine::op2_dec_chk;
+      op2[0x05] =                  &Machine::op2_inc_chk;
+      op2[0x06] =                  &Machine::op2_jin;
+      op2[0x07] =                  &Machine::op2_test_bitmap;
+      op2[0x08] =                  &Machine::op2_or;
+      op2[0x09] =                  &Machine::op2_and;
+      op2[0x0A] =                  &Machine::op2_test_attr;
+      op2[0x0B] =                  &Machine::op2_set_attr;
+      op2[0x0C] =                  &Machine::op2_clear_attr;
+      op2[0x0D] =                  &Machine::op2_store;
+      op2[0x0E] =                  &Machine::op2_insert_obj;
+      op2[0x0F] =                  &Machine::op2_loadw;
+      op2[0x10] =                  &Machine::op2_loadb;
+      op2[0x11] =                  &Machine::op2_get_prop;
+      op2[0x12] =                  &Machine::op2_get_prop_addr;
+      op2[0x13] =                  &Machine::op2_get_next_prop;
+      op2[0x14] =                  &Machine::op2_add;
+      op2[0x15] =                  &Machine::op2_sub;
+      op2[0x16] =                  &Machine::op2_mul;
+      op2[0x17] =                  &Machine::op2_div;
+      op2[0x18] =                  &Machine::op2_mod;
+      op2[0x19] = version() >= 4 ? &Machine::op2_call_2s
+                                 : &Machine::ILLEGAL;
+      op2[0x1A] = version() >= 5 ? &Machine::op2_call_2n
+                                 : &Machine::ILLEGAL;
+      op2[0x1B] = version() >= 5 ? &Machine::op2_set_colour
+                                 : &Machine::ILLEGAL;
+      op2[0x1C] = version() >= 5 ? &Machine::op2_throw
+                                 : &Machine::ILLEGAL;
+      op2[0x1D] =                  &Machine::ILLEGAL;
+      op2[0x1E] =                  &Machine::ILLEGAL;
+      op2[0x1F] =                  &Machine::ILLEGAL;
 
       // Variable operand instructions
-      opV[0x00] = version() <= 3 ? &ZMachine::opV_call
-                                 : &ZMachine::opV_call_vs;
-      opV[0x01] =                  &ZMachine::opV_storew;
-      opV[0x02] =                  &ZMachine::opV_storeb;
-      opV[0x03] =                  &ZMachine::opV_put_prop;
-      opV[0x04] = version() <= 3 ? &ZMachine::opV_sread<false,true>
-                : version() == 4 ? &ZMachine::opV_sread<true,false>
-                                 : &ZMachine::opV_aread;
-      opV[0x05] =                  &ZMachine::opV_print_char;
-      opV[0x06] =                  &ZMachine::opV_print_num;
-      opV[0x07] =                  &ZMachine::opV_random;
-      opV[0x08] =                  &ZMachine::opV_push;
-      opV[0x09] = version() == 6 ? &ZMachine::opV_pull_v6
-                                 : &ZMachine::opV_pull_v1;
-      opV[0x0A] = version() >= 3 ? &ZMachine::opV_split_window
-                                 : &ZMachine::ILLEGAL;
-      opV[0x0B] = version() >= 3 ? &ZMachine::opV_set_window
-                                 : &ZMachine::ILLEGAL;
-      opV[0x0C] = version() >= 4 ? &ZMachine::opV_call_vs2
-                                 : &ZMachine::ILLEGAL;
-      opV[0x0D] = version() >= 4 ? &ZMachine::opV_erase_window
-                                 : &ZMachine::ILLEGAL;
-      opV[0x0E] = version() >= 4 ? &ZMachine::opV_erase_line_v4
-                : version() >= 6 ? &ZMachine::opV_erase_line_v6
-                                 : &ZMachine::ILLEGAL;
-      opV[0x0F] = version() >= 4 ? &ZMachine::opV_set_cursor_v4
-                : version() >= 6 ? &ZMachine::opV_set_cursor_v6
-                                 : &ZMachine::ILLEGAL;
-      opV[0x10] = version() >= 4 ? &ZMachine::opV_get_cursor      : &ZMachine::ILLEGAL;
-      opV[0x11] = version() >= 4 ? &ZMachine::opV_set_text_style  : &ZMachine::ILLEGAL;
-      opV[0x12] = version() >= 4 ? &ZMachine::opV_buffer_mode     : &ZMachine::ILLEGAL;
-      opV[0x13] = version() >= 3 ? &ZMachine::opV_output_stream   : &ZMachine::ILLEGAL;
-      opV[0x14] = version() >= 3 ? &ZMachine::opV_input_stream    : &ZMachine::ILLEGAL;
-      opV[0x15] = version() >= 5 ? &ZMachine::opV_sound_effect    : &ZMachine::ILLEGAL;
-      opV[0x16] = version() >= 4 ? &ZMachine::opV_read_char       : &ZMachine::ILLEGAL;
-      opV[0x17] = version() >= 4 ? &ZMachine::opV_scan_table      : &ZMachine::ILLEGAL;
-      opV[0x18] = version() >= 5 ? &ZMachine::opV_not             : &ZMachine::ILLEGAL;
-      opV[0x19] = version() >= 5 ? &ZMachine::opV_call_vn         : &ZMachine::ILLEGAL;
-      opV[0x1A] = version() >= 5 ? &ZMachine::opV_call_vn2        : &ZMachine::ILLEGAL;
-      opV[0x1B] = version() >= 5 ? &ZMachine::opV_tokenise        : &ZMachine::ILLEGAL;
-      opV[0x1C] = version() >= 5 ? &ZMachine::opV_encode_text     : &ZMachine::ILLEGAL;
-      opV[0x1D] = version() >= 5 ? &ZMachine::opV_copy_table      : &ZMachine::ILLEGAL;
-      opV[0x1E] = version() >= 5 ? &ZMachine::opV_print_table     : &ZMachine::ILLEGAL;
-      opV[0x1F] = version() >= 5 ? &ZMachine::opV_check_arg_count : &ZMachine::ILLEGAL;
+      opV[0x00] = version() <= 3 ? &Machine::opV_call
+                                 : &Machine::opV_call_vs;
+      opV[0x01] =                  &Machine::opV_storew;
+      opV[0x02] =                  &Machine::opV_storeb;
+      opV[0x03] =                  &Machine::opV_put_prop;
+      opV[0x04] = version() <= 3 ? &Machine::opV_sread<false,true>
+                : version() == 4 ? &Machine::opV_sread<true,false>
+                                 : &Machine::opV_aread;
+      opV[0x05] =                  &Machine::opV_print_char;
+      opV[0x06] =                  &Machine::opV_print_num;
+      opV[0x07] =                  &Machine::opV_random;
+      opV[0x08] =                  &Machine::opV_push;
+      opV[0x09] = version() == 6 ? &Machine::opV_pull_v6
+                                 : &Machine::opV_pull_v1;
+      opV[0x0A] = version() >= 3 ? &Machine::opV_split_window
+                                 : &Machine::ILLEGAL;
+      opV[0x0B] = version() >= 3 ? &Machine::opV_set_window
+                                 : &Machine::ILLEGAL;
+      opV[0x0C] = version() >= 4 ? &Machine::opV_call_vs2
+                                 : &Machine::ILLEGAL;
+      opV[0x0D] = version() >= 4 ? &Machine::opV_erase_window
+                                 : &Machine::ILLEGAL;
+      opV[0x0E] = version() >= 4 ? &Machine::opV_erase_line_v4
+                : version() >= 6 ? &Machine::opV_erase_line_v6
+                                 : &Machine::ILLEGAL;
+      opV[0x0F] = version() >= 4 ? &Machine::opV_set_cursor_v4
+                : version() >= 6 ? &Machine::opV_set_cursor_v6
+                                 : &Machine::ILLEGAL;
+      opV[0x10] = version() >= 4 ? &Machine::opV_get_cursor      : &Machine::ILLEGAL;
+      opV[0x11] = version() >= 4 ? &Machine::opV_set_text_style  : &Machine::ILLEGAL;
+      opV[0x12] = version() >= 4 ? &Machine::opV_buffer_mode     : &Machine::ILLEGAL;
+      opV[0x13] = version() >= 3 ? &Machine::opV_output_stream   : &Machine::ILLEGAL;
+      opV[0x14] = version() >= 3 ? &Machine::opV_input_stream    : &Machine::ILLEGAL;
+      opV[0x15] = version() >= 5 ? &Machine::opV_sound_effect    : &Machine::ILLEGAL;
+      opV[0x16] = version() >= 4 ? &Machine::opV_read_char       : &Machine::ILLEGAL;
+      opV[0x17] = version() >= 4 ? &Machine::opV_scan_table      : &Machine::ILLEGAL;
+      opV[0x18] = version() >= 5 ? &Machine::opV_not             : &Machine::ILLEGAL;
+      opV[0x19] = version() >= 5 ? &Machine::opV_call_vn         : &Machine::ILLEGAL;
+      opV[0x1A] = version() >= 5 ? &Machine::opV_call_vn2        : &Machine::ILLEGAL;
+      opV[0x1B] = version() >= 5 ? &Machine::opV_tokenise        : &Machine::ILLEGAL;
+      opV[0x1C] = version() >= 5 ? &Machine::opV_encode_text     : &Machine::ILLEGAL;
+      opV[0x1D] = version() >= 5 ? &Machine::opV_copy_table      : &Machine::ILLEGAL;
+      opV[0x1E] = version() >= 5 ? &Machine::opV_print_table     : &Machine::ILLEGAL;
+      opV[0x1F] = version() >= 5 ? &Machine::opV_check_arg_count : &Machine::ILLEGAL;
 
       // Externded instructions
       for(unsigned i = 0; i <= 0x1F; i++)
       {
-         opE[i] = &ZMachine::ILLEGAL;
+         opE[i] = &Machine::ILLEGAL;
       }
 
       if(version() < 5) return;
 
-      opE[0x00] = &ZMachine::opE_save_table;
-      opE[0x01] = &ZMachine::opE_restore_table;
-      opE[0x02] = &ZMachine::opE_log_shift;
-      opE[0x03] = &ZMachine::opE_art_shift;
-      opE[0x04] = &ZMachine::opE_set_font;
-      opE[0x09] = &ZMachine::opE_save_undo;
-      opE[0x0A] = &ZMachine::opE_restore_undo;
-      opE[0x0B] = &ZMachine::opE_print_unicode;
-      opE[0x0C] = &ZMachine::opE_check_unicode;
+      opE[0x00] = &Machine::opE_save_table;
+      opE[0x01] = &Machine::opE_restore_table;
+      opE[0x02] = &Machine::opE_log_shift;
+      opE[0x03] = &Machine::opE_art_shift;
+      opE[0x04] = &Machine::opE_set_font;
+      opE[0x09] = &Machine::opE_save_undo;
+      opE[0x0A] = &Machine::opE_restore_undo;
+      opE[0x0B] = &Machine::opE_print_unicode;
+      opE[0x0C] = &Machine::opE_check_unicode;
 
       if(version() != 6) return;
 
-      opE[0x05] = &ZMachine::opE_draw_picture;
-      opE[0x06] = &ZMachine::opE_picture_data;
-      opE[0x07] = &ZMachine::opE_erase_picture;
-      opE[0x08] = &ZMachine::opE_set_margins;
+      opE[0x05] = &Machine::opE_draw_picture;
+      opE[0x06] = &Machine::opE_picture_data;
+      opE[0x07] = &Machine::opE_erase_picture;
+      opE[0x08] = &Machine::opE_set_margins;
 
-      opE[0x10] = &ZMachine::opE_move_window;
-      opE[0x11] = &ZMachine::opE_window_size;
-      opE[0x12] = &ZMachine::opE_window_style;
-      opE[0x13] = &ZMachine::opE_get_wind_prop;
-      opE[0x14] = &ZMachine::opE_scroll_window;
-      opE[0x15] = &ZMachine::opE_pop_stack;
-      opE[0x16] = &ZMachine::opE_read_mouse;
-      opE[0x17] = &ZMachine::opE_mouse_window;
-      opE[0x18] = &ZMachine::opE_push_stack;
-      opE[0x19] = &ZMachine::opE_put_wind_prop;
-      opE[0x1A] = &ZMachine::opE_print_form;
-      opE[0x1B] = &ZMachine::opE_make_menu;
-      opE[0x1C] = &ZMachine::opE_picture_table;
+      opE[0x10] = &Machine::opE_move_window;
+      opE[0x11] = &Machine::opE_window_size;
+      opE[0x12] = &Machine::opE_window_style;
+      opE[0x13] = &Machine::opE_get_wind_prop;
+      opE[0x14] = &Machine::opE_scroll_window;
+      opE[0x15] = &Machine::opE_pop_stack;
+      opE[0x16] = &Machine::opE_read_mouse;
+      opE[0x17] = &Machine::opE_mouse_window;
+      opE[0x18] = &Machine::opE_push_stack;
+      opE[0x19] = &Machine::opE_put_wind_prop;
+      opE[0x1A] = &Machine::opE_print_form;
+      opE[0x1B] = &Machine::opE_make_menu;
+      opE[0x1C] = &Machine::opE_picture_table;
    }
 
    //============================================================================
 
    void clearOperands() { num_arg = 0; }
 
-   void fetchOperand(Z::OperandType type)
+   void fetchOperand(OperandType type)
    {
       uint16_t operand;
 
       switch(type)
       {
-      case Z::OP_LARGE_CONST: operand = state.fetch16();               break;
-      case Z::OP_SMALL_CONST: operand = state.fetch8();                break;
-      case Z::OP_VARIABLE:    operand = state.varRead(state.fetch8()); break;
+      case OP_LARGE_CONST: operand = state.fetch16();               break;
+      case OP_SMALL_CONST: operand = state.fetch8();                break;
+      case OP_VARIABLE:    operand = state.varRead(state.fetch8()); break;
       default: assert(!"bad operand type"); return;
       }
 
@@ -1394,9 +1397,9 @@ private:
       // Unpack the type of the operands
       for(unsigned i = 0; i < max_num_operands; ++i)
       {
-         Z::OperandType type = Z::OperandType(op_types >> 14);
+         OperandType type = OperandType(op_types >> 14);
 
-         if(type == Z::OP_NONE) return;
+         if(type == OP_NONE) return;
 
          fetchOperand(type);
 
@@ -1409,15 +1412,15 @@ private:
 
    void doOp1(uint8_t op_code)
    {
-      fetchOperand(Z::OperandType((op_code >> 4) & 3));
+      fetchOperand(OperandType((op_code >> 4) & 3));
 
       (this->*op1[op_code & 0xF])();
    }
 
    void doOp2(uint8_t op_code)
    {
-      fetchOperand(op_code & (1 << 6) ? Z::OP_VARIABLE : Z::OP_SMALL_CONST);
-      fetchOperand(op_code & (1 << 5) ? Z::OP_VARIABLE : Z::OP_SMALL_CONST);
+      fetchOperand(op_code & (1 << 6) ? OP_VARIABLE : OP_SMALL_CONST);
+      fetchOperand(op_code & (1 << 5) ? OP_VARIABLE : OP_SMALL_CONST);
 
       (this->*op2[op_code & 0x1F])();
    }
@@ -1510,5 +1513,7 @@ private:
       trace.write('\n');
    }
 };
+
+} // namespace Z
 
 #endif

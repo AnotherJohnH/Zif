@@ -28,20 +28,22 @@
 
 #include "share/SavableState.h"
 
-#include "ZHeader.h"
+#include "Z/Header.h"
 #include "Z/Story.h"
 
+namespace Z {
+
 //! Z machine state
-class ZState : public IF::SavableState
+class State : public IF::SavableState
 {
 public:
-   ZState(const Z::Story&    story_,
-          const std::string& save_dir_,
-          unsigned           num_undo_,
-          uint32_t           initial_rand_seed_)
+   State(const Z::Story&    story_,
+         const std::string& save_dir_,
+         unsigned           num_undo_,
+         uint32_t           initial_rand_seed_)
       : IF::SavableState(story_, save_dir_, num_undo_, initial_rand_seed_, 2048)
    {
-      const ZHeader* header = story_.getHeader();
+      const Header* header = story_.getHeader();
       global_base = header->glob;
    }
 
@@ -154,5 +156,7 @@ private:
    // Static configuration
    uint32_t global_base{0};
 };
+
+} // namespace Z
 
 #endif

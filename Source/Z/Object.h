@@ -20,15 +20,18 @@
 // SOFTWARE.
 //------------------------------------------------------------------------------
 
-#ifndef ZOBJECT_H
-#define ZOBJECT_H
+#ifndef Z_OBJECT_H
+#define Z_OBJECT_H
 
 #include <cassert>
+#include <cstdint>
 
 #include "share/Memory.h"
 
+namespace Z {
+
 //! Z machine object directory
-class ZObject
+class Object
 {
 private:
    const unsigned SMALL_PROP_BITS = 5;
@@ -153,7 +156,7 @@ private:
    }
 
 public:
-   ZObject(IF::Memory& memory_)
+   Object(IF::Memory& memory_)
       : memory(memory_)
    {
    }
@@ -357,5 +360,7 @@ public:
       setChild(parent, obj);
    }
 };
+
+} // namespace Z
 
 #endif

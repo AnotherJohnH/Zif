@@ -24,7 +24,7 @@
 #include "share/Options.h"
 #include "share/Blorb.h"
 
-#include "Z/ZMachine.h"
+#include "Z/Machine.h"
 #include "Glulx/Machine.h"
 #include "Level9/Machine.h"
 
@@ -74,7 +74,7 @@ private:
       {
          if (z_story.load(story_file, exec_offset))
          {
-            ZMachine machine(console, options, z_story);
+            Z::Machine machine(console, options, z_story);
             return machine.play() ? 0 : 1;
          }
          else

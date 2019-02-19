@@ -30,9 +30,10 @@
 #include "share/Options.h"
 #include "share/Memory.h"
 
+namespace Z {
 
 //! Input/output stream handler
-class ZStream
+class Stream
 {
 public:
    enum MessageLevel
@@ -42,10 +43,10 @@ public:
       ERROR
    };
 
-   ZStream(Console&       console_,
-           const Options& options_,
-           unsigned       version_,
-           IF::Memory&    memory_)
+   Stream(Console&       console_,
+          const Options& options_,
+          unsigned       version_,
+          IF::Memory&    memory_)
       : console(console_)
       , memory(memory_)
    {
@@ -442,5 +443,7 @@ private:
 
    MessageLevel message_filter{ERROR};
 };
+
+} // namespace Z
 
 #endif
