@@ -24,6 +24,7 @@
 #define GLULX_MACHINE_H
 
 #include <cmath>
+#include <cstring>
 
 #include "share/Machine.h"
 
@@ -217,8 +218,9 @@ private:
    float fLd(unsigned index)
    {
       uint32_t bits = loadOperand<uint32_t>(index);
-      // Now for some type punning!
-      return *(float*)&bits;
+      float    flt;
+      memcpy(&flt, &bits, sizeof(flt));
+      return flt;
    }
 
    //! Store a 32-bit integer value
@@ -231,7 +233,12 @@ private:
    void uSb(unsigned i, uint8_t value) { storeOperand<uint8_t>(i, value); }
 
    //! Store a float operand
-   void fSt(unsigned i, float value) { storeOperand<uint32_t>(i, *(uint32_t*)&value); }
+   void fSt(unsigned i, float value)
+   {
+      uint32_t bits;
+      memcpy(&bits, &value, sizeof(bits));
+      storeOperand<uint32_t>(i, bits);
+   }
 
 
    //! Relative jump

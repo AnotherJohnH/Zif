@@ -312,7 +312,7 @@ public:
                text += "]";
             }
 
-            if (i != (op[code].num_operand - 1)) text += ", ";
+            if ((i + 1) != op[code].num_operand) text += ", ";
          }
       }
 
