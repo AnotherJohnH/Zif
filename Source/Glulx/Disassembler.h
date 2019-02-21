@@ -27,10 +27,12 @@
 #include <cstring>
 #include <string>
 
+#include "share/Disassembler.h"
+
 namespace Glulx {
 
 //! Glulx disassembler
-class Disassembler
+class Disassembler : public IF::Disassembler
 {
 public:
    Disassembler()
@@ -179,37 +181,79 @@ public:
       declOp(0x1C9, "jisinf", "LL");
    }
 
-   //! Disassemble a single instruction
-   unsigned disassemble(std::string& text, uint32_t inst_addr, uint8_t* raw)
+private:
+   class Op
    {
+   public:
+      const char* mnemonic{""};
+      uint8_t     num_operand{0};
+      uint8_t     operand_type{0};
+
+      bool isLoad(unsigned i) const
+      {
+         return (operand_type & 0b10000000 >> i) != 0;
+      }
+
+      void init(const char* mnemonic_, const char* operands)
+      {
+         mnemonic    = mnemonic_;
+         num_operand = strlen(operands);
+
+         for(unsigned i=0; operands[i] != '\0'; i++)
+         {
+            if (operands[i] == 'L')
+            {
+               setIsLoad(i);
+            }
+         }
+      }
+
+   private:
+       void setIsLoad(unsigned i)
+       {
+          operand_type |= 0b10000000 >> i;
+       }
+   };
+
+   static const unsigned MAX_OPERAND = 8;
+   static const unsigned MAX_OP_CODE = 0x1CA;
+
+   Op     op[MAX_OP_CODE];
+   size_t max_mnemonic_len{0};
+
+   //! Declare an op
+   void declOp(uint32_t code, const char* mnemonic, const char* operands)
+   {
+      op[code].init(mnemonic, operands);
+
+      size_t len = strlen(mnemonic);
+      if (len > max_mnemonic_len)
+      {
+         max_mnemonic_len = len;
+      }
+   }
+
+   //! Decode an op
+   virtual unsigned decodeOp(std::string& text, const uint8_t* raw) const override
+   {
+      unsigned n = 0;
+
       text = "";
 
-      fmtHex(text, inst_addr, 6);
-      text += ": ";
-
       // Extract op-code
-      uint32_t code = *raw++;
+      uint32_t code = raw[n++];
       if (code >= 0xC0)
       {
          code = (code & 0x0F) << 24;
-         code |= uint32_t(*raw++) << 16;
-         code |= uint32_t(*raw++) << 8;
-         code |= uint32_t(*raw++);
-         fmtHex(text, code, 7);
+         code |= uint32_t(raw[n++]) << 16;
+         code |= uint32_t(raw[n++]) << 8;
+         code |= uint32_t(raw[n++]);
       }
       else if (code >= 0x80)
       {
          code = (code & 0x3F) << 8;
-         code |= uint32_t(*raw++);
-         fmtHex(text, code, 4);
+         code |= uint32_t(raw[n++]);
       }
-      else
-      {
-         text += "  ";
-         fmtHex(text, code, 2);
-      }
-
-      text += "  ";
 
       if (code < MAX_OP_CODE)
       {
@@ -225,7 +269,7 @@ public:
          // Fetch and split address mode nibbles
          for(unsigned i=0; i<op[code].num_operand; i += 2)
          {
-            uint8_t mode_pair = *raw++;
+            uint8_t mode_pair = raw[n++];
             mode[i]   = mode_pair & 0xF;
             mode[i+1] = mode_pair >> 4;
          }
@@ -238,19 +282,19 @@ public:
             switch(mode[i] & 0b11)
             {
             case 1:
-               addr = *raw++;
+               addr = raw[n++];
                break;
 
             case 2:
-               addr =  (*raw++) << 8;
-               addr |= *raw++;
+               addr =  (raw[n++]) << 8;
+               addr |= raw[n++];
                break;
 
             case 3:
-               addr =  (*raw++) << 24;
-               addr |= (*raw++) << 16;
-               addr |= (*raw++) << 8;
-               addr |= *raw++;
+               addr =  (raw[n++]) << 24;
+               addr |= (raw[n++]) << 16;
+               addr |= (raw[n++]) << 8;
+               addr |=  raw[n++];
                break;
             }
 
@@ -316,88 +360,7 @@ public:
          }
       }
 
-      return 0;
-   }
-
-private:
-   static const unsigned MAX_OPERAND = 8;
-   static const unsigned MAX_OP_CODE = 0x1CA;
-
-   class Op
-   {
-   public:
-      const char* mnemonic{""};
-      uint8_t     num_operand{0};
-      uint8_t     operand_type{0};
-
-      bool isLoad(unsigned i) const
-      {
-         return (operand_type & 0b10000000 >> i) != 0;
-      }
-
-      void init(const char* mnemonic_, const char* operands)
-      {
-         mnemonic    = mnemonic_;
-         num_operand = strlen(operands);
-
-         for(unsigned i=0; operands[i] != '\0'; i++)
-         {
-            if (operands[i] == 'L')
-            {
-               setIsLoad(i);
-            }
-         }
-      }
-
-   private:
-       void setIsLoad(unsigned i)
-       {
-          operand_type |= 0b10000000 >> i;
-       }
-   };
-
-   Op     op[MAX_OP_CODE];
-   size_t max_mnemonic_len{0};
-
-   //! Declare an operand
-   void declOp(uint32_t code, const char* mnemonic, const char* operands)
-   {
-      op[code].init(mnemonic, operands);
-
-      size_t len = strlen(mnemonic);
-      if (len > max_mnemonic_len)
-      {
-         max_mnemonic_len = len;
-      }
-   }
-
-   // Not entirely sure why I needed to write this!
-   template <typename TYPE>
-   static void fmtHex(std::string& text, TYPE value, size_t digits = 0)
-   {
-      static const char pad = '0';
-
-      for(signed n = sizeof(TYPE) * 2 - 1; n >= 0; n--)
-      {
-         unsigned digit = (value >> (n * 4)) & 0xF;
-
-         if ((n != 0) && (digit == 0))
-         {
-            if ((value >> (n * 4)) != 0)
-            {
-               text += '0';
-            }
-            else if (n < digits)
-            {
-               text += pad;
-            }
-         }
-         else
-         {
-            text += digit > 9 ? 'A' + digit - 10
-                              : '0' + digit;
-         }
-      }
+      return n;
    }
 };
 

@@ -24,8 +24,9 @@
 #define Z_DISASSEMBLER_H
 
 #include <cstdint>
-#include <cstdio>
 #include <string>
+
+#include "share/Disassembler.h"
 
 namespace Z {
 
@@ -38,7 +39,7 @@ enum OperandType : uint8_t
 };
 
 //! Z Disassembler
-class Disassembler
+class Disassembler : public IF::Disassembler
 {
 public:
    Disassembler(unsigned version = 5)
@@ -206,129 +207,6 @@ public:
       }
    }
 
-   //! Disassemble a single instruction
-   unsigned disassemble(std::string& text, uint32_t inst_addr, const uint8_t* raw)
-   {
-      unsigned  n      = 0;
-      uint8_t   code   = raw[n++];
-      const Op* decode = &op[code];
-
-      inst = "";
-
-      if (code == 0xBE)
-      {
-          // Extended operation
-          code = raw[n++];
-          decode = &opE[code & 0x1F];
-      }
-
-      switch(decode->in_type)
-      {
-      case '0':
-         // No input operands
-         break;
-
-      case '1':
-         // Single input operand
-         n += fmtOp(inst, decode->variant, raw + n);
-         break;
-
-      case '2':
-         // Two input operands
-         n += fmtOp(inst, decode->variant & 0b10 ? OP_VARIABLE : OP_SMALL_CONST, raw + n);
-         n += fmtOp(inst, decode->variant & 0b01 ? OP_VARIABLE : OP_SMALL_CONST, raw + n);
-         break;
-
-      case 'V':
-         // Variable number of input operands
-         n += fmtVarOperands(inst, decode->variant, raw + n);
-         break;
-
-      default:
-         assert(!"bad input operand type");
-         break;
-      }
-
-      switch(decode->out_type)
-      {
-      case '_':
-         // No output operand
-         break;
-
-      case 'S':
-         // Result
-         inst += " ->";
-         fmtVar(inst, raw[n++]);
-         break;
-
-      case 'B':
-         {
-            // Label
-            uint8_t type        = raw[n++];
-            bool    if_true     = (type & 0b10000000) != 0;
-            bool    long_branch = (type & 0b01000000) == 0;
-            int16_t offset      =  type & 0b00111111;
-
-            inst += if_true ? " ?T " : " ?F ";
-
-            if (long_branch)
-            {
-               offset = (offset << 8) | raw[n++];
-            }
-
-            if (offset == 0)
-            {
-               inst += "false";
-            }
-            else if (offset == 1)
-            {
-               inst += "true";
-            }
-            else
-            {
-               inst += std::to_string(offset);
-            }
-         }
-         break;
-
-      default:
-         assert(!"bad input operand type");
-         break;
-      }
-
-      text = "";
-      fmtHex(text, inst_addr, 6);
-      text += "  ";
-
-      for(unsigned i=0; i<10; i++)
-      {
-         if (i < n)
-         {
-            fmtHex(text, raw[i], 2);
-            text += " ";
-         }
-         else
-         {
-            text += "   ";
-         }
-      }
-
-      text += decode->mnemonic;
-#if 0
-      text += '-';
-      text += decode->type;
-#endif
-
-      for(size_t i=0; i<=max_mnemonic_len - strlen(decode->mnemonic); i++)
-      {
-         text += " ";
-      }
-
-      text += inst;
-
-      return n;
-   }
-
 private:
    struct Op
    {
@@ -349,9 +227,6 @@ private:
          variant  = variant_;
       }
    };
-
-   // Local strings to avoid repeated dynamic allocation
-   std::string inst{};
 
    Op     op[0x100];
    Op     opE[0x20];
@@ -398,7 +273,7 @@ private:
    }
 
    //!
-   void fmtVar(std::string& text, uint8_t index)
+   void fmtVar(std::string& text, uint8_t index) const
    {
       if (index == 0)
       {
@@ -417,7 +292,7 @@ private:
    }
 
    //! Disassemble a single operand
-   unsigned fmtOp(std::string& text, unsigned op_type, const uint8_t* code)
+   unsigned fmtOp(std::string& text, unsigned op_type, const uint8_t* code) const
    {
       switch(op_type)
       {
@@ -448,7 +323,7 @@ private:
    }
 
    //! Disassemble a variable number of operands
-   unsigned fmtVarOperands(std::string& text, unsigned n, const uint8_t* code)
+   unsigned fmtVarOperands(std::string& text, unsigned n, const uint8_t* code) const
    {
       unsigned bytes    = 1;
       uint16_t op_types = (*code++) << 8;
@@ -475,33 +350,108 @@ private:
       return bytes;
    }
 
-   // Not entirely sure why I needed to write this!
-   template <typename TYPE>
-   static void fmtHex(std::string& text, TYPE value, size_t digits = 0)
+   //! Decode a single op
+   virtual unsigned decodeOp(std::string& text, const uint8_t* raw) const override
    {
-      static const char pad = '0';
+      unsigned  n = 0;
 
-      for(signed n = sizeof(TYPE) * 2 - 1; n >= 0; n--)
+      uint8_t   code   = raw[n++];
+      const Op* decode = &op[code];
+
+      text = "";
+
+      if (code == 0xBE)
       {
-         unsigned digit = (value >> (n * 4)) & 0xF;
-
-         if ((n != 0) && (digit == 0))
-         {
-            if ((value >> (n * 4)) != 0)
-            {
-               text += '0';
-            }
-            else if (n <= digits)
-            {
-               text += pad;
-            }
-         }
-         else
-         {
-            text += digit > 9 ? 'A' + digit - 10
-                              : '0' + digit;
-         }
+          // Extended operation
+          code = raw[n++];
+          decode = &opE[code & 0x1F];
       }
+
+      text += decode->mnemonic;
+#if 0
+      text += '-';
+      text += decode->type;
+#endif
+      for(size_t i=0; i<=max_mnemonic_len - strlen(decode->mnemonic); i++)
+      {
+         text += " ";
+      }
+
+      switch(decode->in_type)
+      {
+      case '0':
+         // No input operands
+         break;
+
+      case '1':
+         // Single input operand
+         n += fmtOp(text, decode->variant, raw + n);
+         break;
+
+      case '2':
+         // Two input operands
+         n += fmtOp(text, decode->variant & 0b10 ? OP_VARIABLE : OP_SMALL_CONST, raw + n);
+         n += fmtOp(text, decode->variant & 0b01 ? OP_VARIABLE : OP_SMALL_CONST, raw + n);
+         break;
+
+      case 'V':
+         // Variable number of input operands
+         n += fmtVarOperands(text, decode->variant, raw + n);
+         break;
+
+      default:
+         assert(!"bad input operand type");
+         break;
+      }
+
+      switch(decode->out_type)
+      {
+      case '_':
+         // No output operand
+         break;
+
+      case 'S':
+         // Result
+         text += " ->";
+         fmtVar(text, raw[n++]);
+         break;
+
+      case 'B':
+         {
+            // Label
+            uint8_t type        = raw[n++];
+            bool    if_true     = (type & 0b10000000) != 0;
+            bool    long_branch = (type & 0b01000000) == 0;
+            int16_t offset      =  type & 0b00111111;
+
+            text += if_true ? " ?T " : " ?F ";
+
+            if (long_branch)
+            {
+               offset = (offset << 8) | raw[n++];
+            }
+
+            if (offset == 0)
+            {
+               text += "false";
+            }
+            else if (offset == 1)
+            {
+               text += "true";
+            }
+            else
+            {
+               text += std::to_string(offset);
+            }
+         }
+         break;
+
+      default:
+         assert(!"bad input operand type");
+         break;
+      }
+
+      return n;
    }
 };
 

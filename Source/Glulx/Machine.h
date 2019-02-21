@@ -58,7 +58,8 @@ public:
             while(!state.isQuitRequested())
             {
                inst_addr = state.getPC();
-               printTrace();
+               dis.trace(dis_text, inst_addr, state.memory.data() + inst_addr);
+               trace.write(dis_text);
                fetchDecodeExecute();
             }
          }
@@ -417,13 +418,6 @@ private:
          state.quit();
          break;
       }
-   }
-
-   void printTrace()
-   {
-      (void) dis.disassemble(dis_text, state.getPC(), state.memory.data() + state.getPC());
-      trace.write(dis_text);
-      trace.write("\n");
    }
 };
 

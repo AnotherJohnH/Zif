@@ -45,7 +45,6 @@ protected:
    Log                  trace{"trace.log"};
    IF::Memory::Address  inst_addr{0};
    std::string          dis_text;
-   unsigned             dis_op_count{0};
 };
 
 } // namespace IF

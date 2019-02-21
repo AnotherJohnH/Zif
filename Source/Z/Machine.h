@@ -69,7 +69,7 @@ public:
 
       object.init(header->obj, header->version);
 
-      initDecoder();
+      initDecoder(story_.getVersion());
    }
 
    //! Play a Z file.
@@ -79,9 +79,9 @@ public:
       info("Version  : z%d",  header->version);
       info("Checksum : %04X", header->checksum);
 
-      if((version() >= 3) && !story_is_valid)
+      if((header->version >= 3) && !story_is_valid)
       {
-         if (version() == 3)
+         if (header->version == 3)
          {
             // Some v3 games do not have a checksum
             info("Checksum fail");
@@ -108,7 +108,8 @@ public:
             while(!state.isQuitRequested())
             {
                inst_addr = state.getPC();
-               printTrace();
+               dis.trace(dis_text, inst_addr, state.memory.data() + inst_addr);
+               trace.write(dis_text);
                fetchDecodeExecute();
             }
          }
@@ -121,7 +122,7 @@ public:
             }
          }
 
-         if (version() <= 3) showStatus();
+         if (header->version <= 3) showStatus();
       }
       catch(const char* message)
       {
@@ -188,8 +189,6 @@ private:
       stream.vmessage(Stream::WARNING, format, ap);
       va_end(ap);
    }
-
-   unsigned version() const { return header->version; }
 
    //! Check for v3 time games
    bool isTimeGame() const
@@ -258,7 +257,7 @@ private:
       {
          uint16_t value = 0;
 
-         if(version() <= 4)
+         if(header->version <= 4)
          {
             value = state.fetch16();
          }
@@ -1184,138 +1183,138 @@ private:
 
    void opE_picture_table() { TODO_WARN("picture_table unimplemented"); }
 
-   void initDecoder()
+   void initDecoder(unsigned version)
    {
       // Zero operand instructions
-      op0[0x0] =                  &Machine::op0_rtrue;
-      op0[0x1] =                  &Machine::op0_rfalse;
-      op0[0x2] =                  &Machine::op0_print;
-      op0[0x3] =                  &Machine::op0_print_ret;
-      op0[0x4] =                  &Machine::op0_nop;
-      op0[0x5] = version() <= 3 ? &Machine::op0_save_v1
-               : version() == 4 ? &Machine::op0_save_v4
-                                : &Machine::ILLEGAL;
-      op0[0x6] = version() <= 3 ? &Machine::op0_restore_v1
-               : version() == 4 ? &Machine::op0_restore_v4
-                                : &Machine::ILLEGAL;
-      op0[0x7] =                  &Machine::op0_restart;
-      op0[0x8] =                  &Machine::op0_ret_popped;
-      op0[0x9] = version() <= 4 ? &Machine::op0_pop
-                                : &Machine::op0_catch;
-      op0[0xA] =                  &Machine::op0_quit;
-      op0[0xB] =                  &Machine::op0_new_line;
-      op0[0xC] = version() <= 2 ? &Machine::ILLEGAL
-               : version() == 3 ? &Machine::op0_show_status
-                                : &Machine::op0_nop;
-      op0[0xD] = version() >= 3 ? &Machine::op0_verify
-                                : &Machine::ILLEGAL;
-      op0[0xE] =                  &Machine::ILLEGAL;   // "extend" decoded elsewhere
-      op0[0xF] = version() >= 5 ? &Machine::op0_piracy
-                                : &Machine::ILLEGAL;
+      op0[0x0] =                &Machine::op0_rtrue;
+      op0[0x1] =                &Machine::op0_rfalse;
+      op0[0x2] =                &Machine::op0_print;
+      op0[0x3] =                &Machine::op0_print_ret;
+      op0[0x4] =                &Machine::op0_nop;
+      op0[0x5] = version <= 3 ? &Machine::op0_save_v1
+               : version == 4 ? &Machine::op0_save_v4
+                              : &Machine::ILLEGAL;
+      op0[0x6] = version <= 3 ? &Machine::op0_restore_v1
+               : version == 4 ? &Machine::op0_restore_v4
+                              : &Machine::ILLEGAL;
+      op0[0x7] =                &Machine::op0_restart;
+      op0[0x8] =                &Machine::op0_ret_popped;
+      op0[0x9] = version <= 4 ? &Machine::op0_pop
+                              : &Machine::op0_catch;
+      op0[0xA] =                &Machine::op0_quit;
+      op0[0xB] =                &Machine::op0_new_line;
+      op0[0xC] = version <= 2 ? &Machine::ILLEGAL
+               : version == 3 ? &Machine::op0_show_status
+                              : &Machine::op0_nop;
+      op0[0xD] = version >= 3 ? &Machine::op0_verify
+                              : &Machine::ILLEGAL;
+      op0[0xE] =                &Machine::ILLEGAL;   // "extend" decoded elsewhere
+      op0[0xF] = version >= 5 ? &Machine::op0_piracy
+                              : &Machine::ILLEGAL;
 
       // One operand instructions
-      op1[0x0] =                  &Machine::op1_jz;
-      op1[0x1] =                  &Machine::op1_get_sibling;
-      op1[0x2] =                  &Machine::op1_get_child;
-      op1[0x3] =                  &Machine::op1_get_parent;
-      op1[0x4] =                  &Machine::op1_get_prop_len;
-      op1[0x5] =                  &Machine::op1_inc;
-      op1[0x6] =                  &Machine::op1_dec;
-      op1[0x7] =                  &Machine::op1_print_addr;
-      op1[0x8] = version() >= 4 ? &Machine::op1_call_1s
-                                : &Machine::ILLEGAL;
-      op1[0x9] =                  &Machine::op1_remove_obj;
-      op1[0xA] =                  &Machine::op1_print_obj;
-      op1[0xB] =                  &Machine::op1_ret;
-      op1[0xC] =                  &Machine::op1_jump;
-      op1[0xD] =                  &Machine::op1_print_paddr;
-      op1[0xE] =                  &Machine::op1_load;
-      op1[0xF] = version() <= 4 ? &Machine::op1_not
-                                : &Machine::op1_call_1n;
+      op1[0x0] =                &Machine::op1_jz;
+      op1[0x1] =                &Machine::op1_get_sibling;
+      op1[0x2] =                &Machine::op1_get_child;
+      op1[0x3] =                &Machine::op1_get_parent;
+      op1[0x4] =                &Machine::op1_get_prop_len;
+      op1[0x5] =                &Machine::op1_inc;
+      op1[0x6] =                &Machine::op1_dec;
+      op1[0x7] =                &Machine::op1_print_addr;
+      op1[0x8] = version >= 4 ? &Machine::op1_call_1s
+                              : &Machine::ILLEGAL;
+      op1[0x9] =                &Machine::op1_remove_obj;
+      op1[0xA] =                &Machine::op1_print_obj;
+      op1[0xB] =                &Machine::op1_ret;
+      op1[0xC] =                &Machine::op1_jump;
+      op1[0xD] =                &Machine::op1_print_paddr;
+      op1[0xE] =                &Machine::op1_load;
+      op1[0xF] = version <= 4 ? &Machine::op1_not
+                              : &Machine::op1_call_1n;
 
       // Two operand instructions
-      op2[0x00] =                  &Machine::ILLEGAL;
-      op2[0x01] =                  &Machine::op2_je;
-      op2[0x02] =                  &Machine::op2_jl;
-      op2[0x03] =                  &Machine::op2_jg;
-      op2[0x04] =                  &Machine::op2_dec_chk;
-      op2[0x05] =                  &Machine::op2_inc_chk;
-      op2[0x06] =                  &Machine::op2_jin;
-      op2[0x07] =                  &Machine::op2_test_bitmap;
-      op2[0x08] =                  &Machine::op2_or;
-      op2[0x09] =                  &Machine::op2_and;
-      op2[0x0A] =                  &Machine::op2_test_attr;
-      op2[0x0B] =                  &Machine::op2_set_attr;
-      op2[0x0C] =                  &Machine::op2_clear_attr;
-      op2[0x0D] =                  &Machine::op2_store;
-      op2[0x0E] =                  &Machine::op2_insert_obj;
-      op2[0x0F] =                  &Machine::op2_loadw;
-      op2[0x10] =                  &Machine::op2_loadb;
-      op2[0x11] =                  &Machine::op2_get_prop;
-      op2[0x12] =                  &Machine::op2_get_prop_addr;
-      op2[0x13] =                  &Machine::op2_get_next_prop;
-      op2[0x14] =                  &Machine::op2_add;
-      op2[0x15] =                  &Machine::op2_sub;
-      op2[0x16] =                  &Machine::op2_mul;
-      op2[0x17] =                  &Machine::op2_div;
-      op2[0x18] =                  &Machine::op2_mod;
-      op2[0x19] = version() >= 4 ? &Machine::op2_call_2s
-                                 : &Machine::ILLEGAL;
-      op2[0x1A] = version() >= 5 ? &Machine::op2_call_2n
-                                 : &Machine::ILLEGAL;
-      op2[0x1B] = version() >= 5 ? &Machine::op2_set_colour
-                                 : &Machine::ILLEGAL;
-      op2[0x1C] = version() >= 5 ? &Machine::op2_throw
-                                 : &Machine::ILLEGAL;
-      op2[0x1D] =                  &Machine::ILLEGAL;
-      op2[0x1E] =                  &Machine::ILLEGAL;
-      op2[0x1F] =                  &Machine::ILLEGAL;
+      op2[0x00] =                &Machine::ILLEGAL;
+      op2[0x01] =                &Machine::op2_je;
+      op2[0x02] =                &Machine::op2_jl;
+      op2[0x03] =                &Machine::op2_jg;
+      op2[0x04] =                &Machine::op2_dec_chk;
+      op2[0x05] =                &Machine::op2_inc_chk;
+      op2[0x06] =                &Machine::op2_jin;
+      op2[0x07] =                &Machine::op2_test_bitmap;
+      op2[0x08] =                &Machine::op2_or;
+      op2[0x09] =                &Machine::op2_and;
+      op2[0x0A] =                &Machine::op2_test_attr;
+      op2[0x0B] =                &Machine::op2_set_attr;
+      op2[0x0C] =                &Machine::op2_clear_attr;
+      op2[0x0D] =                &Machine::op2_store;
+      op2[0x0E] =                &Machine::op2_insert_obj;
+      op2[0x0F] =                &Machine::op2_loadw;
+      op2[0x10] =                &Machine::op2_loadb;
+      op2[0x11] =                &Machine::op2_get_prop;
+      op2[0x12] =                &Machine::op2_get_prop_addr;
+      op2[0x13] =                &Machine::op2_get_next_prop;
+      op2[0x14] =                &Machine::op2_add;
+      op2[0x15] =                &Machine::op2_sub;
+      op2[0x16] =                &Machine::op2_mul;
+      op2[0x17] =                &Machine::op2_div;
+      op2[0x18] =                &Machine::op2_mod;
+      op2[0x19] = version >= 4 ? &Machine::op2_call_2s
+                               : &Machine::ILLEGAL;
+      op2[0x1A] = version >= 5 ? &Machine::op2_call_2n
+                               : &Machine::ILLEGAL;
+      op2[0x1B] = version >= 5 ? &Machine::op2_set_colour
+                               : &Machine::ILLEGAL;
+      op2[0x1C] = version >= 5 ? &Machine::op2_throw
+                               : &Machine::ILLEGAL;
+      op2[0x1D] =                &Machine::ILLEGAL;
+      op2[0x1E] =                &Machine::ILLEGAL;
+      op2[0x1F] =                &Machine::ILLEGAL;
 
       // Variable operand instructions
-      opV[0x00] = version() <= 3 ? &Machine::opV_call
-                                 : &Machine::opV_call_vs;
-      opV[0x01] =                  &Machine::opV_storew;
-      opV[0x02] =                  &Machine::opV_storeb;
-      opV[0x03] =                  &Machine::opV_put_prop;
-      opV[0x04] = version() <= 3 ? &Machine::opV_sread<false,true>
-                : version() == 4 ? &Machine::opV_sread<true,false>
-                                 : &Machine::opV_aread;
-      opV[0x05] =                  &Machine::opV_print_char;
-      opV[0x06] =                  &Machine::opV_print_num;
-      opV[0x07] =                  &Machine::opV_random;
-      opV[0x08] =                  &Machine::opV_push;
-      opV[0x09] = version() == 6 ? &Machine::opV_pull_v6
-                                 : &Machine::opV_pull_v1;
-      opV[0x0A] = version() >= 3 ? &Machine::opV_split_window
-                                 : &Machine::ILLEGAL;
-      opV[0x0B] = version() >= 3 ? &Machine::opV_set_window
-                                 : &Machine::ILLEGAL;
-      opV[0x0C] = version() >= 4 ? &Machine::opV_call_vs2
-                                 : &Machine::ILLEGAL;
-      opV[0x0D] = version() >= 4 ? &Machine::opV_erase_window
-                                 : &Machine::ILLEGAL;
-      opV[0x0E] = version() >= 4 ? &Machine::opV_erase_line_v4
-                : version() >= 6 ? &Machine::opV_erase_line_v6
-                                 : &Machine::ILLEGAL;
-      opV[0x0F] = version() >= 4 ? &Machine::opV_set_cursor_v4
-                : version() >= 6 ? &Machine::opV_set_cursor_v6
-                                 : &Machine::ILLEGAL;
-      opV[0x10] = version() >= 4 ? &Machine::opV_get_cursor      : &Machine::ILLEGAL;
-      opV[0x11] = version() >= 4 ? &Machine::opV_set_text_style  : &Machine::ILLEGAL;
-      opV[0x12] = version() >= 4 ? &Machine::opV_buffer_mode     : &Machine::ILLEGAL;
-      opV[0x13] = version() >= 3 ? &Machine::opV_output_stream   : &Machine::ILLEGAL;
-      opV[0x14] = version() >= 3 ? &Machine::opV_input_stream    : &Machine::ILLEGAL;
-      opV[0x15] = version() >= 5 ? &Machine::opV_sound_effect    : &Machine::ILLEGAL;
-      opV[0x16] = version() >= 4 ? &Machine::opV_read_char       : &Machine::ILLEGAL;
-      opV[0x17] = version() >= 4 ? &Machine::opV_scan_table      : &Machine::ILLEGAL;
-      opV[0x18] = version() >= 5 ? &Machine::opV_not             : &Machine::ILLEGAL;
-      opV[0x19] = version() >= 5 ? &Machine::opV_call_vn         : &Machine::ILLEGAL;
-      opV[0x1A] = version() >= 5 ? &Machine::opV_call_vn2        : &Machine::ILLEGAL;
-      opV[0x1B] = version() >= 5 ? &Machine::opV_tokenise        : &Machine::ILLEGAL;
-      opV[0x1C] = version() >= 5 ? &Machine::opV_encode_text     : &Machine::ILLEGAL;
-      opV[0x1D] = version() >= 5 ? &Machine::opV_copy_table      : &Machine::ILLEGAL;
-      opV[0x1E] = version() >= 5 ? &Machine::opV_print_table     : &Machine::ILLEGAL;
-      opV[0x1F] = version() >= 5 ? &Machine::opV_check_arg_count : &Machine::ILLEGAL;
+      opV[0x00] = version <= 3 ? &Machine::opV_call
+                               : &Machine::opV_call_vs;
+      opV[0x01] =                &Machine::opV_storew;
+      opV[0x02] =                &Machine::opV_storeb;
+      opV[0x03] =                &Machine::opV_put_prop;
+      opV[0x04] = version <= 3 ? &Machine::opV_sread<false,true>
+                : version == 4 ? &Machine::opV_sread<true,false>
+                               : &Machine::opV_aread;
+      opV[0x05] =                &Machine::opV_print_char;
+      opV[0x06] =                &Machine::opV_print_num;
+      opV[0x07] =                &Machine::opV_random;
+      opV[0x08] =                &Machine::opV_push;
+      opV[0x09] = version == 6 ? &Machine::opV_pull_v6
+                               : &Machine::opV_pull_v1;
+      opV[0x0A] = version >= 3 ? &Machine::opV_split_window
+                               : &Machine::ILLEGAL;
+      opV[0x0B] = version >= 3 ? &Machine::opV_set_window
+                               : &Machine::ILLEGAL;
+      opV[0x0C] = version >= 4 ? &Machine::opV_call_vs2
+                               : &Machine::ILLEGAL;
+      opV[0x0D] = version >= 4 ? &Machine::opV_erase_window
+                               : &Machine::ILLEGAL;
+      opV[0x0E] = version >= 4 ? &Machine::opV_erase_line_v4
+                : version >= 6 ? &Machine::opV_erase_line_v6
+                               : &Machine::ILLEGAL;
+      opV[0x0F] = version >= 4 ? &Machine::opV_set_cursor_v4
+                : version >= 6 ? &Machine::opV_set_cursor_v6
+                               : &Machine::ILLEGAL;
+      opV[0x10] = version >= 4 ? &Machine::opV_get_cursor      : &Machine::ILLEGAL;
+      opV[0x11] = version >= 4 ? &Machine::opV_set_text_style  : &Machine::ILLEGAL;
+      opV[0x12] = version >= 4 ? &Machine::opV_buffer_mode     : &Machine::ILLEGAL;
+      opV[0x13] = version >= 3 ? &Machine::opV_output_stream   : &Machine::ILLEGAL;
+      opV[0x14] = version >= 3 ? &Machine::opV_input_stream    : &Machine::ILLEGAL;
+      opV[0x15] = version >= 5 ? &Machine::opV_sound_effect    : &Machine::ILLEGAL;
+      opV[0x16] = version >= 4 ? &Machine::opV_read_char       : &Machine::ILLEGAL;
+      opV[0x17] = version >= 4 ? &Machine::opV_scan_table      : &Machine::ILLEGAL;
+      opV[0x18] = version >= 5 ? &Machine::opV_not             : &Machine::ILLEGAL;
+      opV[0x19] = version >= 5 ? &Machine::opV_call_vn         : &Machine::ILLEGAL;
+      opV[0x1A] = version >= 5 ? &Machine::opV_call_vn2        : &Machine::ILLEGAL;
+      opV[0x1B] = version >= 5 ? &Machine::opV_tokenise        : &Machine::ILLEGAL;
+      opV[0x1C] = version >= 5 ? &Machine::opV_encode_text     : &Machine::ILLEGAL;
+      opV[0x1D] = version >= 5 ? &Machine::opV_copy_table      : &Machine::ILLEGAL;
+      opV[0x1E] = version >= 5 ? &Machine::opV_print_table     : &Machine::ILLEGAL;
+      opV[0x1F] = version >= 5 ? &Machine::opV_check_arg_count : &Machine::ILLEGAL;
 
       // Externded instructions
       for(unsigned i = 0; i <= 0x1F; i++)
@@ -1323,7 +1322,7 @@ private:
          opE[i] = &Machine::ILLEGAL;
       }
 
-      if(version() < 5) return;
+      if(version < 5) return;
 
       opE[0x00] = &Machine::opE_save_table;
       opE[0x01] = &Machine::opE_restore_table;
@@ -1335,7 +1334,7 @@ private:
       opE[0x0B] = &Machine::opE_print_unicode;
       opE[0x0C] = &Machine::opE_check_unicode;
 
-      if(version() != 6) return;
+      if(version != 6) return;
 
       opE[0x05] = &Machine::opE_draw_picture;
       opE[0x06] = &Machine::opE_picture_data;
@@ -1497,20 +1496,6 @@ private:
          // 111xxxxx
          doOpV(opcode);
       }
-   }
-
-   void printTrace()
-   {
-      (void) dis.disassemble(dis_text, inst_addr, state.memory.data() + inst_addr);
-
-      // TODO avoid sprintf
-      std::string fmt_op_count = "NNNNNN";
-      sprintf(&fmt_op_count.front(), "%6d", dis_op_count++);
-
-      trace.write(fmt_op_count);
-      trace.write("  ");
-      trace.write(dis_text);
-      trace.write('\n');
    }
 };
 
