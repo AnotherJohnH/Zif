@@ -48,11 +48,11 @@ public:
    {
       state.reset();
 
-      // PC after reset points at the first function not code
-      call(state.getPC(), 0);
-
       try
       {
+         // PC after reset points at the first function not code
+         call(state.getPC(), 0);
+
          if (options.trace)
          {
             while(!state.isQuitRequested())
@@ -256,16 +256,36 @@ private:
 
    void call(uint32_t address, uint32_t arg)
    {
+      state.frame_ptr = state.stack.size();
+
+      state.stack.push32(0); // Place holder for frame length
+      state.stack.push32(0); // Place holder for local pos
+
       state.jump(address);
       uint8_t type = state.fetch8();
+
       while(true)
       {
          uint8_t local_type  = state.fetch8();
+         state.stack.push8(local_type);
+
          uint8_t local_count = state.fetch8();
+         state.stack.push8(local_count);
+
          if (local_count == 0) break;
-         (void) local_type;
       }
+
+      // Padding to start of locals
+      if ((state.stack.size() & 0b10) != 0)
+      {
+         state.stack.push16(0);
+      }
+      state.stack.write32(state.frame_ptr + 4, state.stack.size() - state.frame_ptr);
+
+      state.stack.write32(state.frame_ptr, state.stack.size() - state.frame_ptr);
+
       (void) type;
+
    }
 
    void fetchDecodeExecute()

@@ -129,8 +129,8 @@ protected:
    // Dynamic state
    bool            do_quit{false};
    Memory::Address pc{0};
-   Stack::Address  frame_ptr{0};
 public:
+   Stack::Address  frame_ptr{0};
    IF::Memory      memory;
    IF::Stack       stack;
    IF::Random      random;

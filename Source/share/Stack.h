@@ -33,7 +33,7 @@ namespace IF {
 class Stack
 {
 public:
-   using Address = uint16_t;
+   using Address = uint32_t;
 
    Stack(Address max_size_)
       : max_size(max_size_)
