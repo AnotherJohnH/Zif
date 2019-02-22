@@ -91,7 +91,7 @@ protected:
 
    // Not entirely sure why I needed to write this!
    template <typename TYPE>
-   static void fmtHex(std::string& text, TYPE value, size_t digits = 0, char pad = '0')
+   static void fmtHex(std::string& text, TYPE value, unsigned digits = 0, char pad = '0')
    {
       for(signed n = sizeof(TYPE) * 2 - 1; n >= 0; n--)
       {
@@ -103,7 +103,7 @@ protected:
             {
                text += '0';
             }
-            else if (n <= digits)
+            else if (n <= signed(digits))
             {
                text += pad;
             }

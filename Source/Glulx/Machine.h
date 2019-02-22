@@ -431,8 +431,8 @@ private:
       case 0x1C4: /* jfgt       */ fetchA(3); if (fLd(0) >  fLd(1)) jump(sLd(2)); break;
       case 0x1C5: /* jfge       */ fetchA(3); if (fLd(0) >= fLd(1)) jump(sLd(2)); break;
 
-      case 0x1C8: /* jisnan     */ fetchA(2); if (isnan(fLd(0))) jump(sLd(1)); break;
-      case 0x1C9: /* jisinf     */ fetchA(2); if (isinf(fLd(0))) jump(sLd(1)); break;
+      case 0x1C8: /* jisnan     */ fetchA(2); if (std::isnan(fLd(0))) jump(sLd(1)); break;
+      case 0x1C9: /* jisinf     */ fetchA(2); if (std::isinf(fLd(0))) jump(sLd(1)); break;
 
       default:
          state.quit();
