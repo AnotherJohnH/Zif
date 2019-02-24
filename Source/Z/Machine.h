@@ -54,6 +54,7 @@ public:
       : IF::Machine(console_, options_)
       , story_is_valid(story_.isValid())
       , state(story_, (const char*)options.save_dir, options.undo, options.seed)
+      , dis(story_.getVersion())
       , stream(console, options_, story_.getVersion(), state.memory)
       , screen(console, stream, story_.getVersion())
       , object(state.memory)

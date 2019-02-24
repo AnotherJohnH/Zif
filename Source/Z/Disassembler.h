@@ -42,7 +42,7 @@ enum OperandType : uint8_t
 class Disassembler : public IF::Disassembler
 {
 public:
-   Disassembler(unsigned version = 5)
+   Disassembler(unsigned version)
    {
       // Ops supported on all versions
       declOp( 0x0, '0', '_', "rtrue");
@@ -358,8 +358,6 @@ private:
       uint8_t   code   = raw[n++];
       const Op* decode = &op[code];
 
-      text = "";
-
       if (code == 0xBE)
       {
           // Extended operation
@@ -367,7 +365,7 @@ private:
           decode = &opE[code & 0x1F];
       }
 
-      text += decode->mnemonic;
+      text = decode->mnemonic;
 #if 0
       text += '-';
       text += decode->type;
