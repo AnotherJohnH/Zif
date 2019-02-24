@@ -1,7 +1,7 @@
 
 binaries = ['zif','zdmp', 'zcrape']
 app      = 'Zif'
-version  = '0.5.7-Beta'
+version  = '0.5.8-Beta'
 
 source  = ['Source/share/ConsoleImpl.cpp',
            'Source/Z/Stream.cpp']
