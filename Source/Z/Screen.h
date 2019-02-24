@@ -58,7 +58,7 @@ private:
       uint8_t  text_style{0};
       uint16_t colour_data{0};
       uint8_t  font_number{0};
-      uint8_t  font_size{0};
+      uint8_t  font_size{1};
       uint8_t  attr{0};
       int16_t  line_count{0};
       bool     printer_enabled{false};
