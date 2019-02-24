@@ -608,10 +608,11 @@ private:
 
       if(SHOW_STATUS) showStatus();
 
+      uint8_t  len   = 0;
       uint8_t  max   = state.memory.read8(buffer++) - 1;
       uint16_t start = buffer;
 
-      for(uint8_t len = 0; len < max; len++)
+      while(len < max)
       {
          uint16_t ch;
 
@@ -625,7 +626,7 @@ private:
             // => delete
             if(buffer > start)
             {
-               stream.writeRaw(" \b");
+               stream.writeRaw("\b \b");
                --buffer;
                --len;
             }
@@ -638,6 +639,7 @@ private:
          else
          {
             state.memory.write8(buffer++, tolower(ch));
+            len++;
          }
       }
 
@@ -658,7 +660,7 @@ private:
       uint16_t start  = buffer;
       uint8_t  status = 0;
 
-      for(; len < max; len++)
+      while(len < max)
       {
          uint16_t ch;
 
@@ -672,7 +674,7 @@ private:
             // => delete
             if(buffer > start)
             {
-               stream.writeRaw(" \b");
+               stream.writeRaw("\b \b");
                --buffer;
                --len;
             }
@@ -687,6 +689,7 @@ private:
          else
          {
             state.memory.write8(buffer++, ch);
+            len++;
          }
       }
 

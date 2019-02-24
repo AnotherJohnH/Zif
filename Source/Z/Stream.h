@@ -184,10 +184,13 @@ public:
       bool    ok = console.read(ch, timeout_100ms * 100);
       if(ok)
       {
-         // Echo input to enabled output streams
-         if(console_enable)                       console.write(ch);
-         if(printer_enable && printer_echo_input) print(ch);
-         if(snooper_enable)                       snooper.write(ch);
+         if(ch != '\b')
+         {
+            // Echo input to enabled output streams
+            if(console_enable)                       console.write(ch);
+            if(printer_enable && printer_echo_input) print(ch);
+            if(snooper_enable)                       snooper.write(ch);
+         }
 
          if(ch == '\n') buffer_col = 1;
 
@@ -304,6 +307,7 @@ private:
          case '\0': return;
          case '\t': break;
          case '\n': break;
+         case '\b': break;
          case '\r': zscii = '\n'; break;
          case 0x11: zscii = ' '; break; // v6 sentence space
 

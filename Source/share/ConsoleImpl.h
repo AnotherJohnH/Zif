@@ -224,32 +224,28 @@ public:
    //! \returns false on timeout
    virtual bool read(uint8_t& data, unsigned timeout_100ms) override
    {
-      int ch;
-
-      while(true)
+      int ch = getInput(timeout_100ms);
+      if(ch == 0)
       {
-         ch = getInput(timeout_100ms);
-         if(ch < 0)
-         {
-            exit(0); // TODO this seems a bit severe!
-         }
-         else if(ch == 0x7F)
-         {
-            ch = '\b';
-            break;
-         }
-         else if(ch < 0xFF)
-         {
-            break;
-         }
+         // Timeout
+         return false;
+      }
+      else if(ch == 0x7F)
+      {
+         // Delete => back-space
+         ch = '\b';
+      }
+      else if(ch < 0)
+      {
+         // External application exit event
+         exit(0);
       }
 
       scroll           = 0;
       only_white_space = true;
 
       data = ch;
-
-      return ch != 0;
+      return true;
    }
 
    //! Write character

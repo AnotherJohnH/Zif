@@ -61,7 +61,7 @@ int ConsoleImpl::getInput(unsigned timeout_ms)
 
    int ch = curses.getch();
 
-   // Some PLT::KeyCOde to ZSCII conversions
+   // Some PLT::KeyCode to ZSCII conversions
    switch(ch)
    {
    case PLT::UP:    return 0x81;
