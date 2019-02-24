@@ -176,23 +176,26 @@ public:
    }
 
    //! Read ZSCII character
-   bool readChar(uint16_t& zscii, unsigned timeout_100ms)
+   bool readChar(uint16_t& zscii, unsigned timeout_100ms, bool echo)
    {
-      flushOutputBuffer();
+      if(echo) flushOutputBuffer();
 
       uint8_t ch;
       bool    ok = console.read(ch, timeout_100ms * 100);
       if(ok)
       {
-         if(ch != '\b')
+         if(echo)
          {
-            // Echo input to enabled output streams
-            if(console_enable)                       console.write(ch);
-            if(printer_enable && printer_echo_input) print(ch);
-            if(snooper_enable)                       snooper.write(ch);
-         }
+            if(ch != '\b')
+            {
+               // Echo input to enabled output streams
+               if(console_enable)                       console.write(ch);
+               if(printer_enable && printer_echo_input) print(ch);
+               if(snooper_enable)                       snooper.write(ch);
+            }
 
-         if(ch == '\n') buffer_col = 1;
+            if(ch == '\n') buffer_col = 1;
+         }
 
          zscii = ch;
       }

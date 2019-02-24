@@ -291,9 +291,9 @@ private:
       }
    }
 
-   bool readChar(uint16_t timeout, uint16_t routine, uint16_t& ch)
+   bool readChar(uint16_t timeout, bool echo, uint16_t routine, uint16_t& ch)
    {
-      if(!stream.readChar(ch, timeout))
+      if(!stream.readChar(ch, timeout, echo))
       {
          if(routine == 0) return false;
 
@@ -616,7 +616,7 @@ private:
       {
          uint16_t ch;
 
-         if(!readChar(timeout, routine, ch))
+         if(!readChar(timeout, /* echo */ true, routine, ch))
          {
             return;
          }
@@ -664,7 +664,7 @@ private:
       {
          uint16_t ch;
 
-         if(!readChar(timeout, routine, ch))
+         if(!readChar(timeout, /* echo */ true, routine, ch))
          {
             break;
          }
@@ -807,7 +807,7 @@ private:
       uint16_t routine = num_arg >= 3 ? uarg[2] : 0;
       uint16_t ch;
 
-      if(readChar(timeout, routine, ch))
+      if(readChar(timeout, /* echo */ false, routine, ch))
       {
          state.varWrite(state.fetch8(), ch);
       }
