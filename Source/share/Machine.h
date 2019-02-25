@@ -23,7 +23,6 @@
 #ifndef IF_MACHINE_H
 #define IF_MACHINE_H
 
-#include "share/Log.h"
 #include "share/Memory.h"
 #include "share/Options.h"
 
@@ -42,7 +41,6 @@ public:
 protected:
    Console&             console;
    const Options&       options;
-   Log                  trace{"trace.log"};
    IF::Memory::Address  inst_addr{0};
    std::string          dis_text;
 };

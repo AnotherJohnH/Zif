@@ -71,6 +71,8 @@ public:
       {
          message_filter = WARNING;
       }
+
+      trace_enable = options_.trace;
    }
 
    bool getBuffering() const { return buffer_enable; }
@@ -192,6 +194,7 @@ public:
                if(console_enable)                       console.write(ch);
                if(printer_enable && printer_echo_input) print(ch);
                if(snooper_enable)                       snooper.write(ch);
+               if(trace_enable)                         trace.writePart("IN <= \"", ch, "\"\n");
             }
 
             if(ch == '\n') buffer_col = 1;
@@ -219,6 +222,8 @@ public:
       {
          send(zscii);
       }
+
+      if(trace_enable)   trace.writePart("OUT => \"", char(zscii), "\"\n");
    }
 
    //! Write signed integer value (may be buffered)
@@ -294,6 +299,8 @@ public:
          console.read(ch, 0);
       }
    }
+
+   Log& getTrace() { return trace; }
 
 private:
    static const unsigned MAX_WORD_LENGTH       = 16;
@@ -447,6 +454,10 @@ private:
    // Input snooper stream state
    bool snooper_enable{false};
    Log  snooper{"key.log"};
+
+   // Debug state
+   bool trace_enable{false};
+   Log  trace{"trace.log"};
 
    MessageLevel message_filter{ERROR};
 };

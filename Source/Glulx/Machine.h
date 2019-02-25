@@ -26,6 +26,7 @@
 #include <cmath>
 #include <cstring>
 
+#include "share/Log.h"
 #include "share/Machine.h"
 
 #include "Glulx/State.h"
@@ -95,6 +96,7 @@ private:
    IF::Memory::Address  ramstart{0};
    IF::Stack::Address   local{0};
    Disassembler         dis;
+   Log                  trace{"trace.log"};
 
    //! Decoded instruction address modes
    uint8_t  mode[MAX_OPERAND];

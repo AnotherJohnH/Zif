@@ -45,23 +45,50 @@ public:
    {
       ensureOpen();
 
+      if (suffix != "")
+      {
+         // partial write in progress => end it
+         for(const auto& ch : suffix)
+         {
+            ::fputc(ch, fp);
+         }
+
+         prefix = "";
+         suffix = "";
+      }
+
       ::fputc(ch, fp);
    }
 
    //! write a string to the log
    void write(const std::string& str)
    {
-      ensureOpen();
-
       for(const auto& ch : str)
       {
-         ::fputc(ch, fp);
+         write(ch);
       }
+   }
+
+   void writePart(const std::string& prefix_, char ch, const std::string& suffix_)
+   {
+      ensureOpen();
+
+      if (prefix != prefix_)
+      {
+         // start a new partial write
+         write(prefix_);
+         prefix = prefix_;
+         suffix = suffix_;
+      }
+
+      ::fputc(ch, fp);
    }
 
 private:
    std::string filename;
    FILE*       fp{nullptr};
+   std::string prefix;
+   std::string suffix;
 
    void ensureOpen()
    {

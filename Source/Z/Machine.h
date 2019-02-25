@@ -110,7 +110,7 @@ public:
             {
                inst_addr = state.getPC();
                dis.trace(dis_text, inst_addr, state.memory.data() + inst_addr);
-               trace.write(dis_text);
+               stream.getTrace().write(dis_text);
                fetchDecodeExecute();
             }
          }
