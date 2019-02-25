@@ -848,7 +848,8 @@ private:
       uint16_t dict  = num_arg >= 3 ? uarg[2] : uint16_t(header->dict);
       bool     flag  = num_arg == 4 ? uarg[3] != 0 : false;
 
-      parser.tokenise(state.memory, parse, text + 1, dict, flag);
+      // Test +2 to skip max len and actual len
+      parser.tokenise(state.memory, parse, text + 2, dict, flag);
    }
 
    void opV_encode_text() { throw "op encode_text unimplemeneted"; }

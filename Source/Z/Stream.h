@@ -194,7 +194,7 @@ public:
                if(console_enable)                       console.write(ch);
                if(printer_enable && printer_echo_input) print(ch);
                if(snooper_enable)                       snooper.write(ch);
-               if(trace_enable)                         trace.writePart("IN <= \"", ch, "\"\n");
+               if(trace_enable)                         trace_log.writePart("IN <= \"", ch, "\"\n");
             }
 
             if(ch == '\n') buffer_col = 1;
@@ -223,7 +223,7 @@ public:
          send(zscii);
       }
 
-      if(trace_enable)   trace.writePart("OUT => \"", char(zscii), "\"\n");
+      if(trace_enable)   trace_log.writePart("OUT => \"", char(zscii), "\"\n");
    }
 
    //! Write signed integer value (may be buffered)
@@ -300,7 +300,15 @@ public:
       }
    }
 
-   Log& getTrace() { return trace; }
+   void trace(const std::string& string)
+   {
+      trace_log.write(string);
+   }
+
+   Log& getTrace()
+   {
+      return trace_log;
+   }
 
 private:
    static const unsigned MAX_WORD_LENGTH       = 16;
@@ -457,7 +465,7 @@ private:
 
    // Debug state
    bool trace_enable{false};
-   Log  trace{"trace.log"};
+   Log  trace_log{"trace.log"};
 
    MessageLevel message_filter{ERROR};
 };
