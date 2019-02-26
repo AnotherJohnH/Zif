@@ -47,8 +47,8 @@ public:
       // Ops supported on all versions
       declOp( 0x0, '0', '_', "rtrue");
       declOp( 0x1, '0', '_', "rfalse");
-      declOp( 0x2, '0', '_', "print");
-      declOp( 0x3, '0', '_', "print_ret");
+      declOp( 0x2, '0', 'l', "print");
+      declOp( 0x3, '0', 'l', "print_ret");
       declOp( 0x4, '0', '_', "nop");
       declOp( 0x7, '0', '_', "restart");
       declOp( 0x8, '0', '_', "ret_popped");
@@ -109,16 +109,18 @@ public:
       {
          declOp(0x00, 'V', '_', "call");
       }
-      else if (version == 3)
+
+      if (version == 3)
       {
          declOp(0xC, '0', '_', "show_status");
       }
-      else if (version >= 3)
+
+      if (version >= 3)
       {
          declOp(0xD,  '0', 'B', "verify");
 
          declOp(0x0A, 'V', '_', "split_window");
-         declOp(0x0A, 'V', '_', "set_window");
+         declOp(0x0B, 'V', '_', "set_window");
          declOp(0x13, 'V', '_', "output_stream");
          declOp(0x14, 'V', '_', "input_stream");
       }
@@ -133,7 +135,8 @@ public:
 
          declOp(0x04, 'V', '_', "sread");
       }
-      else if (version >= 4)
+
+      if (version >= 4)
       {
          declOp( 0xC, '0', '_', "nop");
 
@@ -406,6 +409,10 @@ private:
       {
       case '_':
          // No output operand
+         break;
+
+      case 'l':
+         text += " literal-string...";
          break;
 
       case 'S':
