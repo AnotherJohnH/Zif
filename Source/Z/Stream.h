@@ -181,7 +181,7 @@ public:
    //! Read ZSCII character
    bool readChar(uint16_t& zscii, unsigned timeout_100ms, bool echo)
    {
-      if(echo) flushOutputBuffer();
+      flushOutputBuffer();
 
       uint8_t ch;
       bool    ok = console.read(ch, timeout_100ms * 100);
