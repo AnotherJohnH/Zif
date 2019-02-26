@@ -141,6 +141,7 @@ public:
    //! Control automatic line breaking
    void setBuffering(bool buffer_enable_)
    {
+      flush();
       buffer_enable = buffer_enable_;
    }
 

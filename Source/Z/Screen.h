@@ -201,6 +201,8 @@ public:
 
       assert(version >= 3);
 
+      stream.flush();
+
       // Save state of current window
       ZWindow& current = window[index];
 
