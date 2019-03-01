@@ -93,9 +93,77 @@ Depend on SDL2 and SDL2-image, so a development installs of SDL2 and SDL2-image 
 
 Although a Linux build, the Kindle3 build does not depend on SDL2 or SDL2-image.
 
+#### Building
+
 Requires gcc built for arm-linux-gnueabihf and a set of headers and static runtime libraries
 that are compatible with the Linux installed on the Kindle3. The original ARMv6 Raspberry Pi
 running a Debian based Linux has been found to be suitable platform to build the Kindle3 version.
+
+#### Installing
+
+1. Install a Kindle3 Jailbreak (see https://www.mobileread.com/forums/showthread.php?t=122519)
+
+2. Install and configure the usbnetwork package (see https://www.mobileread.com/forums/showpost.php?p=973688&postcount=1)
+
+3. Make sure that remote ssh access is up and running and is available by default after a reboot
+
+4. Really make sure that you completed step 3.
+
+5. Install the Zif <tgz-file> to the Kindle.
+
+```
+   scp <tgz-file> root@<kindle-hostname>:/mnt/us
+   ssh root@<kindle-hostname>
+   cd /mnt/us
+   mkdir Zif
+   cd Zif
+   mv ../<tgz-file> .
+   gunzip <tgz-file>
+   tar xvf <tar-file>
+```
+
+6. Kill the Amazon Kindle ebook framework. (It will restart when the Kindle next re-boots)
+
+```
+   ssh root@<kindle-hostname>
+   killall start.sh cvm
+```
+
+NOTE: If you want to restart the kindle and get the Kindle ebook framework back.
+
+```
+   shutdown -r now
+```
+
+7. Check Zif works
+
+```
+   cd /mnt/us/Zif
+   ./zif --version
+   ./zif
+```
+
+8. An easy way to automatically start Zif on boot up is to modify the start script
+/opt/amazon/ebook/bin/start.sh. Find the "START OF SCRIPT LINE" which is around
+line 225 and then add the following lines before the while loop e.g.
+
+```
+   cd /mnt/us/Zif
+   ./zif
+```
+
+i.e.
+
+```
+   cd /opt/amazon/ebook/bin
+   mntroot rw
+   vi start.sh
+   mntroot ro
+   shutdown -r now
+```
+
+This will mean that Zif will start automatically on boot and on quiting Zif the normal
+Amazon Kindle startup will resume.
 
 ### Browser (via Emscripten)
 
