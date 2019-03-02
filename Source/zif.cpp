@@ -28,7 +28,7 @@
 #include "Glulx/Machine.h"
 #include "Level9/Machine.h"
 
-#include "TRM/Launcher.h"
+#include "Launcher.h"
 
 #define  PROGRAM         "Zif"
 #define  DESCRIPTION     "Z-code engine for interactive fiction"
@@ -39,7 +39,7 @@
 
 
 //! The Zif Launcher Application
-class ZifApp : public TRM::Launcher
+class ZifApp : public Launcher
 {
 private:
    Options options;
@@ -116,8 +116,8 @@ private:
 
 public:
    ZifApp(int argc, const char* argv[])
-      : TRM::Launcher(PROGRAM, DESCRIPTION, LINK, AUTHOR, VERSION, COPYRIGHT_YEAR,
-                      "[<story-file>]", "zif.cfg")
+      : Launcher(PROGRAM, DESCRIPTION, LINK, AUTHOR, VERSION, COPYRIGHT_YEAR,
+                 "[<story-file>]", "zif.cfg")
    {
       parseArgsAndStart(argc, argv);
    }
