@@ -35,6 +35,8 @@
 #include "TRM/App.h"
 #include "TRM/Curses.h"
 
+#include "InfoPage.h"
+
 struct TermConfig : public STB::Oil<TermConfig>
 {
    unsigned font_size{18};
@@ -79,6 +81,7 @@ private:
    char                     path[FILENAME_MAX]      = {};
    char                     selection[FILENAME_MAX] = {};
    bool                     selection_is_dir{false};
+   InfoPage                 info_page;
 
    //! Get the next line with content from the given file stream
    static bool getLine(PLT::File& file, char* buffer, size_t size)
@@ -190,77 +193,6 @@ private:
       }
    }
 
-   void layoutText(unsigned l, unsigned c, const char* text)
-   {
-      curses.move(l, c);
-
-      const char* s = text;
-      const char* o = s;
-
-      for(unsigned x = 3; true; x++)
-      {
-         if(isspace(*s) || (*s == '\0'))
-         {
-            if((s - o) == 1)
-            {
-               curses.addstr("\n\n");
-               for(x = 1; x < c; ++x)
-                  curses.addch(' ');
-               o = s + 1;
-            }
-            else
-            {
-               if(x >= curses.cols)
-               {
-                  curses.addch('\n');
-                  for(x = 1; x < c; ++x)
-                     curses.addch(' ');
-                  o++;
-                  x += s - o;
-               }
-
-               for(; o != s; o++)
-               {
-                  char ch           = *o;
-                  if(ch == '\n') ch = ' ';
-                  curses.addch(ch);
-               }
-            }
-         }
-
-         if(*s++ == '\0') break;
-      }
-   }
-
-   //! Display info page
-   void doInfo()
-   {
-      drawHeader();
-
-      curses.mvaddstr(3, 3, "Program     : "); curses.addstr(program);
-      curses.mvaddstr(4, 3, "Description : "); curses.addstr(description);
-      curses.mvaddstr(5, 3, "Link        : "); if (link != nullptr) curses.addstr(link);
-      curses.mvaddstr(6, 3, "Author      : "); curses.addstr(author);
-      curses.mvaddstr(7, 3, "Version     : "); curses.addstr(version);
-
-      curses.mvaddstr(8, 3, "Built       : ");
-      curses.addstr(__TIME__); curses.addstr(" "); curses.addstr(__DATE__);
-
-      curses.mvaddstr(9, 3, "Compiler    : "); layoutText(9, 17, __VERSION__);
-
-      curses.attron(TRM::A_BOLD);
-      curses.mvaddstr(11, 3, "Copyright (c) ");
-      curses.addstr(copyright_year);
-      curses.addstr(" ");
-      curses.addstr(author);
-
-      curses.attroff(TRM::A_BOLD);
-
-      layoutText(13, 3, MIT_LICENSE);
-
-      (void)curses.getch();
-   }
-
    //! Implement an action
    void doAction(const char* cmd, const char* value = "")
    {
@@ -270,7 +202,7 @@ private:
       }
       else if(strcmp(cmd, "Info") == 0)
       {
-         doInfo();
+         info_page.publish();
       }
       else
       {
@@ -505,6 +437,7 @@ public:
             const char*  config_file)
       : App(program, description, link, author, version, copyright_year, args_help)
       , opt_config('c', "config", "Use alternate config file", config_file)
+      , info_page(curses, program, description, link, author, version, copyright_year)
    {
    }
 };
