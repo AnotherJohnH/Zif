@@ -23,41 +23,31 @@
 #ifndef PAGE_H
 #define PAGE_H
 
-#include "TRM/Curses.h"
+#include "PLT/Info.h"
+#include "PLT/Rtc.h"
 
-class Page
+#include "Item.h"
+
+class Page : public Item::Owner
 {
 public:
-   Page(TRM::Curses& curses_, const char* program_)
+   Page(TRM::Curses& curses_, const std::string& name_ = "")
       : curses(curses_)
-      , program(program_)
+      , name(name_)
    {
    }
 
-   virtual void publish() = 0;
+   virtual void title(std::string& text)
+   {
+      text = name;
+   }
+
+   virtual void show()
+   {
+      drawItems(curses);
+   }
 
 protected:
-   void drawHeader(const std::string& text = "")
-   {
-      curses.clear();
-
-      curses.attron(TRM::A_REVERSE);
-
-      curses.move(1, 1);
-      for(unsigned i = 0; i < curses.cols; ++i)
-      {
-         curses.addch(' ');
-      }
-
-      curses.attron(TRM::A_BOLD);
-      curses.mvaddstr(1, 3, program.c_str());
-      curses.attroff(TRM::A_BOLD);
-
-      curses.mvaddstr(1, 3 + program.size() + 2, text.c_str());
-
-      curses.attroff(TRM::A_REVERSE);
-   }
-
    void layoutText(unsigned l, unsigned c, const char* text)
    {
       curses.move(l, c);
@@ -100,8 +90,8 @@ protected:
       }
    }
 
-   TRM::Curses&      curses;
-   const std::string program;
+   TRM::Curses& curses;
+   std::string  name;
 };
 
 #endif

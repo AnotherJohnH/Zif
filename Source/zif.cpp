@@ -28,7 +28,7 @@
 #include "Glulx/Machine.h"
 #include "Level9/Machine.h"
 
-#include "Launcher.h"
+#include "launcher/Launcher.h"
 
 #define  PROGRAM         "Zif"
 #define  DESCRIPTION     "Z-code engine for interactive fiction"
@@ -51,7 +51,7 @@ private:
       return 1;
    }
 
-   virtual int startTerminalLauncher(const char* story_file) override
+   virtual int runGame(const char* story_file) override
    {
       ConsoleImpl console(term, options);
 
