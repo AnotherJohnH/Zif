@@ -191,7 +191,7 @@ public:
       if (version == 6)
       {
          declOp(0x05, 'E', '_', "draw_picture");
-         declOp(0x06, 'E', 'B', "picture_date");
+         declOp(0x06, 'E', 'B', "picture_data");
          declOp(0x07, 'E', '_', "erase_picture");
          declOp(0x08, 'E', '_', "set_margin");
          declOp(0x10, 'E', '_', "move_window");
