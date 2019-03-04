@@ -42,12 +42,57 @@ public:
       text = name;
    }
 
-   virtual void show()
+   virtual void show(const std::string& program)
    {
+      drawHeader(program);
       drawItems(curses);
    }
 
 protected:
+   //!
+   void drawHeader(const std::string& program)
+   {  
+      curses.clear();
+      
+      curses.attron(TRM::A_REVERSE);
+      
+      curses.move(1, 1);
+      for(unsigned i = 0; i < curses.cols; ++i)
+      {  
+         curses.addch(' ');
+      }
+      
+      curses.attron(TRM::A_BOLD);
+      curses.mvaddstr(1, 3, program.c_str());
+      curses.attroff(TRM::A_BOLD);
+      
+      std::string title_text;
+      title(title_text);
+      curses.mvaddstr(1, 3 + program.size() + 2, title_text.c_str());
+      
+      char buffer[32]; // TODO stop using char[] and sprintf
+      
+      int32_t power = PLT::Info::get(PLT::Info::PWR_PERCENT);
+      if (power > 0)
+      {  
+         sprintf(buffer, " %02d%%", power);
+         curses.mvaddstr(1, curses.cols - 11, buffer);
+      }
+      
+      PLT::Rtc::DateAndTime date_and_time;
+      if (PLT::Rtc::getDateAndTime(date_and_time))
+      {  
+         sprintf(buffer, " %02u:%02u", date_and_time.hour, date_and_time.minute);
+      }
+      else
+      {  
+         strcpy(buffer, " --:--");
+      }
+      curses.mvaddstr(1, curses.cols - 7, buffer);
+      
+      curses.attroff(TRM::A_REVERSE);
+   }
+
    void layoutText(unsigned l, unsigned c, const char* text)
    {
       curses.move(l, c);

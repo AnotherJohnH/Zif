@@ -23,6 +23,8 @@
 #ifndef INFO_PAGE_H
 #define INFO_PAGE_H
 
+#include <string>
+
 #include "Page.h"
 
 //! Manage the information page
@@ -30,14 +32,12 @@ class InfoPage : public Page
 {
 public:
    InfoPage(TRM::Curses& curses_,
-            const char*  program_,
-            const char*  description_,
-            const char*  link_,
-            const char*  author_,
-            const char*  version_,
-            const char*  copyright_year_)
+            const std::string& description_,
+            const std::string& link_,
+            const std::string& author_,
+            const std::string& version_,
+            const std::string& copyright_year_)
       : Page(curses_, "Info")
-      , program(program_)
       , description(description_)
       , link(link_)
       , author(author_)
@@ -47,11 +47,13 @@ public:
    }
 
    //! Display info page
-   virtual void show() override
+   virtual void show(const std::string& program) override
    {
+      drawHeader(program);
+
       curses.mvaddstr(3, 3, "Program     : "); curses.addstr(program.c_str());
       curses.mvaddstr(4, 3, "Description : "); curses.addstr(description.c_str());
-      curses.mvaddstr(5, 3, "Link        : "); if(link != "")  curses.addstr(link.c_str());
+      curses.mvaddstr(5, 3, "Link        : "); if(link != "") curses.addstr(link.c_str());
       curses.mvaddstr(6, 3, "Author      : "); curses.addstr(author.c_str());
       curses.mvaddstr(7, 3, "Version     : "); curses.addstr(version.c_str());
 
@@ -72,7 +74,6 @@ public:
    }
 
 private:
-   const std::string program;
    const std::string description;
    const std::string link;
    const std::string author;

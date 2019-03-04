@@ -117,7 +117,7 @@ private:
 public:
    ZifApp(int argc, const char* argv[])
       : Launcher(PROGRAM, DESCRIPTION, LINK, AUTHOR, VERSION, COPYRIGHT_YEAR,
-                 "[<story-file>]", "zif.cfg")
+                 "[<story-file>]")
    {
       parseArgsAndStart(argc, argv);
    }

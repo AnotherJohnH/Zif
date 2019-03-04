@@ -23,62 +23,45 @@
 #ifndef GAME_PAGE_H
 #define GAME_PAGE_H
 
+#include <cstdio>
+
 #include "Page.h"
-#include "ButtonItem.h"
+
+#define LIST_FILE "Games/list"
 
 //! Manage the home page
 class GamePage : public Page
 {
 public:
-   GamePage(TRM::Curses& curses_, const char* config_file)
+   GamePage(TRM::Curses& curses_)
       : Page(curses_)
-      , opt_config('c', "config", "Use alternate config file", config_file)
    {
    }
 
 private:
-   STB::Option<const char*> opt_config{'c', "config", "Use alternate config file"};
-   unsigned                 cursor{0};
-   unsigned                 cursor_limit{0};
-   char                     path[FILENAME_MAX]      = {};
-   char                     selection[FILENAME_MAX] = {};
-   bool                     selection_is_dir{false};
-
-   //! Get the next line with content from the given file stream
-   static bool getLine(PLT::File& file, char* buffer, size_t size)
-   {
-      while(file.getLine(buffer, size))
-      {
-         if(buffer[0] != '#')
-         {
-            char* s = strchr(buffer, '\n');
-            if(s) *s = '\0';
-            return true;
-         }
-      }
-
-      return false;
-   }
+   unsigned cursor{0};
+   unsigned cursor_limit{0};
+   char     path[FILENAME_MAX]      = {};
+   char     selection[FILENAME_MAX] = {};
+   bool     selection_is_dir{false};
 
    virtual void title(std::string& text) override
    {
       text = path;
    }
 
-   virtual void show() override
+   virtual void show(const std::string& program) override
    {
+      drawHeader(program);
+
       selection_is_dir = false;
-      strcpy(selection, "!Quit");
 
       const unsigned first_row = 3;
 
-      PLT::File file(nullptr, opt_config);
-
-      if(!file.openForRead())
+      FILE* fp = fopen(LIST_FILE, "r");
+      if(fp == nullptr)
       {
-         curses.mvaddstr(first_row, 3, "ERROR - failed to open \"");
-         curses.addstr(file.getFilename());
-         curses.addstr("\"");
+         curses.mvaddstr(first_row, 3, "ERROR - failed to open \"" LIST_FILE "\"");
          return;
       }
 
@@ -89,10 +72,16 @@ private:
       {
          // Read one line from the config gile
          char line[FILENAME_MAX];
-         if(!getLine(file, line, sizeof(line)))
+         if(fgets(line, sizeof(line), fp) == nullptr)
          {
             cursor_limit = index - 1;
             break;
+         }
+
+         char* s = strchr(line, '\n');
+         if (s != nullptr)
+         {
+            *s = '\0';
          }
 
          // Does the start of the line match the current path
@@ -123,17 +112,14 @@ private:
                   curses.attron(TRM::A_REVERSE);
                }
 
-               if(entry[0] == '!')
-               {
-                  entry++;
-               }
-
                curses.mvaddstr(first_row + index, 3, entry);
 
                curses.attroff(TRM::A_REVERSE);
             }
          }
       }
+
+      fclose(fp);
    }
 
    virtual void up() override

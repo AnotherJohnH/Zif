@@ -23,11 +23,8 @@
 #ifndef LAUNCHER_H
 #define LAUNCHER_H
 
-#include <cctype>
-#include <cstring>
-#include <utility>
+#include <string>
 
-#include "PLT/File.h"
 #include "PLT/KeyCode.h"
 
 #include "TRM/App.h"
@@ -45,97 +42,22 @@ protected:
    TRM::Curses  curses;
 
 private:
-   const char* filename{nullptr};
-   bool        quit{false};
-   HomePage    home_page;
-   GamePage    game_page;
-   ConfigPage  config_page;
-   InfoPage    info_page;
-   Page*       active_page{nullptr};
-
-   //!
-   void drawHeader()
-   {
-      curses.clear();
-
-      curses.attron(TRM::A_REVERSE);
-
-      curses.move(1, 1);
-      for(unsigned i = 0; i < curses.cols; ++i)
-      {
-         curses.addch(' ');
-      }
-
-      curses.attron(TRM::A_BOLD);
-      curses.mvaddstr(1, 3, program);
-      curses.attroff(TRM::A_BOLD);
-
-      std::string title;
-      active_page->title(title);
-      curses.mvaddstr(1, 3 + strlen(program) + 2, title.c_str());
-
-      char buffer[32]; // TODO stop using char[] and sprintf
-
-      int32_t power = PLT::Info::get(PLT::Info::PWR_PERCENT);
-      if (power > 0)
-      {
-         sprintf(buffer, " %02d%%", power);
-         curses.mvaddstr(1, curses.cols - 11, buffer);
-      }
-
-      PLT::Rtc::DateAndTime date_and_time;
-      if (PLT::Rtc::getDateAndTime(date_and_time))
-      {
-         sprintf(buffer, " %02u:%02u", date_and_time.hour, date_and_time.minute);
-      }
-      else
-      {
-         strcpy(buffer, " --:--");
-      }
-      curses.mvaddstr(1, curses.cols - 7, buffer);
-
-      curses.attroff(TRM::A_REVERSE);
-   }
-
-   virtual void parseArg(const char* arg_) override { filename = arg_; }
-
-   virtual int startTerminalApp(TRM::Device& term_) override
-   {
-      term = &term_;
-      curses.setDevice(&term_);
-
-      config_page.setTermDevice(term_);
-
-      return filename ? runGame(filename)
-                      : viewer();
-   }
+   std::string  filename{};
+   HomePage     home_page;
+   GamePage     game_page;
+   ConfigPage   config_page;
+   InfoPage     info_page;
 
    //! Load and run a story file
    virtual int runGame(const char* file) = 0;
 
-   void setPage(Page& page)
+   void action(Page*& page, const std::string& cmd, const std::string& value = "")
    {
-      active_page = &page;
-   }
-
-   void action(const std::string& cmd, const std::string& value)
-   {
-      if (cmd == "Quit")
-      {
-         quit = true;
-      }
-      else if (cmd == "Games")
-      {
-         setPage(game_page);
-      }
-      else if (cmd == "Settings")
-      {
-         setPage(config_page);
-      }
-      else if (cmd == "Info")
-      {
-         setPage(info_page);
-      }
+           if (cmd == "Quit")     { page = nullptr; }
+      else if (cmd == "Home")     { page = &home_page; }
+      else if (cmd == "Games")    { page = &game_page; }
+      else if (cmd == "Settings") { page = &config_page; }
+      else if (cmd == "Info")     { page = &info_page; }
       else if (cmd == "Run")
       {
          term->ioctl(TRM::Device::IOCTL_TERM_CURSOR, 1);
@@ -146,32 +68,51 @@ private:
       }
    }
 
-   int viewer()
+   // Implement TRM::App
+
+   virtual void parseArg(const char* arg_) override
    {
+      filename = arg_;
+   }
+
+   virtual int startTerminalApp(TRM::Device& term_) override
+   {
+      term = &term_;
+      curses.setDevice(&term_);
+
+      config_page.setTermDevice(term_);
+
       term->ioctl(TRM::Device::IOCTL_TERM_CURSOR, 0);
 
-      setPage(home_page);
+      Page* page = nullptr;
+
+      if (filename == "")
+      {
+         action(page, "Home");
+      }
+      else
+      {
+         action(page, "Run", filename);
+      }
 
       std::string cmd, value;
 
-      while(!quit)
+      while(page != nullptr)
       {
-         drawHeader();
-
-         active_page->show();
+         page->show(program);
 
          switch(curses.getch())
          {
          case -1:
-            quit = true;
+            action(page, "Quit");
             break;
 
          case PLT::UP:
-            active_page->up();
+            page->up();
             break;
 
          case PLT::DOWN:
-            active_page->down();
+            page->down();
             break;
 
          case ' ':
@@ -179,18 +120,18 @@ private:
          case PLT::SELECT:
          case PLT::RIGHT:
          case PLT::PAGE_DOWN:
-            if (active_page->select(cmd, value))
+            if (page->select(cmd, value))
             {
-               action(cmd, value);
+               action(page, cmd, value);
             }
             break;
 
          case PLT::ESCAPE:
          case PLT::PAGE_UP:
          case PLT::LEFT:
-            if (active_page->back())
+            if (page->back())
             {
-               setPage(home_page);
+               action(page, "Home");
             }
             break;
          }
@@ -208,13 +149,12 @@ public:
             const char*  author,
             const char*  version,
             const char*  copyright_year,
-            const char*  args_help,
-            const char*  config_file)
+            const char*  args_help)
       : App(program, description, link, author, version, copyright_year, args_help)
       , home_page(curses)
-      , game_page(curses, config_file)
+      , game_page(curses)
       , config_page(curses)
-      , info_page(curses, program, description, link, author, version, copyright_year)
+      , info_page(curses, description, link, author, version, copyright_year)
    {
    }
 };
