@@ -74,7 +74,7 @@ private:
       active_page->title(title);
       curses.mvaddstr(1, 3 + strlen(program) + 2, title.c_str());
 
-      char buffer[6];
+      char buffer[32]; // TODO stop using char[] and sprintf
 
       int32_t power = PLT::Info::get(PLT::Info::PWR_PERCENT);
       if (power > 0)
