@@ -134,7 +134,7 @@ private:
       }
 
       cursor_max = pos - 1;
-      offset_max = index - cursor_max - 2;
+      offset_max = index - cursor_max - 1;
 
       fclose(fp);
    }
