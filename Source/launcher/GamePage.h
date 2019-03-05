@@ -39,11 +39,11 @@ public:
    }
 
 private:
-   unsigned    cursor{0};
-   unsigned    cursor_max{0};
-   unsigned    offset{0};
-   unsigned    offset_max{0};
    std::string path;
+   unsigned    cursor{0};
+   unsigned    offset{0};
+   unsigned    cursor_max{0};
+   unsigned    offset_max{0};
    std::string selection;
    bool        selection_is_dir{false};
 
@@ -60,9 +60,8 @@ private:
 
       const unsigned first_row = 4;
 
-      cursor_max = 0;
-      offset_max = 0;
-
+      cursor_max       = 0;
+      offset_max       = 0;
       selection        = "";
       selection_is_dir = false;
 
@@ -127,13 +126,14 @@ private:
                      curses.mvaddstr(first_row + pos, 3, entry);
                      curses.attroff(TRM::A_REVERSE);
 
-                     cursor_max = pos++;
+                     pos++;
                   }
                }
             }
          }
       }
 
+      cursor_max = pos - 1;
       offset_max = index - cursor_max - 2;
 
       fclose(fp);
