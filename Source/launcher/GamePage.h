@@ -39,11 +39,15 @@ public:
    }
 
 private:
-   unsigned cursor{0};
-   unsigned cursor_limit{0};
-   char     path[FILENAME_MAX]      = {};
-   char     selection[FILENAME_MAX] = {};
-   bool     selection_is_dir{false};
+   unsigned    cursor{0};
+   unsigned    cursor_max{0};
+   unsigned    offset{0};
+   unsigned    offset_max{0};
+   std::string path;
+   std::string selection;
+   bool        selection_is_dir{false};
+
+   std::string prev;
 
    virtual void title(std::string& text) override
    {
@@ -54,9 +58,13 @@ private:
    {
       drawHeader(program);
 
-      selection_is_dir = false;
+      const unsigned first_row = 4;
 
-      const unsigned first_row = 3;
+      cursor_max = 0;
+      offset_max = 0;
+
+      selection        = "";
+      selection_is_dir = false;
 
       FILE* fp = fopen(LIST_FILE, "r");
       if(fp == nullptr)
@@ -65,16 +73,17 @@ private:
          return;
       }
 
-      char prev[FILENAME_MAX];
-      prev[0] = '\0';
+      prev = "";
 
-      for(unsigned index = 0; (first_row + index) < curses.lines;)
+      unsigned index = 0;
+      unsigned pos   = 0;
+
+      while(true)
       {
          // Read one line from the config gile
          char line[FILENAME_MAX];
          if(fgets(line, sizeof(line), fp) == nullptr)
          {
-            cursor_limit = index - 1;
             break;
          }
 
@@ -85,9 +94,9 @@ private:
          }
 
          // Does the start of the line match the current path
-         if(strncmp(line, path, strlen(path)) == 0)
+         if(strncmp(line, path.c_str(), path.size()) == 0)
          {
-            char* entry = line + strlen(path);
+            char* entry = line + path.size();
 
             // Extract entry and check if it is a directory
             bool  is_dir = false;
@@ -99,57 +108,90 @@ private:
             }
 
             // Is this entry different to the previous entry
-            if(strcmp(entry, prev) != 0)
+            if(prev != entry)
             {
-               strcpy(prev, entry);
+               prev = entry;
 
-               // Is this the currently selected entry
-               if(index++ == cursor)
+               if (index++ >= offset)
                {
-                  strcpy(selection, entry);
-                  selection_is_dir = is_dir;
+                  if ((first_row + pos) < (curses.lines - 1))
+                  {
+                     if(pos == cursor)
+                     {
+                        selection        = entry;
+                        selection_is_dir = is_dir;
 
-                  curses.attron(TRM::A_REVERSE);
+                        curses.attron(TRM::A_REVERSE);
+                     }
+
+                     curses.mvaddstr(first_row + pos, 3, entry);
+                     curses.attroff(TRM::A_REVERSE);
+
+                     cursor_max = pos++;
+                  }
                }
-
-               curses.mvaddstr(first_row + index, 3, entry);
-
-               curses.attroff(TRM::A_REVERSE);
             }
          }
       }
+
+      offset_max = index - cursor_max - 2;
 
       fclose(fp);
    }
 
    virtual void up() override
    {
-      cursor = cursor == 0 ? cursor_limit : cursor - 1;
+      if (cursor == 0)
+      {
+         if (offset > 0)
+         {
+            offset--;
+         }
+      }
+      else
+      {
+         cursor--;
+      }
    }
 
    virtual void down() override
    {
-      cursor = cursor == cursor_limit ? 0 : cursor + 1;
+      if (cursor == cursor_max)
+      {
+         if (offset < offset_max)
+         {
+            offset++;
+         }
+      }
+      else
+      {
+         cursor++;
+      }
    }
 
    virtual bool back() override
    {
-      char* s = strrchr(path, '/');
-      if(s == nullptr) return true;
-
-      *s = '\0';
-
-      s = strrchr(path, '/');
-      if(s)
+      size_t slash_pos = path.rfind('/');
+      if (slash_pos == std::string::npos)
       {
-         s[1] = '\0';
+         return true;
       }
       else
       {
-         path[0] = '\0';
+         path.resize(slash_pos);
+
+         size_t slash_pos = path.rfind('/');
+         if (slash_pos == std::string::npos)
+         {
+            path = "";
+         }
+         else
+         {
+            path.resize(slash_pos + 1);
+         }
       }
 
-      cursor = 0;
+      cursor = offset = 0;
       return false;
    }
 
@@ -157,9 +199,9 @@ private:
    {
       if(selection_is_dir)
       {
-         strcat(path, selection);
-         strcat(path, "/");
-         cursor = 0;
+         path += selection;
+         path += '/';
+         cursor = offset = 0;
          return false;
       }
       else
