@@ -23,6 +23,7 @@
 #ifndef SELECTOR_ITEM_H
 #define SELECTOR_ITEM_H
 
+#include <cctype>
 #include <cstdlib>
 #include <vector>
 
@@ -36,8 +37,9 @@ public:
                 unsigned           col_,
                 const std::string& text_,
                 const std::string& choices_,
-                const std::string& value_ = "")
+                const std::string& unit_ = "")
       : Item(owner, row_,col_, text_)
+      , unit(unit_)
    {
       // First choice, no selection, is a aingle space
       choice_list.push_back(" ");
@@ -56,8 +58,6 @@ public:
          }
       }
       choice_list.push_back(choice);
-
-      if (!value_.empty()) set(value_);
    }
 
    const std::string& get() const
@@ -90,7 +90,9 @@ public:
 private:
    virtual void draw(TRM::Curses& curses, bool active) override
    {
+      curses.attron(TRM::A_BOLD);
       Item::draw(curses, active);
+      curses.attroff(TRM::A_BOLD);
 
       curses.addstr(" : ");
 
@@ -100,6 +102,12 @@ private:
       }
 
       curses.addstr(choice_list.at(index).c_str());
+
+      if ((unit != "") && isdigit(choice_list[index][0]))
+      {
+         curses.addch(' ');
+         curses.addstr(unit.c_str());
+      }
 
       if (active)
       {
@@ -119,6 +127,7 @@ private:
 
    std::vector<std::string> choice_list;
    size_t                   index{0};
+   std::string              unit;
 };
 
 #endif

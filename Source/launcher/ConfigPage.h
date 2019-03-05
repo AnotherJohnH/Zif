@@ -36,7 +36,7 @@ struct TermConfig : public STB::Oil<TermConfig>
    unsigned border_pixels{0};
    unsigned line_space{0};
    bool     invert_video{false};
-   unsigned sleep{1};
+   unsigned sleep{0};
 #ifdef PROJ_TARGET_Kindle3
    uint32_t bg_colour{0xFFFFFF};
    uint32_t fg_colour{0x000000};
@@ -72,7 +72,15 @@ public:
       size.setInt(config.font_size);
       border.setInt(config.border_pixels);
       space.setInt(config.line_space);
-      sleep.setInt(config.sleep);
+
+      if (config.sleep == 0)
+      {
+         sleep.set("Off");
+      }
+      else
+      {
+         sleep.setInt(config.sleep);
+      }
    }
 
    void setTermDevice(TRM::Device& term_)
@@ -86,12 +94,12 @@ private:
    TRM::Device* term{nullptr};
 
    SelectorItem size{   this,  4, 3, "Font size ", "9,12,15,18"};
-   SelectorItem border{ this,  5, 3, "Border    ", "0,4,8,16"};
-   SelectorItem space{  this,  6, 3, "Line space", "0,1,2,3"};
+   SelectorItem border{ this,  5, 3, "Border    ", "0,4,8,16", "pixels"};
+   SelectorItem space{  this,  6, 3, "Line space", "0,1,2,3", "pixels"};
    SelectorItem colour{ this,  8, 3, "Colours   ", 
                         "Green Phosphor,Amber Phosphor,Blue Phosphor,Old Paper,White"};
    SelectorItem video{  this,  9, 3, "Video     ", "Normal,Inverse"};
-   SelectorItem sleep{  this, 11, 3, "Sleep     ", "0,1,5,10"};
+   SelectorItem sleep{  this, 11, 3, "Sleep     ", "Off,1,5,10", "min"};
 
    //! update the terminal configuration
    void configTerminal()
@@ -162,7 +170,14 @@ private:
       }
       else if (active == &sleep)
       {
-         config.sleep = sleep.getInt();
+         if (value == "Off")
+         {
+            config.sleep = 0;
+         }
+         else
+         {
+            config.sleep = sleep.getInt();
+         }
       }
 
       configTerminal();
