@@ -39,7 +39,7 @@ public:
    {
    }
 
-   bool play()
+   bool play(bool restore)
    {
       (void) options;
       (void) story;

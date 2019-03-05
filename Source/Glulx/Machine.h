@@ -45,7 +45,7 @@ public:
    {
    }
 
-   bool play()
+   bool play(bool restore)
    {
       state.reset();
 

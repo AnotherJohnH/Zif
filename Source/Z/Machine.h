@@ -75,7 +75,7 @@ public:
 
    //! Play a Z file.
    //! \return true if there were no errors
-   bool play()
+   bool play(bool restore)
    {
       info("Version  : z%d",  header->version);
       info("Checksum : %04X", header->checksum);
@@ -95,7 +95,7 @@ public:
 
       reset();
 
-      if (options.restore)
+      if (restore)
       {
          state.restore();
       }

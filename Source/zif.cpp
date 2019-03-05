@@ -51,10 +51,28 @@ private:
       return 1;
    }
 
-   virtual int runGame(const char* story_file) override
+   virtual bool hasSaveFile(const std::string& story_file) const override
+   {
+      size_t slash = story_file.rfind('/');
+
+      std::string save_path = (const char*)options.save_dir;
+      save_path += '/';
+      save_path += story_file.c_str() + slash;
+      save_path += ".qzl";
+
+      FILE* fp = fopen(save_path.c_str(), "rb");
+      if (fp != nullptr)
+      {
+         fclose(fp);
+         return true;
+      }
+
+      return false;
+   }
+
+   virtual int runGame(const char* story_file, bool restore) override
    {
       ConsoleImpl console(term, options);
-
       Blorb       blorb;
       std::string exec_type;
       uint32_t    exec_offset{0};
@@ -75,7 +93,7 @@ private:
          if (z_story.load(story_file, exec_offset))
          {
             Z::Machine machine(console, options, z_story);
-            return machine.play() ? 0 : 1;
+            return machine.play(restore) ? 0 : 1;
          }
          else
          {
@@ -89,7 +107,7 @@ private:
          if (glulx_story.load(story_file, exec_offset))
          {
             Glulx::Machine machine(console, options, glulx_story);
-            return machine.play() ? 0 : 1;
+            return machine.play(restore) ? 0 : 1;
          }
          else
          {
@@ -103,7 +121,7 @@ private:
          if (level9_story.load(story_file, exec_offset))
          {
             Level9::Machine machine(console, options, level9_story);
-            return machine.play() ? 0 : 1;
+            return machine.play(restore) ? 0 : 1;
          }
          else
          {

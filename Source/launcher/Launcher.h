@@ -30,10 +30,11 @@
 #include "TRM/App.h"
 #include "TRM/Curses.h"
 
+#include "ConfigPage.h"
+#include "GamePage.h"
 #include "HomePage.h"
 #include "InfoPage.h"
-#include "GamePage.h"
-#include "ConfigPage.h"
+#include "RestorePage.h"
 
 class Launcher : public TRM::App
 {
@@ -47,9 +48,13 @@ private:
    GamePage     game_page;
    ConfigPage   config_page;
    InfoPage     info_page;
+   RestorePage  restore_page;
+
+   //! Check for a save file
+   virtual bool hasSaveFile(const std::string& file) const = 0;
 
    //! Load and run a story file
-   virtual int runGame(const char* file) = 0;
+   virtual int runGame(const char* file, bool restore) = 0;
 
    void action(Page*& page, const std::string& cmd, const std::string& value = "")
    {
@@ -58,13 +63,31 @@ private:
       else if (cmd == "Games")    { page = &game_page; }
       else if (cmd == "Settings") { page = &config_page; }
       else if (cmd == "Info")     { page = &info_page; }
-      else if (cmd == "Run")
+      else if (cmd == "Select")
+      {
+         if (hasSaveFile(value))
+         {
+            restore_page.setFilename(value);
+            page = &restore_page;
+         }
+         else
+         {
+            action(page, "Start", value);
+         }
+      }
+      else if (cmd == "Start")
       {
          term->ioctl(TRM::Device::IOCTL_TERM_CURSOR, 1);
-
-         runGame(value.c_str());
-
+         runGame(value.c_str(), /* restore */ false);
          term->ioctl(TRM::Device::IOCTL_TERM_CURSOR, 0);
+         page = &game_page;
+      }
+      else if (cmd == "Resume")
+      {
+         term->ioctl(TRM::Device::IOCTL_TERM_CURSOR, 1);
+         runGame(value.c_str(), /* restore */ true);
+         term->ioctl(TRM::Device::IOCTL_TERM_CURSOR, 0);
+         page = &game_page;
       }
    }
 
@@ -155,6 +178,7 @@ public:
       , game_page(curses)
       , config_page(curses)
       , info_page(curses, description, link, author, version, copyright_year)
+      , restore_page(curses)
    {
    }
 };

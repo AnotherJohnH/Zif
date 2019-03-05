@@ -1,5 +1,5 @@
 //------------------------------------------------------------------------------
-// Copyright (c) 2016-2017 John D. Haughton
+// Copyright (c) 2016-2019 John D. Haughton
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -20,25 +20,50 @@
 // SOFTWARE.
 //------------------------------------------------------------------------------
 
-#ifndef OPTIONS_H
-#define OPTIONS_H
+#ifndef RESTORE_PAGE_H
+#define RESTORE_PAGE_H
 
-#include "STB/Option.h"
+#include "Page.h"
+#include "ButtonItem.h"
 
-//! Command line options
-struct Options
+//! Manage the restor page
+class RestorePage : public Page
 {
-   STB::Option<bool>        info{    0,   "info",     "Report information messages"};
-   STB::Option<bool>        warn{    0,   "warn",     "Report warning messages"};
-   STB::Option<unsigned>    width{   'w', "width",    "Override output width", 0};
-   STB::Option<bool>        batch{   'b', "batch",    "Batch mode, disable output to screen"};
-   STB::Option<bool>        trace{   'T', "trace",    "Trace execution to \"trace.log\""};
-   STB::Option<bool>        print{   'p', "print",    "Print output to \"print.log\""};
-   STB::Option<bool>        key{     'k', "key",      "Log key presses to \"key.log\""};
-   STB::Option<const char*> input{   'i', "input",    "Read keyboard input from a file"};
-   STB::Option<unsigned>    seed{    'S', "seed",     "Initial random number seed", 0};
-   STB::Option<unsigned>    undo{    'u', "undo",     "Number of undo buffers", 4};
-   STB::Option<const char*> save_dir{'s', "save-dir", "Directory for save files", "save"};
+public:
+   RestorePage(TRM::Curses& curses_)
+      : Page(curses_, "Restore Saved Game?")
+   {
+   }
+
+   void setFilename(const std::string& filename_)
+   {
+      filename = filename_;
+      active   = &yes;
+   }
+
+   virtual void title(std::string& text) override
+   {
+      text = filename;
+   }
+
+   virtual void show(const std::string& program) override
+   {
+      Page::show(program);
+
+      curses.mvaddstr(4, 3, "Restore saved game?");
+   }
+
+   virtual bool select(std::string& cmd, std::string& value) override
+   {
+      cmd   = active == &yes ? "Resume" : "Start";
+      value = filename;
+      return true;
+   }
+
+private:
+   ButtonItem  yes{this, 6, 5, "Yes"};
+   ButtonItem  no{ this, 7, 5, "No"};
+   std::string filename;
 };
 
 #endif

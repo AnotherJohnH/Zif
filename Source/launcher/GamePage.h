@@ -206,7 +206,7 @@ private:
       }
       else
       {
-         cmd = "Run";
+         cmd = "Select";
          value = "Games/";
          value += path;
          value += selection;
