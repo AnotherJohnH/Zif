@@ -51,45 +51,47 @@ public:
 protected:
    //!
    void drawHeader(const std::string& program)
-   {  
+   {
       curses.clear();
-      
+
       curses.attron(TRM::A_REVERSE);
-      
+
       curses.move(1, 1);
       for(unsigned i = 0; i < curses.cols; ++i)
-      {  
+      {
          curses.addch(' ');
       }
-      
+
       curses.attron(TRM::A_BOLD);
       curses.mvaddstr(1, 3, program.c_str());
       curses.attroff(TRM::A_BOLD);
-      
-      std::string title_text;
+
       title(title_text);
       curses.mvaddstr(1, 3 + program.size() + 2, title_text.c_str());
-      
-      char buffer[32]; // TODO stop using char[] and sprintf
-      
+
+      // Battery power
       int32_t power = PLT::Info::get(PLT::Info::PWR_PERCENT);
-      if (power > 0)
-      {  
-         sprintf(buffer, " %02d%%", power);
-         curses.mvaddstr(1, curses.cols - 11, buffer);
+      if (power >= 0)
+      {
+         power_text = std::to_string(power);
+         power_text += '%';
       }
-      
+      curses.mvaddstr(1, curses.cols - 10, power_text.c_str());
+
+      // Time
       PLT::Rtc::DateAndTime date_and_time;
       if (PLT::Rtc::getDateAndTime(date_and_time))
-      {  
-         sprintf(buffer, " %02u:%02u", date_and_time.hour, date_and_time.minute);
+      {
+         // There is a proper C++ way to do this I just don't like it
+         time_text = "";
+         if (date_and_time.hour < 10) time_text += '0';
+         time_text += std::to_string(date_and_time.hour);
+         time_text += ':';
+         if (date_and_time.minute < 10) time_text += '0';
+         time_text += std::to_string(date_and_time.minute);
       }
-      else
-      {  
-         strcpy(buffer, " --:--");
-      }
-      curses.mvaddstr(1, curses.cols - 7, buffer);
-      
+      curses.mvaddstr(1, curses.cols - 6, time_text.c_str());
+
       curses.attroff(TRM::A_REVERSE);
    }
 
@@ -137,6 +139,9 @@ protected:
 
    TRM::Curses& curses;
    std::string  name;
+   std::string  title_text{};
+   std::string  power_text{};
+   std::string  time_text{"--:--"};
 };
 
 #endif

@@ -25,40 +25,49 @@
 
 #include <cstdlib>
 #include <vector>
-#include <cstdlib>
 
 #include "Item.h"
 
 class SelectorItem : public Item
 {
 public:
-   SelectorItem(Owner*      owner,
-                unsigned    row_,
-                unsigned    col_,
-                const char* text_,
-                const char* choices_,
-                const char* value_ = nullptr)
+   SelectorItem(Owner*             owner,
+                unsigned           row_,
+                unsigned           col_,
+                const std::string& text_,
+                const std::string& choices_,
+                const std::string& value_ = "")
       : Item(owner, row_,col_, text_)
    {
+      // First choice, no selection, is a aingle space
       choice_list.push_back(" ");
 
-      std::string temp;
-      for(const char* s = choices_; *s; s++)
+      std::string choice;
+      for(const auto& ch : choices_)
       {
-         if (*s == ',')
+         if (ch == ',')
          {
-            choice_list.push_back(temp);
-            temp = "";
+            choice_list.push_back(choice);
+            choice = "";
          }
          else
          {
-            temp += *s;
+            choice += ch;
          }
       }
+      choice_list.push_back(choice);
 
-      choice_list.push_back(temp);
+      if (!value_.empty()) set(value_);
+   }
 
-      if (value_ != nullptr) set(value_);
+   const std::string& get() const
+   {
+      return choice_list.at(index);
+   }
+
+   signed getInt() const
+   {
+      return atoi(get().c_str());
    }
 
    void set(const std::string& value)
@@ -73,19 +82,9 @@ public:
       }
    }
 
-   const std::string& get()
-   {
-      return choice_list.at(index);
-   }
-
    void setInt(signed value)
    {
       set(std::to_string(value));
-   }
-
-   signed getInt()
-   {
-      return atoi(get().c_str());
    }
 
 private:
@@ -112,8 +111,9 @@ private:
    {
       index++;
       if (index == choice_list.size()) index = 1;
-      value = choice_list.at(index);
+
       cmd = text;
+      value = choice_list.at(index);
       return true;
    }
 

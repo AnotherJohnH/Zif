@@ -109,10 +109,10 @@ public:
       Item* last{nullptr};
    };
 
-   Item(Owner*       owner,
-         unsigned    row_,
-         unsigned    col_,
-         const char* text_)
+   Item(Owner*              owner,
+         unsigned           row_,
+         unsigned           col_,
+         const std::string& text_)
       : text(text_)
       , row(row_)
       , col(col_)

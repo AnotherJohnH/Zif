@@ -28,7 +28,7 @@
 class ButtonItem : public Item
 {
 public:
-   ButtonItem(Owner* owner, unsigned row_, unsigned col_, const char* text_)
+   ButtonItem(Owner* owner, unsigned row_, unsigned col_, const std::string& text_)
       : Item(owner, row_, col_, text_)
    {
    }
@@ -49,9 +49,10 @@ private:
       }
    }
 
-   virtual bool select(std::string& cmd, std::string& /* value */) override
+   virtual bool select(std::string& cmd, std::string& value) override
    {
-      cmd = text;
+      cmd   = text;
+      value = "";
       return true;
    }
 };
