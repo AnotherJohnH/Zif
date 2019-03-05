@@ -101,7 +101,7 @@ private:
       term->ioctl(TRM::Device::IOCTL_TERM_BORDER, config.border_pixels);
       term->ioctl(TRM::Device::IOCTL_TERM_LINE_SPACE, config.line_space);
       term->ioctl(TRM::Device::IOCTL_TERM_FONT_SIZE, config.font_size);
-      term->ioctl(TRM::Device::IOCTL_TERM_SLEEP, config.sleep);
+      term->ioctl(TRM::Device::IOCTL_TERM_SLEEP, config.sleep * 60);
 
       curses.init();
    }
