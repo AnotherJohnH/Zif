@@ -176,9 +176,10 @@ public:
                           : uint32_t(init_pc);
    }
 
-   //!
-   void init(Console& console, Config& config)
+   //! Reset header for this interpreter
+   void reset(Console& console, Config& config)
    {
+      // Flags 1
       if(version <= 3)
       {
          if(!config.status_line)     flags1 |= 1 << 4;
@@ -190,6 +191,7 @@ public:
          if(console.getAttr(Console::BOLD))         flags1 |= 1 << 2;
          if(console.getAttr(Console::ITALIC))       flags1 |= 1 << 3;
          if(console.getAttr(Console::FIXED_FONT))   flags1 |= 1 << 4;
+
          if(console.getAttr(Console::READ_TIMEOUT)) flags1 |= 1 << 7;
 
          if(version >= 5)
@@ -204,13 +206,15 @@ public:
          }
       }
 
-      // 8.1.5.1
+      // Flags 2 - 8.1.5.1
       if((version == 5) && !console.getAttr(Console::GRAPHIC_FONT))
       {
-         flags2 &= ~(1 << 3);
+         if (!config.pictures) flags2 &= ~(1 << 3);
+         if (!config.undo)     flags2 &= ~(1 << 4);
+         if (!config.mouse)    flags2 &= ~(1 << 5);
+         if (!config.sounds)   flags2 &= ~(1 << 7);
+         if (!config.menus)    flags2 &= ~(1 << 8);
       }
-
-      standard_revision = (config.interp_major_version << 8) | config.interp_minor_version;
 
       if(version >= 4)
       {
@@ -226,17 +230,19 @@ public:
       screen_lines  = console.getAttr(Console::LINES);
       screen_cols   = console.getAttr(Console::COLS);
 
-      font_height = console.getAttr(Console::FONT_HEIGHT);
-      font_width  = console.getAttr(Console::FONT_WIDTH);
-
       if(version >= 5)
       {
          screen_width  = screen_cols * font_width;
          screen_height = screen_lines * font_height;
       }
 
+      font_height = console.getAttr(Console::FONT_HEIGHT);
+      font_width  = console.getAttr(Console::FONT_WIDTH);
+
       background_colour = 2;
       foreground_colour = 9;
+
+      standard_revision = (config.interp_major_version << 8) | config.interp_minor_version;
    }
 };
 

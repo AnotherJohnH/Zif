@@ -61,12 +61,7 @@ public:
       , text(story_.getHeader(), state.memory)
       , parser(story_.getVersion())
    {
-      Config config;
-      config.interp_major_version = 1;
-      config.interp_minor_version = 0;
-
       header = (Header*)state.memory.data();
-      header->init(console, config);
 
       object.init(header->obj, header->version);
 
@@ -93,12 +88,7 @@ public:
          }
       }
 
-      reset();
-
-      if (restore)
-      {
-         state.restore();
-      }
+      reset(restore);
 
       bool ok = true;
 
@@ -146,6 +136,7 @@ private:
 
    static const unsigned MAX_OPERANDS = 8;
 
+   Config       config;
    bool         story_is_valid;
    State        state;
    Disassembler dis;
@@ -410,16 +401,16 @@ private:
    }
 
    //! v1 restore ?(label)
-   void op0_restore_v1() { branch(state.restore()); }
+   void op0_restore_v1() { branch(reset(/* resotore */ true)); }
 
    //! v4 restore -> (result)
    void op0_restore_v4()
    {
-      if(!state.restore()) state.varWrite(state.fetch8(), 0);
+      if(!reset(/* restore */ true)) state.varWrite(state.fetch8(), 0);
    }
 
    //! restart
-   void op0_restart() { reset(); }
+   void op0_restart() { reset(false); }
 
    //! ret_popped
    void op0_ret_popped() { subRet(state.pop()); }
@@ -923,7 +914,7 @@ private:
       (void)bytes;
       (void)name; // TODO use supplied parameters
 
-      if(!state.restore()) state.varWrite(state.fetch8(), 0);
+      if(!reset(/* restore */true)) state.varWrite(state.fetch8(), 0);
    }
 
    void opE_log_shift()
@@ -1454,10 +1445,27 @@ private:
       (this->*opE[op_code & 0x1F])();
    }
 
-   void reset()
+   //! Reset the interpreter to initial conditions
+   bool reset(bool restore)
    {
-      screen.reset();
-      state.reset();
+      bool ok = true;
+
+      if (restore)
+      {
+         ok = state.restore();
+      }
+      else
+      {
+         state.reset();
+      }
+
+      if (ok)
+      {
+         screen.reset();
+         header->reset(console, config);
+      }
+
+      return ok;
    }
 
    void fetchDecodeExecute()

@@ -181,7 +181,7 @@ public:
    virtual void encodeQuetzalHeader(STB::IFF::Document& doc, uint32_t pc) const override
    {
       STB::IFF::Chunk* ifhd_chunk = doc.newChunk("IFhd", 13);
-      const Header*   header     = getHeader();
+      const Header*    header     = getHeader();
       IFhd             ifhd;
 
       ifhd.release       = header->release;
