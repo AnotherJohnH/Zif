@@ -24,6 +24,7 @@
 #define LAUNCHER_H
 
 #include <string>
+#include <vector>
 
 #include "PLT/KeyCode.h"
 
@@ -43,12 +44,13 @@ protected:
    TRM::Curses  curses;
 
 private:
-   std::string  filename{};
-   HomePage     home_page;
-   GamePage     game_page;
-   ConfigPage   config_page;
-   InfoPage     info_page;
-   RestorePage  restore_page;
+   std::string        filename{};
+   std::vector<Page*> page_stack;
+   HomePage           home_page;
+   GamePage           game_page;
+   ConfigPage         config_page;
+   InfoPage           info_page;
+   RestorePage        restore_page;
 
    //! Check for a save file
    virtual bool hasSaveFile(const std::string& file) const = 0;
@@ -56,23 +58,37 @@ private:
    //! Load and run a story file
    virtual int runGame(const char* file, bool restore) = 0;
 
-   void action(Page*& page, const std::string& cmd, const std::string& value = "")
+   //! Open a new page, which is pushed onto the current page stack
+   void openPage(Page& page)
    {
-           if (cmd == "Quit")     { page = nullptr; }
-      else if (cmd == "Home")     { page = &home_page; }
-      else if (cmd == "Games")    { page = &game_page; }
-      else if (cmd == "Settings") { page = &config_page; }
-      else if (cmd == "Info")     { page = &info_page; }
+      page_stack.push_back(&page);
+   }
+
+   //! Close the current page, poping it of the page stack
+   Page* closePage()
+   {
+      page_stack.pop_back();
+      return page_stack.empty() ? nullptr : page_stack.back();
+   }
+
+   void action(const std::string& cmd, const std::string& value = "")
+   {
+           if (cmd == "Quit")     { page_stack.clear(); }
+      else if (cmd == "Games")    { openPage(game_page); }
+      else if (cmd == "Settings") { openPage(config_page); }
+      else if (cmd == "Info")     { openPage(info_page); }
       else if (cmd == "Select")
       {
          if (hasSaveFile(value))
          {
             restore_page.setFilename(value);
-            page = &restore_page;
+            openPage(restore_page);
          }
          else
          {
-            action(page, "Start", value);
+            term->ioctl(TRM::Device::IOCTL_TERM_CURSOR, 1);
+            runGame(value.c_str(), /* restore */ false);
+            term->ioctl(TRM::Device::IOCTL_TERM_CURSOR, 0);
          }
       }
       else if (cmd == "Start")
@@ -80,14 +96,14 @@ private:
          term->ioctl(TRM::Device::IOCTL_TERM_CURSOR, 1);
          runGame(value.c_str(), /* restore */ false);
          term->ioctl(TRM::Device::IOCTL_TERM_CURSOR, 0);
-         page = &game_page;
+         closePage();
       }
       else if (cmd == "Resume")
       {
          term->ioctl(TRM::Device::IOCTL_TERM_CURSOR, 1);
          runGame(value.c_str(), /* restore */ true);
          term->ioctl(TRM::Device::IOCTL_TERM_CURSOR, 0);
-         page = &game_page;
+         closePage();
       }
    }
 
@@ -107,27 +123,27 @@ private:
 
       term->ioctl(TRM::Device::IOCTL_TERM_CURSOR, 0);
 
-      Page* page = nullptr;
-
       if (filename == "")
       {
-         action(page, "Home");
+         openPage(home_page);
       }
       else
       {
-         action(page, "Run", filename);
+         action("Select", filename);
       }
 
       std::string cmd, value;
 
-      while(page != nullptr)
+      while(!page_stack.empty())
       {
+         Page* page = page_stack.back();
+
          page->show(program);
 
          switch(curses.getch())
          {
          case -1:
-            action(page, "Quit");
+            action("Quit");
             break;
 
          case PLT::UP:
@@ -145,7 +161,7 @@ private:
          case PLT::PAGE_DOWN:
             if (page->select(cmd, value))
             {
-               action(page, cmd, value);
+               action(cmd, value);
             }
             break;
 
@@ -154,7 +170,7 @@ private:
          case PLT::LEFT:
             if (page->back())
             {
-               action(page, "Home");
+               closePage();
             }
             break;
          }
