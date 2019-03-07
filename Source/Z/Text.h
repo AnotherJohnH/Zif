@@ -253,24 +253,6 @@ public:
    }
 
    //! Write raw text starting at the given address
-   void printTable(const Writer& writer,
-                   uint32_t      addr,
-                   unsigned      width,
-                   unsigned      height,
-                   unsigned      skip)
-   {
-      for(unsigned line = 0; line < height; line++)
-      {
-         for(unsigned col = 0; col < width; col++)
-         {
-            writer(memory.fetch8(addr++));
-         }
-
-         addr += skip;
-      }
-   }
-
-   //! Write raw text starting at the given address
    void printForm(const Writer& writer, uint32_t addr)
    {
       while(true)

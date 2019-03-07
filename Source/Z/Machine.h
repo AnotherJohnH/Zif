@@ -898,9 +898,23 @@ private:
       uint16_t addr   = uarg[0];
       uint16_t width  = uarg[1];
       uint16_t height = num_arg >= 3 ? uarg[2] : 1;
-      int16_t  skip   = num_arg == 4 ? uarg[3] : 0;
+      uint16_t skip   = num_arg == 4 ? uarg[3] : 0;
 
-      text.printTable([this](uint16_t ch){ stream.writeChar(ch); }, addr, width, height, skip);
+      unsigned line, col;
+      console.getCursorPos(line, col);
+
+      for(unsigned l = 0; l < height; l++)
+      {
+         for(unsigned c = 0; c < width; c++)
+         {
+            uint8_t ch = state.memory.fetch8(addr++);
+            stream.writeChar(ch);
+         }
+
+         console.moveCursor(line + l + 1, col);
+
+         addr += skip;
+      }
    }
 
    void opV_check_arg_count() { branch(uarg[0] <= state.getNumFrameArgs()); }
