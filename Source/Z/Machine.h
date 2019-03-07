@@ -362,6 +362,25 @@ private:
       return text.print([this](uint16_t ch){ stream.writeChar(ch); }, addr);
    }
 
+   //! Read filename from memory
+   void readFilename(uint16_t name, std::string& filename)
+   {
+      // Make sure the save directory exists
+      (void) PLT::File::createDir((const char*)options.save_dir);
+
+      filename = (const char*)options.save_dir;
+      filename += '/';
+      uint8_t size = state.memory.read8(name);
+      for(uint8_t i=0; i<size; i++)
+      {
+         filename += toupper(state.memory.read8(name+i+1));
+      }
+      if (filename.find('.') == std::string::npos)
+      {
+         filename += ".AUX";
+      }
+   }
+
    void ILLEGAL() { throw "illegal op"; }
 
    void TODO_WARN(const char* op) { warning(op); }
@@ -895,13 +914,22 @@ private:
       uint16_t bytes = uarg[1];
       uint16_t name  = uarg[2];
 
-      (void)table;
-      (void)bytes;
-      (void)name; // TODO use supplied parameters
+      bool ok = false;
 
-      uint8_t ret = state.fetch8();
-      state.varWrite(ret, 2);
-      state.varWrite(ret, state.save() ? 1 : 0);
+      std::string filename;
+      readFilename(name, filename);
+      FILE* fp = fopen(filename.c_str(), "w");
+      if (fp != nullptr)
+      {
+         for(unsigned i=0; i<bytes; i++)
+         {
+            fputc(state.memory.read8(table + i), fp);
+         }
+         fclose(fp);
+         ok = true;
+      }
+
+      state.varWrite(state.fetch8(), ok ? 1 : 0);
    }
 
    void opE_restore_table()
@@ -910,11 +938,22 @@ private:
       uint16_t bytes = uarg[1];
       uint16_t name  = uarg[2];
 
-      (void)table;
-      (void)bytes;
-      (void)name; // TODO use supplied parameters
+      bool ok = false;
 
-      if(!reset(/* restore */true)) state.varWrite(state.fetch8(), 0);
+      std::string filename;
+      readFilename(name, filename);
+      FILE* fp = fopen(filename.c_str(), "r");
+      if (fp != nullptr)
+      {
+         for(unsigned i=0; i<bytes; i++)
+         {
+            fputc(state.memory.read8(table + i), fp);
+         }
+         fclose(fp);
+         ok = true;
+      }
+
+      state.varWrite(state.fetch8(), ok ? 1 : 0);
    }
 
    void opE_log_shift()
