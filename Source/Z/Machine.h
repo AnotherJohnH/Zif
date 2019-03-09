@@ -949,25 +949,29 @@ private:
    void opE_restore_table()
    {
       uint16_t table = uarg[0];
-      uint16_t bytes = uarg[1];
+      uint16_t size  = uarg[1];
       uint16_t name  = uarg[2];
 
-      bool ok = false;
+      uint16_t bytes = 0;
 
       std::string filename;
       readFilename(name, filename);
       FILE* fp = fopen(filename.c_str(), "r");
       if (fp != nullptr)
       {
-         for(unsigned i=0; i<bytes; i++)
+         for(bytes=0; bytes<size; bytes++)
          {
-            fputc(state.memory.read8(table + i), fp);
+            int ch = fgetc(fp);
+            if (ch < 0)
+            {
+               break;
+            }
+            state.memory.write8(table + bytes, uint8_t(ch));
          }
          fclose(fp);
-         ok = true;
       }
 
-      state.varWrite(state.fetch8(), ok ? 1 : 0);
+      state.varWrite(state.fetch8(), bytes);
    }
 
    void opE_log_shift()
