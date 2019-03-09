@@ -72,19 +72,32 @@ public:
    //! \return true if there were no errors
    bool play(bool restore)
    {
-      info("Version  : z%d",  header->version);
-      info("Checksum : %04X", header->checksum);
+      std::string text;
+
+      text = "Version  : z";
+      text += std::to_string(header->version);
+      stream.info(text);
+
+      text = "Checksum : ";
+      // The proper C++ way of doing this is not appealing
+      const char* hex_digs = "0123456789ABCDEF";
+      uint16_t checksum = header->checksum;
+      text += hex_digs[(checksum >>  4) & 0xF];
+      text += hex_digs[(checksum >>  0) & 0xF];
+      text += hex_digs[(checksum >> 12) & 0xF];
+      text += hex_digs[(checksum >>  8) & 0xF];
+      stream.info(text);
 
       if((header->version >= 3) && !story_is_valid)
       {
          if (header->version == 3)
          {
             // Some v3 games do not have a checksum
-            info("Checksum fail");
+            stream.info("Checksum fail");
          }
          else
          {
-            warning("Checksum fail");
+            stream.warning("Checksum fail");
          }
       }
 
@@ -120,13 +133,13 @@ public:
          (void) dis.disassemble(dis_text, inst_addr, state.memory.data() + inst_addr);
          dis_text += " => ";
          dis_text += message;
-         console.error(dis_text);
+         stream.error(dis_text);
          ok = false;
       }
 
       console.waitForKey();
 
-      info("quit");
+      stream.info("quit");
 
       return ok;
    }
@@ -165,22 +178,6 @@ private:
    // of dynamic memory allocation) but use of this string keeps
    // allocations to a minimum
    std::string work_str;
-
-   void info(const char* format, ...)
-   {
-      va_list ap;
-      va_start(ap, format);
-      stream.vmessage(Stream::INFO, format, ap);
-      va_end(ap);
-   }
-
-   void warning(const char* format, ...)
-   {
-      va_list ap;
-      va_start(ap, format);
-      stream.vmessage(Stream::WARNING, format, ap);
-      va_end(ap);
-   }
 
    //! Check for v3 time games
    bool isTimeGame() const
@@ -383,7 +380,7 @@ private:
 
    void ILLEGAL() { throw "illegal op"; }
 
-   void TODO_WARN(const char* op) { warning(op); }
+   void TODO_WARN(const char* op) { stream.warning(op); }
 
    //============================================================================
    // Zero operand instructions
@@ -637,7 +634,7 @@ private:
             // => delete
             if(buffer > start)
             {
-               stream.writeRaw("\b \b");
+               stream.deleteChar();
                --buffer;
                --len;
             }
@@ -685,7 +682,7 @@ private:
             // => delete
             if(buffer > start)
             {
-               stream.writeRaw("\b \b");
+               stream.deleteChar();
                --buffer;
                --len;
             }

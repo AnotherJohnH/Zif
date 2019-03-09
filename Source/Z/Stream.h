@@ -227,6 +227,14 @@ public:
       if(trace_enable)   trace_log.writePart("OUT => \"", char(zscii), "\"\n");
    }
 
+   //! Delete the last character written
+   void deleteChar()
+   {
+      send('\b');
+      send(' ');
+      send('\b');
+   }
+
    //! Write signed integer value (may be buffered)
    void writeNumber(int16_t value_)
    {
@@ -255,50 +263,19 @@ public:
       }
    }
 
-   //! Write raw string with no buffering
-   void writeRaw(const char* s)
+   void error(const std::string& text)
    {
-      for(; *s; s++)
-      {
-         send(*s);
-      }
+      message(ERROR, text);
    }
 
-   //! Report a message (with variable args)
-   void vmessage(MessageLevel level, const char* format, va_list ap)
+   void warning(const std::string& text)
    {
-      if(level < message_filter) return;
+      message(WARNING, text);
+   }
 
-      // Start message on a new-line
-      unsigned line, col;
-      console.getCursorPos(line, col);
-      if(col != 1)
-      {
-         writeRaw("\n");
-      }
-
-      // Identify message source
-      console.setFontStyle(Console::FONT_STYLE_REVERSE);
-      writeRaw("ZIF");
-      console.setFontStyle(Console::FONT_STYLE_NORMAL);
-
-      switch(level)
-      {
-      case INFO:    writeRaw(" "); break;
-      case WARNING: writeRaw(" WRN: "); break;
-      case ERROR:   writeRaw(" ERR: "); break;
-      }
-
-      vWritef(format, ap);
-
-      writeRaw("\n");
-
-      // TODO wait for keypress on any exit
-      if(level == ERROR)
-      {
-         uint8_t ch;
-         console.read(ch, 0);
-      }
+   void info(const std::string& text)
+   {
+      message(INFO, text);
    }
 
    void trace(const std::string& string)
@@ -323,7 +300,7 @@ private:
          // Filter undefined output codes
          switch(zscii)
          {
-         case '\0': return;
+         case '\0': return; // ignore
          case '\t': break;
          case '\n': break;
          case '\b': break;
@@ -345,6 +322,15 @@ private:
 
       if(console_enable) console.write(ch);
       if(printer_enable) print(ch);
+   }
+
+   //! Write raw string with no buffering
+   void sendString(const char* s)
+   {
+      for(; *s; s++)
+      {
+         send(*s);
+      }
    }
 
    //! Flush any output that has been buffered
@@ -433,8 +419,34 @@ private:
       return false;
    }
 
-   //! printf style write to output streams
-   void vWritef(const char* format, va_list ap);
+   //! Report a message
+   void message(MessageLevel level, const std::string& text)
+   {
+      if(level < message_filter) return;
+
+      // Start message on a new-line
+      unsigned line, col;
+      console.getCursorPos(line, col);
+      if(col != 1)
+      {
+         send('\n');
+      }
+
+      // Identify message source
+      console.setFontStyle(Console::FONT_STYLE_REVERSE);
+      sendString("ZIF");
+      console.setFontStyle(Console::FONT_STYLE_NORMAL);
+
+      switch(level)
+      {
+      case INFO:    sendString(" "); break;
+      case WARNING: sendString(" WRN: "); break;
+      case ERROR:   sendString(" ERR: "); break;
+      }
+
+      sendString(text.c_str());
+      send('\n');
+   }
 
    // Console stream state
    bool     console_enable{true};
