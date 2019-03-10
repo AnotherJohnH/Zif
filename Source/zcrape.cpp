@@ -41,7 +41,7 @@ class ZcrapeApp : public STB::ConsoleApp
 private:
    STB::Option<const char*> host{   'H', "host",  "Remote hostname",   "ifarchive.org"};
    STB::Option<const char*> path{   'P', "path",  "Remote path",       "/if-archive/games/zcode/"};
-   STB::Option<const char*> cache{  'C', "cache", "Cache directory",   "cache"};
+   STB::Option<const char*> cache{  'C', "cache", "Download directory","Games/Downloads"};
    STB::Option<unsigned>    delay{  'D', "delay", "Delay per GET (s)", 1};
 
    //! Download file
