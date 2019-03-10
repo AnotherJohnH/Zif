@@ -159,6 +159,7 @@ private:
          case PLT::SELECT:
          case PLT::RIGHT:
          case PLT::PAGE_DOWN:
+         case PLT::END:
             if (page->select(cmd, value))
             {
                action(cmd, value);
@@ -168,6 +169,7 @@ private:
          case PLT::ESCAPE:
          case PLT::PAGE_UP:
          case PLT::LEFT:
+         case PLT::HOME:
             if (page->back())
             {
                closePage();
