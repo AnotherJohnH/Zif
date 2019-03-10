@@ -77,6 +77,13 @@ private:
       std::string exec_type;
       uint32_t    exec_offset{0};
 
+      FILE* fp = fopen(story_file, "r");
+      if (fp == nullptr)
+      {
+         return error(console,"Story file could not be opened");
+      }
+      fclose(fp);
+
       if (!blorb.findResource(story_file,
                               Blorb::Resource::EXEC,
                               /* index */ 0,
