@@ -103,13 +103,22 @@ public:
    {
       flush();
 
+      if (text_style == 0)
+      {
+         console_text_style = 0;
+      }
+      else
+      {
+         console_text_style |= uint8_t(text_style);
+      }
+
       // Convert Z-code text style to a Console font style. Might be a 1-1
       // mapping of bits, but copying each bit is more robust
       Console::FontStyle font_style = 0;
-      if(text_style & (1 << 0)) font_style |= Console::FONT_STYLE_REVERSE;
-      if(text_style & (1 << 1)) font_style |= Console::FONT_STYLE_BOLD;
-      if(text_style & (1 << 2)) font_style |= Console::FONT_STYLE_ITALIC;
-      if(text_style & (1 << 3)) font_style |= Console::FONT_STYLE_FIXED;
+      if(console_text_style & (1 << 0)) font_style |= Console::FONT_STYLE_REVERSE;
+      if(console_text_style & (1 << 1)) font_style |= Console::FONT_STYLE_BOLD;
+      if(console_text_style & (1 << 2)) font_style |= Console::FONT_STYLE_ITALIC;
+      if(console_text_style & (1 << 3)) font_style |= Console::FONT_STYLE_FIXED;
 
       console.setFontStyle(font_style);
    }
@@ -451,6 +460,7 @@ private:
    // Console stream state
    bool     console_enable{true};
    bool     console_extended_colours_enable{false};
+   uint8_t  console_text_style;
    Console& console;
 
    // Buffer used for automatic line breaks
