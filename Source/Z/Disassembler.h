@@ -45,8 +45,8 @@ public:
    Disassembler(unsigned version)
    {
       // Ops supported on all versions
-      declOp( 0x0, '0', '_', "rtrue");
-      declOp( 0x1, '0', '_', "rfalse");
+      declOp( 0x0, '0', 'S', "rtrue");
+      declOp( 0x1, '0', 'S', "rfalse");
       declOp( 0x2, '0', 'l', "print");
       declOp( 0x3, '0', 'l', "print_ret");
       declOp( 0x4, '0', '_', "nop");
