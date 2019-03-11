@@ -219,8 +219,8 @@ private:
    //! Call a sub-routine
    void subCall(uint16_t        call_type,
                 uint16_t        packed_addr,
-                uint16_t        argc,
-                const uint16_t* argv)
+                uint16_t        argc = 0,
+                const uint16_t* argv = nullptr)
    {
       uint32_t target = header->unpackAddr(packed_addr, /* routine */ true);
       if (target == 0)
@@ -231,9 +231,15 @@ private:
          case 0:  state.varWrite(state.fetch8(), 0); break;
          case 1:  /* throw return value away */ break;
          case 2:  state.push(0); break;
+         case 3:  state.varWrite(state.fetch8(), 0); break;
          default: throw "bad call type"; break;
          }
          return;
+      }
+
+      if (call_type == 3)
+      {
+         state.push(packed_addr);
       }
 
       state.call(call_type, target);
@@ -268,13 +274,32 @@ private:
          frame_ptr = state.getFramePtr();
       }
 
-      uint8_t call_type = state.returnFromFrame(frame_ptr);
+      uint8_t  call_type = state.returnFromFrame(frame_ptr);
 
       switch(call_type)
       {
       case 0: state.varWrite(state.fetch8(), value); break;
       case 1: /* throw return value away */ break;
       case 2: state.push(value);            break;
+
+      case 3:
+         {
+            uint16_t packed_routine = state.pop();
+            uint16_t timeout        = state.pop();
+            if (value == 0)
+            {
+               uint16_t ch;
+               if (readChar(timeout, /* echo */ false, packed_routine, ch))
+               {
+                  state.varWrite(state.fetch8(), ch);
+               }
+            }
+            else
+            {
+               state.varWrite(state.fetch8(), value);
+            }
+         }
+         break;
 
       default: throw "bad call type";
       }
@@ -284,13 +309,16 @@ private:
    {
       if(!stream.readChar(ch, timeout, echo))
       {
-         if(routine == 0) return false;
-
-         subCall(0, routine, 0, 0);
-
+         // Timeout
+         if(routine != 0)
+         {
+            state.push(timeout);
+            subCall(/* call_type */ 3, routine);
+         }
          return false;
       }
 
+      // Character available
       return true;
    }
 
@@ -485,7 +513,7 @@ private:
 
    void op1_print_addr()    { streamText(uarg[0]); }
 
-   void op1_call_1s()       { subCall(0, uarg[0], 0, 0); }
+   void op1_call_1s()       { subCall(0, uarg[0]); }
 
    void op1_remove_obj()    { object.remove(uarg[0]); }
 
@@ -501,7 +529,7 @@ private:
 
    void op1_not()           { state.varWrite(uarg[0], ~uarg[0]); }
 
-   void op1_call_1n()       { subCall(1, uarg[0], 0, 0); }
+   void op1_call_1n()       { subCall(1, uarg[0]); }
 
    //============================================================================
    // Two operand instructions
