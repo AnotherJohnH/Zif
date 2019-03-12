@@ -230,11 +230,6 @@ public:
          // Timeout
          return false;
       }
-      else if(ch == 0x7F)
-      {
-         // Delete => back-space
-         ch = '\b';
-      }
       else if(ch < 0)
       {
          // External application exit event

@@ -193,27 +193,42 @@ public:
       flushOutputBuffer();
 
       uint8_t ch;
-      bool    ok = console.read(ch, timeout_100ms * 100);
-      if(ok)
+
+      while(true)
       {
-         if(echo)
+         if (console.read(ch, timeout_100ms * 100))
          {
-            if(ch != '\b')
+            if (ch == '\b')
             {
-               // Echo input to enabled output streams
-               if(console_enable)                       console.write(ch);
-               if(printer_enable && printer_echo_input) print(ch);
-               if(snooper_enable)                       snooper.write(ch);
-               if(trace_enable)                         trace_log.writePart("IN <= \"", ch, "\"\n");
+               break;
             }
+            else if ((ch == '\n') ||
+                     (ch == 27) ||
+                     ((ch >= 32) && (ch <= 126)) ||
+                     ((ch >= 129) && (ch <= 254)))
+            {
+               if(echo)
+               {
+                  // Echo input to enabled output streams
+                  if(console_enable)                       console.write(ch);
+                  if(printer_enable && printer_echo_input) print(ch);
+                  if(snooper_enable)                       snooper.write(ch);
+                  if(trace_enable)                         trace_log.writePart("IN <= \"", ch, "\"\n");
 
-            if(ch == '\n') buffer_col = 1;
+                  if(ch == '\n') buffer_col = 1;
+               }
+               break;
+            }
          }
-
-         zscii = ch;
+         else
+         {
+            // Timeout
+            return false;
+         }
       }
 
-      return ok;
+      zscii = ch;
+      return true;
    }
 
    //! Write ZSCII character (may be buffered)

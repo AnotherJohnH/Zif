@@ -288,10 +288,10 @@ private:
             uint16_t timeout        = state.pop();
             if (value == 0)
             {
-               uint16_t ch;
-               if (readChar(timeout, /* echo */ false, packed_routine, ch))
+               uint16_t zscii;
+               if (readChar(timeout, /* echo */ false, packed_routine, zscii))
                {
-                  state.varWrite(state.fetch8(), ch);
+                  state.varWrite(state.fetch8(), zscii);
                }
             }
             else
@@ -305,9 +305,9 @@ private:
       }
    }
 
-   bool readChar(uint16_t timeout, bool echo, uint16_t routine, uint16_t& ch)
+   bool readChar(uint16_t timeout, bool echo, uint16_t routine, uint16_t& zscii)
    {
-      if(!stream.readChar(ch, timeout, echo))
+      if(!stream.readChar(zscii, timeout, echo))
       {
          // Timeout
          if(routine != 0)
@@ -319,6 +319,10 @@ private:
       }
 
       // Character available
+
+      // Newline is 13 in ZSCII
+      if (zscii == '\n') zscii = 13;
+
       return true;
    }
 
@@ -650,14 +654,14 @@ private:
 
       while(len < max)
       {
-         uint16_t ch;
+         uint16_t zscii;
 
-         if(!readChar(timeout, /* echo */ true, routine, ch))
+         if(!readChar(timeout, /* echo */ true, routine, zscii))
          {
             return;
          }
 
-         if(ch == '\b')
+         if(zscii == '\b')
          {
             // => delete
             if(buffer > start)
@@ -667,14 +671,14 @@ private:
                --len;
             }
          }
-         else if(ch == '\n')
+         else if(zscii == 13)
          {
             state.memory.write8(buffer, '\0');
             break;
          }
          else
          {
-            state.memory.write8(buffer++, tolower(ch));
+            state.memory.write8(buffer++, tolower(zscii));
             len++;
          }
       }
@@ -698,14 +702,14 @@ private:
 
       while(len < max)
       {
-         uint16_t ch;
+         uint16_t zscii;
 
-         if(!readChar(timeout, /* echo */ true, routine, ch))
+         if(!readChar(timeout, /* echo */ true, routine, zscii))
          {
             break;
          }
 
-         if(ch == '\b')
+         if(zscii == '\b')
          {
             // => delete
             if(buffer > start)
@@ -715,16 +719,16 @@ private:
                --len;
             }
          }
-         else if(ch == '\n')
+         else if(zscii == 13)
          {
             state.memory.write8(buffer, '\0');
             state.memory.write8(start - 1, len);
-            status = ch;
+            status = uint8_t(zscii);
             break;
          }
          else
          {
-            state.memory.write8(buffer++, ch);
+            state.memory.write8(buffer++, uint8_t(zscii));
             len++;
          }
       }
@@ -841,11 +845,11 @@ private:
       // assert(uarg[0] == 1);
       uint16_t timeout = num_arg >= 2 ? uarg[1] : 0;
       uint16_t routine = num_arg >= 3 ? uarg[2] : 0;
-      uint16_t ch;
+      uint16_t zscii;
 
-      if(readChar(timeout, /* echo */ false, routine, ch))
+      if(readChar(timeout, /* echo */ false, routine, zscii))
       {
-         state.varWrite(state.fetch8(), ch);
+         state.varWrite(state.fetch8(), zscii);
       }
    }
 
