@@ -235,6 +235,18 @@ public:
             next.cursor.y = next.pos.y + next.size.y - 1;
             next.cursor.x = 1;
          }
+         else
+         {
+            if (next.cursor.y < next.pos.y)
+               next.cursor.y = next.pos.y;
+            else if (next.cursor.y >= (next.pos.y + next.size.y))
+               next.cursor.y = next.pos.y + next.size.y - 1;;
+
+            if (next.cursor.x < next.pos.x)
+               next.cursor.x = next.pos.x;
+            else if (next.cursor.x >= (next.pos.x + next.size.x))
+               next.cursor.x = next.pos.x + next.size.x - 1;;
+         }
       }
 
       stream.enableStream(2, next.printer_enabled);
