@@ -178,7 +178,7 @@ private:
          }
       }
 
-      curses.clear();
+      curses.reset();
 
       return 0;
    }
