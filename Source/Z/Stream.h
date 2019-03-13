@@ -333,7 +333,11 @@ private:
 
          default:
             // "extra" characters
-            if((zscii >= 155) && (zscii <=251)) break;
+            if((zscii >= 155) && (zscii <=251))
+            {
+               zscii = '?';
+               break;
+            }
             return;
          }
       }
