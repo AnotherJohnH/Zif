@@ -730,7 +730,7 @@ private:
          }
          else
          {
-            state.memory.write8(buffer++, uint8_t(zscii));
+            state.memory.write8(buffer++, tolower(zscii));
             len++;
          }
       }
