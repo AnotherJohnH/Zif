@@ -700,6 +700,8 @@ private:
       uint16_t start  = buffer;
       uint8_t  status = 0;
 
+      buffer += len;
+
       while(len < max)
       {
          uint16_t zscii;
