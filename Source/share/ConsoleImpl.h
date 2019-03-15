@@ -270,9 +270,16 @@ public:
    {
       if(only_white_space) return;
 
-      curses.addstr("...");
+      const char* msg = "[press a key]";
+      curses.addstr(msg);
+
+      curses.timeout(0);
       curses.getch();
-      curses.addstr("\b\b\b   \b\b\b");
+
+      size_t n = strlen(msg);
+      for(size_t i=0; i<n; i++) curses.addch('\b');
+      for(size_t i=0; i<n; i++) curses.addch(' ');
+      for(size_t i=0; i<n; i++) curses.addch('\b');
 
       scroll           = 0;
       only_white_space = true;

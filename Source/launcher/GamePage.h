@@ -113,7 +113,7 @@ private:
 
                if (index++ >= offset)
                {
-                  if ((first_row + pos) < (curses.lines - 1))
+                  if ((first_row + pos) < curses.lines)
                   {
                      if(pos == cursor)
                      {

@@ -131,8 +131,9 @@ public:
       catch(const char* message)
       {
          (void) dis.disassemble(dis_text, inst_addr, state.memory.data() + inst_addr);
-         dis_text += " => ";
+         dis_text += " \"";
          dis_text += message;
+         dis_text += "\"";
          stream.error(dis_text);
          ok = false;
       }
