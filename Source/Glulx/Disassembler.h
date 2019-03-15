@@ -234,7 +234,7 @@ private:
    }
 
    //! Decode an op
-   virtual unsigned decodeOp(std::string& text, const uint8_t* raw) const override
+   virtual unsigned decodeOp(std::string& text, const uint8_t* raw, bool pack) const override
    {
       unsigned n = 0;
 
@@ -259,9 +259,16 @@ private:
       {
          text += op[code].mnemonic;
 
-         for(size_t i=0; i<=max_mnemonic_len - strlen(op[code].mnemonic); i++)
+         if (pack)
          {
             text += " ";
+         }
+         else
+         {
+            for(size_t i=0; i<=max_mnemonic_len - strlen(op[code].mnemonic); i++)
+            {
+               text += " ";
+            }
          }
 
          uint8_t mode[MAX_OPERAND];

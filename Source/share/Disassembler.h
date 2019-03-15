@@ -48,19 +48,26 @@ public:
       fmtHex(text, inst_addr, 6);
       text += "  ";
 
-      unsigned n = decodeOp(work, raw);
+      unsigned n = decodeOp(work, raw, !in_trace);
 
-      for(unsigned i=0; i<10; i++)
+      if (in_trace)
       {
-         if (i < n)
+         for(unsigned i=0; i<10; i++)
          {
-            fmtHex(text, raw[i], 2);
-            text += " ";
+            if (i < n)
+            {
+               fmtHex(text, raw[i], 2);
+               text += " ";
+            }
+            else
+            {
+               text += "   ";
+            }
          }
-         else
-         {
-            text += "   ";
-         }
+      }
+      else
+      {
+         text += "  ";
       }
 
       text += work;
@@ -87,7 +94,7 @@ protected:
    bool             in_trace{false};
    mutable unsigned trace_count{0};
 
-   virtual unsigned decodeOp(std::string& text, const uint8_t* raw) const = 0;
+   virtual unsigned decodeOp(std::string& text, const uint8_t* raw, bool pack) const = 0;
 
    // Not entirely sure why I needed to write this!
    template <typename TYPE>

@@ -354,7 +354,7 @@ private:
    }
 
    //! Decode a single op
-   virtual unsigned decodeOp(std::string& text, const uint8_t* raw) const override
+   virtual unsigned decodeOp(std::string& text, const uint8_t* raw, bool pack) const override
    {
       unsigned  n = 0;
 
@@ -369,13 +369,17 @@ private:
       }
 
       text = decode->mnemonic;
-#if 0
-      text += '-';
-      text += decode->type;
-#endif
-      for(size_t i=0; i<=max_mnemonic_len - strlen(decode->mnemonic); i++)
+
+      if (pack)
       {
          text += " ";
+      }
+      else
+      {
+         for(size_t i=0; i<=max_mnemonic_len - strlen(decode->mnemonic); i++)
+         {
+            text += " ";
+         }
       }
 
       switch(decode->in_type)
