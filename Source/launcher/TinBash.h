@@ -179,6 +179,10 @@ private:
          {
             quit = true;
          }
+         else if (argv[0] == "restart")
+         {
+            doRestart();
+         }
          else if (argv[0] == "cd")
          {
             if (chdir(argv[1].c_str()) < 0)
@@ -194,6 +198,18 @@ private:
          {
             runExternal();
          }
+      }
+   }
+
+   void doRestart()
+   {
+      static char* argv[2];
+      argv[0] = (char*)"zif"; // naughty but everything is about to end
+      argv[1] = nullptr;
+
+      if (execve("./zif", argv, nullptr) < 0)
+      {
+         error("restart: Failed");
       }
    }
 
