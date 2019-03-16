@@ -39,13 +39,13 @@ public:
    {
    }
 
-   //! Run the shell
+   //! Run the shells main execution loop
    void exec()
    {
       curses.clear();
       curses.curs_set(1);
 
-      curses.addstr("TinBash (This Is Not Bash) -- extreemly simplistic shell utility\n");
+      curses.addstr("TINBash (This Is Not Bash) -- extremely simple shell\n");
       curses.addstr("\n");
 
       quit = false;
@@ -74,36 +74,61 @@ private:
 
       curses.addstr("tin> ");
 
-      while(true)
+      bool end_of_line = false;
+      while(!quit && !end_of_line)
       {
          int ch = curses.getch();
          if (ch < 0)
          {
             quit = true;
-            break;
-         }
-
-         if (ch == '\b')
-         {
-            if (cmd != "")
-            {
-               cmd.pop_back();
-               curses.addstr("\b \b");
-            }
-         }
-         else if (ch == '\n')
-         {
-            curses.addch('\n');
-            break;
-         }
-         else if (ch == '\t')
-         {
-            // TODO tab completion
          }
          else
          {
-            cmd += char(ch);
-            curses.addch(ch);
+            switch(ch)
+            {
+            case '\b':
+               if (cmd != "")
+               {
+                  cmd.pop_back();
+                  curses.addstr("\b \b");
+               }
+               break;
+
+            case '\n':
+               curses.addch('\n');
+               end_of_line = true;
+               break;
+
+            case '\t':
+               // TODO tab completion
+               break;
+
+            case PLT::BACK:
+               quit = true;
+               break;
+
+            case PLT::UP: break;
+            case PLT::DOWN: break;
+            case PLT::LEFT: break;
+            case PLT::RIGHT: break;
+
+            case PLT::HOME:
+               curses.clear();
+               cmd = "";
+               end_of_line = true;
+               break;
+
+            case PLT::MENU: break;
+            case PLT::SELECT: break;
+
+            default:
+               if ((ch >= ' ') && (ch <= '~'))
+               {
+                  cmd += char(ch);
+                  curses.addch(ch);
+               }
+               break;
+            }
          }
       }
    }
