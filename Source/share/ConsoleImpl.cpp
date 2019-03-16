@@ -90,13 +90,16 @@ int ConsoleImpl::getInput(unsigned timeout_ms)
    case PLT::F12:       return 0x90;
 
    // Ignore
-   case PLT::MENU:      return 1;
    case PLT::SELECT:    return 1;
    case PLT::HOME:      return 1;
+   case PLT::END:       return 1;
+   case PLT::PAGE_UP:   return 1;
+   case PLT::PAGE_DOWN: return 1;
    case PLT::VOL_UP:    return 1;
    case PLT::VOL_DOWN:  return 1;
 
    // Quit game
+   case PLT::MENU:      return -1;
    case PLT::BACK:      return -1;
    }
 
