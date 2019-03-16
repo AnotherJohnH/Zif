@@ -233,7 +233,7 @@ public:
       else if(ch < 0)
       {
          // External application exit event
-         exit(0);
+         throw "quit";
       }
 
       scroll           = 0;
