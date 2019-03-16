@@ -192,6 +192,7 @@ private:
 
             case PLT::ESCAPE:
             case PLT::MENU:
+               page->home();
                page_stack.clear();
                openPage(home_page);
                break;
