@@ -53,6 +53,24 @@ public:
          last = item;
       }
 
+      virtual void home()
+      {
+         active = getFirst();
+      }
+
+      virtual void end()
+      {
+         active = getLast();
+      }
+
+      virtual void pageUp()
+      {
+      }
+
+      virtual void pageDown()
+      {
+      }
+
       //! Move to the previous active item in the page
       virtual void up()
       {

@@ -164,26 +164,38 @@ private:
                page->down();
                break;
 
+            case PLT::PAGE_UP:
+               page->pageUp();
+               break;
+
+            case PLT::PAGE_DOWN:
+               page->pageDown();
+               break;
+
+            case PLT::HOME:
+               page->home();
+               break;
+
+            case PLT::END:
+               page->end();
+               break;
+
             case ' ':
             case '\n':
             case PLT::SELECT:
             case PLT::RIGHT:
-            case PLT::PAGE_DOWN:
-            case PLT::END:
                if (page->select(cmd, value))
                {
                   action(cmd, value);
                }
                break;
 
-            case PLT::HOME:
+            case PLT::ESCAPE:
             case PLT::MENU:
                page_stack.clear();
                openPage(home_page);
                break;
 
-            case PLT::ESCAPE:
-            case PLT::PAGE_UP:
             case PLT::LEFT:
             case PLT::BACK:
                if (page->back())

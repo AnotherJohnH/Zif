@@ -46,7 +46,6 @@ public:
    {
       drawHeader(program);
       drawItems(curses);
-
       return false;
    }
 
