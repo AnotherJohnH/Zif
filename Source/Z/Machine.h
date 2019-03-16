@@ -959,54 +959,70 @@ private:
 
    void opE_save_table()
    {
-      uint16_t table = uarg[0];
-      uint16_t bytes = uarg[1];
-      uint16_t name  = uarg[2];
+      bool    ok  = false;
+      uint8_t ret = state.fetch8();
 
-      bool ok = false;
-
-      std::string filename;
-      readFilename(name, filename);
-      FILE* fp = fopen(filename.c_str(), "w");
-      if (fp != nullptr)
+      if (num_arg == 3)
       {
-         for(unsigned i=0; i<bytes; i++)
+         uint16_t table = uarg[0];
+         uint16_t bytes = uarg[1];
+         uint16_t name  = uarg[2];
+
+         std::string filename;
+         readFilename(name, filename);
+         FILE* fp = fopen(filename.c_str(), "w");
+         if (fp != nullptr)
          {
-            fputc(state.memory.read8(table + i), fp);
+            for(unsigned i=0; i<bytes; i++)
+            {
+               fputc(state.memory.read8(table + i), fp);
+            }
+            fclose(fp);
+            ok = true;
          }
-         fclose(fp);
-         ok = true;
+      }
+      else
+      {
+         state.varWrite(ret, 2);
+         ok = state.save();
       }
 
-      state.varWrite(state.fetch8(), ok ? 1 : 0);
+      state.varWrite(ret, ok ? 1 : 0);
    }
 
    void opE_restore_table()
    {
-      uint16_t table = uarg[0];
-      uint16_t size  = uarg[1];
-      uint16_t name  = uarg[2];
-
-      uint16_t bytes = 0;
-
-      std::string filename;
-      readFilename(name, filename);
-      FILE* fp = fopen(filename.c_str(), "r");
-      if (fp != nullptr)
+      if (num_arg == 3)
       {
-         for(bytes=0; bytes<size; bytes++)
-         {
-            int ch = fgetc(fp);
-            if (ch < 0)
-            {
-               break;
-            }
-            state.memory.write8(table + bytes, uint8_t(ch));
-         }
-         fclose(fp);
-      }
+         uint16_t table = uarg[0];
+         uint16_t size  = uarg[1];
+         uint16_t name  = uarg[2];
 
-      state.varWrite(state.fetch8(), bytes);
+         uint16_t bytes = 0;
+
+         std::string filename;
+         readFilename(name, filename);
+         FILE* fp = fopen(filename.c_str(), "r");
+         if (fp != nullptr)
+         {
+            for(bytes=0; bytes<size; bytes++)
+            {
+               int ch = fgetc(fp);
+               if (ch < 0)
+               {
+                  break;
+               }
+               state.memory.write8(table + bytes, uint8_t(ch));
+            }
+            fclose(fp);
+         }
+
+         state.varWrite(state.fetch8(), bytes);
+      }
+      else if(!reset(/* restore */ true))
+      {
+         state.varWrite(state.fetch8(), 0);
+      }
    }
 
    void opE_log_shift()
