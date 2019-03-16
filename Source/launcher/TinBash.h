@@ -156,7 +156,10 @@ private:
          }
          else if (argv[0] == "cd")
          {
-            chdir(argv[1].c_str());
+            if (chdir(argv[1].c_str()) < 0)
+            {
+               error("cd: No such file or directory");
+            }
          }
          else if (argv[0] == "export")
          {
@@ -185,6 +188,13 @@ private:
       }
 
       pclose(pp);
+   }
+
+   void error(const std::string& message)
+   {
+       curses.addstr("tin: ");
+       curses.addstr(message.c_str());
+       curses.addch('\n');
    }
 };
 
