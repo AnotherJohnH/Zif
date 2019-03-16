@@ -176,10 +176,16 @@ private:
                }
                break;
 
+            case PLT::HOME:
+            case PLT::MENU:
+               page_stack.clear();
+               openPage(home_page);
+               break;
+
             case PLT::ESCAPE:
             case PLT::PAGE_UP:
             case PLT::LEFT:
-            case PLT::HOME:
+            case PLT::BACK:
                if (page->back())
                {
                   closePage();
