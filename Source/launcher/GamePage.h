@@ -159,6 +159,10 @@ private:
       {
          offset -= cursor_max;
       }
+      else if (offset == 0)
+      {
+         cursor = 0;
+      }
       else
       {
          offset = 0;
