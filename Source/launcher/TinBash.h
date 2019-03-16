@@ -30,7 +30,7 @@
 
 #include "TRM/Curses.h"
 
-//! Manage the information page
+//! A simple shell utility
 class TinBash
 {
 public:
@@ -64,6 +64,7 @@ private:
    TRM::Curses&             curses;
    bool                     quit{false};
    std::string              cmd;
+   std::string              ext_cmd;
    std::vector<std::string> argv;
 
    //! Read next user command
@@ -168,10 +169,13 @@ private:
       }
    }
 
-   //! Run command
+   //! Run command as an external process using the system shell
    void runExternal()
    {
-      FILE* pp = popen(cmd.c_str(), "r");
+      ext_cmd = cmd;
+      ext_cmd += " 2>&1";
+
+      FILE* pp = popen(ext_cmd.c_str(), "r");
 
       while(true)
       {
