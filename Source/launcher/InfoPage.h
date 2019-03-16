@@ -47,7 +47,7 @@ public:
    }
 
    //! Display info page
-   virtual void show(const std::string& program) override
+   virtual bool show(const std::string& program) override
    {
       drawHeader(program);
 
@@ -71,6 +71,8 @@ public:
       curses.attroff(TRM::A_BOLD);
 
       layoutText(13, 3, MIT_LICENSE);
+
+      return false;
    }
 
 private:

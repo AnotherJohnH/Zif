@@ -1,5 +1,5 @@
 //------------------------------------------------------------------------------
-// Copyright (c) 2016-2019 John D. Haughton
+// Copyright (c) 2019 John D. Haughton
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -20,50 +20,31 @@
 // SOFTWARE.
 //------------------------------------------------------------------------------
 
-#ifndef RESTORE_PAGE_H
-#define RESTORE_PAGE_H
+#ifndef SHELL_PAGE_H
+#define SHELL_PAGE_H
 
 #include "Page.h"
-#include "ButtonItem.h"
+#include "TinBash.h"
 
-//! Manage the restor page
-class RestorePage : public Page
+//! Manage the shell page
+class ShellPage : public Page
 {
 public:
-   RestorePage(TRM::Curses& curses_)
-      : Page(curses_, "Restore Saved Game?")
+   ShellPage(TRM::Curses& curses_)
+      : Page(curses_, "TinBash")
+      , tin(curses_)
    {
    }
 
-   void setFilename(const std::string& filename_)
-   {
-      filename = filename_;
-      active   = &yes;
-   }
-
-   virtual void title(std::string& text) override
-   {
-      text = filename;
-   }
-
+   //! Display info page
    virtual bool show(const std::string& program) override
    {
-      Page::show(program);
-      curses.mvaddstr(4, 3, "Restore saved game?");
-      return false;
-   }
-
-   virtual bool select(std::string& cmd, std::string& value) override
-   {
-      cmd   = active == &yes ? "Resume" : "Start";
-      value = filename;
+      tin.exec();
       return true;
    }
 
 private:
-   ButtonItem  yes{this, 6, 5, "Yes"};
-   ButtonItem  no{ this, 7, 5, "No"};
-   std::string filename;
+   TinBash tin;
 };
 
 #endif

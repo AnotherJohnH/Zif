@@ -54,7 +54,7 @@ private:
       text = path;
    }
 
-   virtual void show(const std::string& program) override
+   virtual bool show(const std::string& program) override
    {
       drawHeader(program);
 
@@ -69,7 +69,7 @@ private:
       if(fp == nullptr)
       {
          curses.mvaddstr(first_row, 3, "ERROR - failed to open \"" LIST_FILE "\"");
-         return;
+         return false;
       }
 
       prev = "";
@@ -137,6 +137,8 @@ private:
       offset_max = index - cursor_max - 1;
 
       fclose(fp);
+
+      return false;
    }
 
    virtual void up() override

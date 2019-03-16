@@ -39,7 +39,8 @@ private:
    ButtonItem menu_games{    this, 4, 3, "Games"};
    ButtonItem menu_settings{ this, 5, 3, "Settings"};
    ButtonItem menu_info{     this, 6, 3, "Info"};
-   ButtonItem menu_quit{     this, 7, 3, "Quit"};
+   ButtonItem menu_util{     this, 7, 3, "Shell"};
+   ButtonItem menu_quit{     this, 8, 3, "Quit"};
 
    virtual bool back() override { return false; }
 };

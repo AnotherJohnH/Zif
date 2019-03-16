@@ -42,10 +42,12 @@ public:
       text = name;
    }
 
-   virtual void show(const std::string& program)
+   virtual bool show(const std::string& program)
    {
       drawHeader(program);
       drawItems(curses);
+
+      return false;
    }
 
 protected:

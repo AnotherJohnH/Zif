@@ -35,6 +35,7 @@
 #include "GamePage.h"
 #include "HomePage.h"
 #include "InfoPage.h"
+#include "ShellPage.h"
 #include "RestorePage.h"
 
 class Launcher : public TRM::App
@@ -50,6 +51,7 @@ private:
    GamePage           game_page;
    ConfigPage         config_page;
    InfoPage           info_page;
+   ShellPage          shell_page;
    RestorePage        restore_page;
 
    //! Check for a save file
@@ -77,6 +79,7 @@ private:
       else if (cmd == "Games")    { openPage(game_page); }
       else if (cmd == "Settings") { openPage(config_page); }
       else if (cmd == "Info")     { openPage(info_page); }
+      else if (cmd == "Shell")    { openPage(shell_page); }
       else if (cmd == "Select")
       {
          if (hasSaveFile(value))
@@ -138,43 +141,51 @@ private:
       {
          Page* page = page_stack.back();
 
-         page->show(program);
-
-         switch(curses.getch())
+         if (page->show(program))
          {
-         case -1:
-            action("Quit");
-            break;
-
-         case PLT::UP:
-            page->up();
-            break;
-
-         case PLT::DOWN:
-            page->down();
-            break;
-
-         case ' ':
-         case '\n':
-         case PLT::SELECT:
-         case PLT::RIGHT:
-         case PLT::PAGE_DOWN:
-         case PLT::END:
-            if (page->select(cmd, value))
-            {
-               action(cmd, value);
-            }
-            break;
-
-         case PLT::ESCAPE:
-         case PLT::PAGE_UP:
-         case PLT::LEFT:
-         case PLT::HOME:
             if (page->back())
             {
                closePage();
             }
-            break;
+         }
+         else
+         {
+            switch(curses.getch())
+            {
+            case -1:
+               action("Quit");
+               break;
+
+            case PLT::UP:
+               page->up();
+               break;
+
+            case PLT::DOWN:
+               page->down();
+               break;
+
+            case ' ':
+            case '\n':
+            case PLT::SELECT:
+            case PLT::RIGHT:
+            case PLT::PAGE_DOWN:
+            case PLT::END:
+               if (page->select(cmd, value))
+               {
+                  action(cmd, value);
+               }
+               break;
+
+            case PLT::ESCAPE:
+            case PLT::PAGE_UP:
+            case PLT::LEFT:
+            case PLT::HOME:
+               if (page->back())
+               {
+                  closePage();
+               }
+               break;
+            }
          }
       }
 
@@ -196,6 +207,7 @@ public:
       , game_page(curses)
       , config_page(curses)
       , info_page(curses, description, link, author, version, copyright_year)
+      , shell_page(curses)
       , restore_page(curses)
    {
    }
