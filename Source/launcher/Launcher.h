@@ -225,7 +225,7 @@ public:
       , game_page(curses)
       , config_page(curses)
       , info_page(curses, description, link, author, version, copyright_year)
-      , shell_page(curses)
+      , shell_page(curses, "zif")
       , restore_page(curses)
    {
    }

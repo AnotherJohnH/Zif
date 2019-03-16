@@ -141,6 +141,39 @@ private:
       return false;
    }
 
+   virtual void home() override
+   {
+      offset = 0;
+      cursor = 0;
+   }
+
+   virtual void end() override
+   {
+      offset = offset_max;
+      cursor = 0;
+   }
+
+   virtual void pageUp() override
+   {
+      if (offset > cursor_max)
+      {
+         offset -= cursor_max;
+      }
+      else
+      {
+         offset = 0;
+      }
+   }
+
+   virtual void pageDown() override
+   {
+      offset += cursor_max;
+      if (offset > offset_max)
+      {
+         offset = offset_max;
+      }
+   }
+
    virtual void up() override
    {
       if (cursor == 0)

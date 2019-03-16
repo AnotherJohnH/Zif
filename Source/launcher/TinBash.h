@@ -34,8 +34,9 @@
 class TinBash
 {
 public:
-   TinBash(TRM::Curses& curses_)
+   TinBash(TRM::Curses& curses_, const std::string& program_)
       : curses(curses_)
+      , program(program_)
    {
    }
 
@@ -62,6 +63,7 @@ public:
 
 private:
    TRM::Curses&             curses;
+   std::string              program;
    bool                     quit{false};
    std::string              cmd;
    std::string              ext_cmd;
@@ -201,13 +203,14 @@ private:
       }
    }
 
+   //! XXX restart the application
    void doRestart()
    {
       static char* argv[2];
-      argv[0] = (char*)"zif"; // naughty but everything is about to end
+      argv[0] = (char*) program.c_str(); // naughty but the world just about to end
       argv[1] = nullptr;
 
-      if (execve("./zif", argv, nullptr) < 0)
+      if (execve(program.c_str(), argv, nullptr) < 0)
       {
          error("restart: Failed");
       }

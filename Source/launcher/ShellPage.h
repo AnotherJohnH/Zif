@@ -30,9 +30,9 @@
 class ShellPage : public Page
 {
 public:
-   ShellPage(TRM::Curses& curses_)
+   ShellPage(TRM::Curses& curses_, const std::string& program_)
       : Page(curses_, "TinBash")
-      , tin(curses_)
+      , tin(curses_, program_)
    {
    }
 

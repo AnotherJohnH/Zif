@@ -65,10 +65,12 @@ public:
 
       virtual void pageUp()
       {
+         active = getFirst();
       }
 
       virtual void pageDown()
       {
+         active = getLast();
       }
 
       //! Move to the previous active item in the page
