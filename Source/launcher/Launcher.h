@@ -73,6 +73,14 @@ private:
       return page_stack.empty() ? nullptr : page_stack.back();
    }
 
+   void doRunGame(const std::string& file, bool restore)
+   {
+      term->ioctl(TRM::Device::IOCTL_TERM_CURSOR, 1);
+      runGame(file.c_str(), restore);
+      term->ioctl(TRM::Device::IOCTL_TERM_CURSOR, 0);
+      curses.reset();
+   }
+
    void action(const std::string& cmd, const std::string& value = "")
    {
            if (cmd == "Quit")     { page_stack.clear(); }
@@ -89,23 +97,17 @@ private:
          }
          else
          {
-            term->ioctl(TRM::Device::IOCTL_TERM_CURSOR, 1);
-            runGame(value.c_str(), /* restore */ false);
-            term->ioctl(TRM::Device::IOCTL_TERM_CURSOR, 0);
+            doRunGame(value, /* restore */ false);
          }
       }
       else if (cmd == "Start")
       {
-         term->ioctl(TRM::Device::IOCTL_TERM_CURSOR, 1);
-         runGame(value.c_str(), /* restore */ false);
-         term->ioctl(TRM::Device::IOCTL_TERM_CURSOR, 0);
+         doRunGame(value, /* restore */ false);
          closePage();
       }
       else if (cmd == "Resume")
       {
-         term->ioctl(TRM::Device::IOCTL_TERM_CURSOR, 1);
-         runGame(value.c_str(), /* restore */ true);
-         term->ioctl(TRM::Device::IOCTL_TERM_CURSOR, 0);
+         doRunGame(value, /* restore */ true);
          closePage();
       }
    }
@@ -207,8 +209,6 @@ private:
             }
          }
       }
-
-      curses.reset();
 
       return 0;
    }

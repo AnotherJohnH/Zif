@@ -43,6 +43,8 @@ public:
    //! Run the shells main execution loop
    void exec()
    {
+      curses.raw();
+      curses.noecho();
       curses.clear();
       curses.curs_set(1);
 
