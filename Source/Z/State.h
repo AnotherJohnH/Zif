@@ -92,7 +92,14 @@ public:
       }
       else if(arg < 0)
       {
-         random.seed(-arg);
+         if (-arg < 1000)
+         {
+            random.sequentialSeed(-arg);
+         }
+         else
+         {
+            random.seed(-arg);
+         }
          return 0;
       }
       else

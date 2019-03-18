@@ -55,18 +55,37 @@ public:
       seed(1);
    }
 
+   //! Set a the generator into sequential mode
+   void sequentialSeed(uint32_t limit_)
+   {
+      state            = 0;
+      sequential_limit = limit_;
+   }
+
    //! Get the next pseudo random value
    uint32_t get()
    {
-      // use basic xorshift, it's fast and simple
-      state ^= state << 13;
-      state ^= state >> 7;
-      state ^= state << 17;
+      if (sequential_limit != 0)
+      {
+          state++;
+          if (state == sequential_limit)
+          {
+             state = 0;
+          }
+      }
+      else
+      {
+          // use basic xorshift, it's fast and simple
+          state ^= state << 13;
+          state ^= state >> 7;
+          state ^= state << 17;
+      }
       return state;
    }
 
 private:
    uint64_t state{1};
+   uint32_t sequential_limit{0};
 };
 
 } // namespace IF
