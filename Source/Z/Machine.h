@@ -697,6 +697,7 @@ private:
       uint16_t parse   = uarg[1];
       uint16_t timeout = num_arg >= 3 ? uarg[2] : 0;
       uint16_t routine = num_arg >= 4 ? uarg[3] : 0;
+      uint8_t  ret     = state.fetch8();
 
       uint8_t max = state.memory.read8(buffer++);
       uint8_t len = state.memory.read8(buffer++);
@@ -712,7 +713,7 @@ private:
 
          if(!readChar(timeout, /* echo */ true, routine, zscii))
          {
-            break;
+            return;
          }
 
          if(zscii == '\b')
@@ -739,7 +740,7 @@ private:
          }
       }
 
-      state.varWrite(state.fetch8(), status);
+      state.varWrite(ret, status);
 
       if(parse != 0)
       {
