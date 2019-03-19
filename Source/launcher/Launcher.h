@@ -195,8 +195,13 @@ private:
             case PLT::ESCAPE:
             case PLT::MENU:
                page->home();
-               page_stack.clear();
-               openPage(home_page);
+               while(page_stack.size() > 1)
+               {
+                  if (page->back())
+                  {
+                     closePage();
+                  }
+               }
                break;
 
             case PLT::LEFT:
