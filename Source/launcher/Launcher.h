@@ -73,16 +73,19 @@ private:
       return page_stack.empty() ? nullptr : page_stack.back();
    }
 
-   void doRunGame(const std::string& file, bool restore)
+   int doRunGame(const std::string& file, bool restore)
    {
       term->ioctl(TRM::Device::IOCTL_TERM_CURSOR, 1);
-      runGame(file.c_str(), restore);
+      int status = runGame(file.c_str(), restore);
       term->ioctl(TRM::Device::IOCTL_TERM_CURSOR, 0);
       curses.reset();
+      return status;
    }
 
-   void action(const std::string& cmd, const std::string& value = "")
+   int action(const std::string& cmd, const std::string& value = "")
    {
+      int status = 0;
+
            if (cmd == "Quit")     { page_stack.clear(); }
       else if (cmd == "Games")    { openPage(game_page); }
       else if (cmd == "Settings") { openPage(config_page); }
@@ -97,19 +100,21 @@ private:
          }
          else
          {
-            doRunGame(value, /* restore */ false);
+            status = doRunGame(value, /* restore */ false);
          }
       }
       else if (cmd == "Start")
       {
-         doRunGame(value, /* restore */ false);
+         status = doRunGame(value, /* restore */ false);
          closePage();
       }
       else if (cmd == "Resume")
       {
-         doRunGame(value, /* restore */ true);
+         status = doRunGame(value, /* restore */ true);
          closePage();
       }
+
+      return status;
    }
 
    // Implement TRM::App
@@ -128,14 +133,12 @@ private:
 
       term->ioctl(TRM::Device::IOCTL_TERM_CURSOR, 0);
 
-      if (filename == "")
+      if (filename != "")
       {
-         openPage(home_page);
+         return action("Select", filename);
       }
-      else
-      {
-         action("Select", filename);
-      }
+
+      openPage(home_page);
 
       std::string cmd, value;
 
