@@ -26,6 +26,8 @@
 #include <cstdint>
 #include <string>
 
+#include "AddHexString.h"
+
 namespace IF {
 
 //! Z Disassembler
@@ -41,11 +43,11 @@ public:
 
       if (in_trace)
       {
-         fmtHex(text, trace_count++, 6, ' ');
+         addHexString(text, trace_count++, 6, ' ');
          text += "  ";
       }
 
-      fmtHex(text, inst_addr, 6);
+      addHexString(text, inst_addr, 6);
       text += "  ";
 
       unsigned n = decodeOp(work, raw, !in_trace);
@@ -56,7 +58,7 @@ public:
          {
             if (i < n)
             {
-               fmtHex(text, raw[i], 2);
+               addHexString(text, raw[i], 2);
                text += " ";
             }
             else
@@ -95,33 +97,6 @@ protected:
    mutable unsigned trace_count{0};
 
    virtual unsigned decodeOp(std::string& text, const uint8_t* raw, bool pack) const = 0;
-
-   // Not entirely sure why I needed to write this!
-   template <typename TYPE>
-   static void fmtHex(std::string& text, TYPE value, unsigned digits = 0, char pad = '0')
-   {
-      for(signed n = sizeof(TYPE) * 2 - 1; n >= 0; n--)
-      {
-         unsigned digit = (value >> (n * 4)) & 0xF;
-
-         if ((n != 0) && (digit == 0))
-         {
-            if ((value >> (n * 4)) != 0)
-            {
-               text += '0';
-            }
-            else if (n <= signed(digits))
-            {
-               text += pad;
-            }
-         }
-         else
-         {
-            text += digit > 9 ? 'A' + digit - 10
-                              : '0' + digit;
-         }
-      }
-   }
 };
 
 } // namespace IF

@@ -317,18 +317,18 @@ private:
             case 0x1:
                text += "#";
                addr = int32_t(addr << 24) >> 24;
-               fmtHex(text, addr, 2);
+               addHexString(text, addr, 2);
                break;
 
             case 0x2:
                text += "#";
                addr = int32_t(addr << 16) >> 16;
-               fmtHex(text, addr, 4);
+               addHexString(text, addr, 4);
                break;
 
             case 0x3:
                text += "#";
-               fmtHex(text, addr);
+               addHexString(text, addr);
                break;
 
             case 0x4: text += "X"; break;
@@ -336,7 +336,7 @@ private:
             case 0x5:
             case 0x6:
             case 0x7:
-               fmtHex(text, addr);
+               addHexString(text, addr);
                break;
 
             case 0x8: text += "sp"; break;
@@ -345,7 +345,7 @@ private:
             case 0xA:
             case 0xB:
                text += "local+";
-               fmtHex(text, addr);
+               addHexString(text, addr);
                break;
 
             case 0xC: text += "X"; break;
@@ -354,7 +354,7 @@ private:
             case 0xE:
             case 0xF:
                text += "ram+";
-               fmtHex(text, addr);
+               addHexString(text, addr);
                break;
             }
 

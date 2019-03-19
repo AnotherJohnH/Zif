@@ -303,13 +303,13 @@ private:
          text += " $";
          {
             uint16_t value = (uint16_t(code[0])<<8) | code[1];
-            fmtHex(text, value);
+            addHexString(text, value);
          }
          return 2;
 
       case OP_SMALL_CONST:
          text += " $";
-         fmtHex(text, code[0]);
+         addHexString(text, code[0]);
          return 1;
 
       case OP_VARIABLE:
