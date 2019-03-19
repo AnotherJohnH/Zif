@@ -98,7 +98,7 @@ public:
          }
          else
          {
-            random.seed(-arg);
+            random.predictableSeed(-arg);
          }
          return 0;
       }

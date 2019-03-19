@@ -365,7 +365,7 @@ private:
       case 0x104: /* jumpabs    */ fetchA(1); jumpabs(uLd(0)); break;
 
       case 0x110: /* random     */ fetchA(2); break;
-      case 0x111: /* setrandom  */ fetchA(1); state.random.seed(uLd(0)); break;
+      case 0x111: /* setrandom  */ fetchA(1); state.random.predictableSeed(uLd(0)); break;
 
       case 0x120: /* quit       */ state.quit(); break;
       case 0x121: /* verify     */ fetchA(1); uSt(0, 0); break;

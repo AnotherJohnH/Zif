@@ -69,7 +69,7 @@ public:
 
       if (initial_rand_seed != 0)
       {  
-         random.seed(initial_rand_seed);
+         random.predictableSeed(initial_rand_seed);
       }
    }
 

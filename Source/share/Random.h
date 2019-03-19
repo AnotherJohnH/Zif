@@ -43,7 +43,7 @@ public:
    const uint64_t& internalState() const { return state; }
 
    //! Seed the random number generator
-   void seed(uint32_t seed_)
+   void predictableSeed(uint32_t seed_)
    {
       state = seed_ == 0 ? 1 : seed_;
    }
@@ -52,7 +52,7 @@ public:
    void unpredictableSeed()
    {
       // TODO seed with an unpredictable value
-      seed(1);
+      predictableSeed(1);
    }
 
    //! Set a the generator into sequential mode
