@@ -53,7 +53,7 @@ public:
    //! Read 8-bit value from an absolute offset into the stack
    uint8_t read8(Address offset) const
    {
-      if (offset >= size()) throw "stack fault";
+      if ((size() < 1) || (offset > (size() - 1))) throw "stack fault";
       return raw[offset];
    }
 
@@ -103,7 +103,7 @@ public:
    //! Write an 8-bit value at an absolute offset into the stack
    void write8(Address offset, uint8_t value)
    {
-      if (offset >= size()) throw "stack fault";
+      if ((size() < 1) || (offset > (size() - 1))) throw "stack fault";
       raw[offset] = value;
    }
 
