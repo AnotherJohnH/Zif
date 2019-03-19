@@ -137,8 +137,8 @@ public:
             dis_text += message;
             dis_text += "\"";
             stream.error(dis_text);
+            ok = false;
          }
-         ok = false;
       }
 
       console.waitForKey();
