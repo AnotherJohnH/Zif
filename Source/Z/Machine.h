@@ -241,11 +241,6 @@ private:
          return;
       }
 
-      if (call_type == 3)
-      {
-         state.push(packed_addr);
-      }
-
       state.call(call_type, target);
 
       uint8_t num_locals = state.fetch8();
@@ -317,6 +312,7 @@ private:
          if(routine != 0)
          {
             state.push(timeout);
+            state.push(routine);
             subCall(/* call_type */ 3, routine);
          }
          return false;
