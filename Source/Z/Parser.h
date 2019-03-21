@@ -211,7 +211,7 @@ public:
             {
                memory.write16(out + 2 + num_word * 4, entry);
                memory.write8(out + 2 + num_word * 4 + 2, word_len);
-               memory.write8(out + 2 + num_word * 4 + 3, start);
+               memory.write8(out + 2 + num_word * 4 + 3, start + 2);
             }
 
             num_word++;
