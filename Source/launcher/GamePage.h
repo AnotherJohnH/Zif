@@ -150,7 +150,7 @@ private:
    virtual void end() override
    {
       offset = offset_max;
-      cursor = 0;
+      cursor = cursor_max;
    }
 
    virtual void pageUp() override
@@ -171,10 +171,17 @@ private:
 
    virtual void pageDown() override
    {
-      offset += cursor_max;
-      if (offset > offset_max)
+      if (offset < offset_max)
       {
-         offset = offset_max;
+         offset += cursor_max;
+         if (offset > offset_max)
+         {
+            offset = offset_max;
+         }
+      }
+      else
+      {
+         cursor = cursor_max;
       }
    }
 
