@@ -108,6 +108,8 @@ private:
                break;
 
             case PLT::BACK:
+            case PLT::MENU:
+            case PLT::ESCAPE:
                quit = true;
                break;
 
@@ -122,7 +124,6 @@ private:
                end_of_line = true;
                break;
 
-            case PLT::MENU: break;
             case PLT::SELECT: break;
 
             default:

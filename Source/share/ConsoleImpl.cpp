@@ -91,7 +91,6 @@ int ConsoleImpl::getInput(unsigned timeout_ms)
 
    // Ignore
    case PLT::SELECT:    return 1;
-   case PLT::HOME:      return 1;
    case PLT::END:       return 1;
    case PLT::PAGE_UP:   return 1;
    case PLT::PAGE_DOWN: return 1;
