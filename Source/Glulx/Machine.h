@@ -47,6 +47,8 @@ public:
 
    bool play(bool restore)
    {
+      bool ok = true;
+
       state.reset();
 
       try
@@ -75,18 +77,22 @@ public:
       }
       catch(const char* message)
       {
-         (void) dis.disassemble(dis_text, inst_addr, state.memory.data() + inst_addr);
-         dis_text += " => ";
-         dis_text += message;
-         console.error(dis_text);
-         console.waitForKey();
-         return false;
+         if (strcmp(message, "quit") != 0)
+         {
+            (void) dis.disassemble(dis_text, inst_addr, state.memory.data() + inst_addr);
+            dis_text += " \"";
+            dis_text += message;
+            dis_text += "\"";
+            console.error(dis_text);
+            ok = false;
+         }
       }
 
       console.error("Glulx games are not currently supported");
+
       console.waitForKey();
 
-      return true;
+      return ok;
    }
 
 private:
@@ -437,7 +443,7 @@ private:
       case 0x1C9: /* jisinf     */ fetchA(2); if (std::isinf(fLd(0))) jump(sLd(1)); break;
 
       default:
-         state.quit();
+         throw "unimplemented op";
          break;
       }
    }
