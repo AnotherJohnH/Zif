@@ -90,9 +90,10 @@ private:
       script_fp = fopen(filename.c_str(), "r");
       if (script_fp == nullptr)
       {
-         curses.addstr("ERR: Failed to open '");
-         curses.addstr(filename.c_str());
-         curses.addstr("'\n");
+         std::string message = "Failed to open '";
+         message += filename;
+         message += "'";
+         error(message);
       }
       return script_fp != nullptr;
    }
@@ -310,7 +311,7 @@ private:
 
    void error(const std::string& message)
    {
-       curses.addstr("tin: ");
+       curses.addstr("tin: ERROR - ");
        curses.addstr(message.c_str());
        curses.addch('\n');
    }
