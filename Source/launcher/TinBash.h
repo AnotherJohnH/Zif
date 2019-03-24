@@ -248,21 +248,10 @@ private:
    {
       if (argv.size() > 0)
       {
-         if (argv[0] == "exit")
-         {
-            quit = true;
-         }
-         else if (argv[0] == "restart")
-         {
-            doRestart();
-         }
-         else if (argv[0] == "cd")
-         {
-            if (chdir(argv[1].c_str()) < 0)
-            {
-               error("cd: No such file or directory");
-            }
-         }
+              if (argv[0] == "exit")    { cmd_exit(); }
+         else if (argv[0] == "restart") { cmd_restart(); }
+         else if (argv[0] == "cd")      { cmd_cd(); }
+         else if (argv[0] == "help")    { cmd_help(); }
          else if (argv[0] == "export")
          {
             // TODO env var setting
@@ -278,8 +267,41 @@ private:
       }
    }
 
-   //! XXX restart the application
-   void doRestart()
+   //! 
+   void cmd_exit()
+   {
+      quit = true;
+   }
+
+   //! Change directory
+   void cmd_cd()
+   {
+      if (chdir(argv[1].c_str()) < 0)
+      {
+         error("cd: No such file or directory");
+      }
+   }
+
+   //! 
+   void cmd_help()
+   {
+      curses.addstr("\n");
+      curses.addstr("Built in commands...\n");
+      curses.addstr("\n");
+      curses.addstr("cd <dir>     - Change directory\n");
+      curses.addstr("exit         - Exit to launcher menu\n");
+      curses.addstr("restart      - Reload and restart the whole application\n");
+      curses.addstr("<script>.tin - Run a tin script from the current directory\n");
+      curses.addstr("               The supplied 'update.tin' script will\n");
+      curses.addstr("               unpack, update and restart the application\n");
+      curses.addstr("               from a tgz file\n");
+      curses.addstr("\n");
+      curses.addstr("Other commands are passed to popen()\n");
+      curses.addstr("\n");
+   }
+
+   //! Restart the application
+   void cmd_restart()
    {
       static char* argv[2];
       argv[0] = (char*) program.c_str(); // naughty but the world just about to end
