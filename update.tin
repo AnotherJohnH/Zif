@@ -1,9 +1,18 @@
 #
 # tinbash script to update Zif
 #
+
+# Preserve config
 cp Games/list .
+
+# Install application from tgz
 gunzip Zif*.tgz
 tar xvf Zif*.tar
 rm Zif*.tar
+
+# Restore config
 cp list Games
+rm list
+
+# Reload application from binary just installed
 restart
