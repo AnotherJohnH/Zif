@@ -253,7 +253,7 @@ private:
    //! Relative jump
    void jump(int32_t offset)
    {
-       state.branch(offset);
+       state.branch(offset - 2);
    }
 
    //! Absolute jump
