@@ -23,6 +23,7 @@
 #ifndef TIN_BASH_H
 #define TIN_BASH_H
 
+#include <cstdio>
 #include <string>
 #include <vector>
 #include <cstdio>
@@ -41,20 +42,30 @@ public:
    }
 
    //! Run the shells main execution loop
-   void exec()
+   void exec(const std::string& script = "")
    {
       curses.raw();
       curses.noecho();
       curses.clear();
       curses.curs_set(1);
 
-      curses.addstr("TINBash (This Is Not Bash) -- extremely simple shell\n");
-      curses.addstr("\n");
+      if (script == "")
+      {
+         curses.addstr("TINBash (This Is Not Bash) -- extremely simple shell\n\n");
+         interactive = true;
+      }
+      else
+      {
+         openScript(script);
+         interactive = false;
+      }
 
       quit = false;
 
       while(!quit)
       {
+         prompt = true;
+
          read();
          split();
          run();
@@ -66,22 +77,58 @@ public:
 private:
    TRM::Curses&             curses;
    std::string              program;
+   bool                     interactive{true};
+   FILE*                    script_fp{nullptr};
+   bool                     prompt{false};
    bool                     quit{false};
    std::string              cmd;
    std::string              ext_cmd;
    std::vector<std::string> argv;
+
+   bool openScript(const std::string& filename)
+   {
+      script_fp = fopen(filename.c_str(), "r");
+      return script_fp != nullptr;
+   }
+
+   //! Read next char
+   int getNextChar()
+   {
+      if (script_fp != nullptr)
+      {
+         int ch = fgetc(script_fp);
+         if (ch != EOF)
+         {
+            return ch;
+         }
+         fclose(script_fp);
+         script_fp = nullptr;
+
+         if (!interactive)
+         {
+            return -1;
+         }
+      }
+
+      if (prompt)
+      {
+         prompt = false;
+         curses.addstr("tin> ");
+      }
+
+      return curses.getch();
+   }
 
    //! Read next user command
    void read()
    {
       cmd = "";
 
-      curses.addstr("tin> ");
-
       bool end_of_line = false;
+      bool in_comment  = false;
       while(!quit && !end_of_line)
       {
-         int ch = curses.getch();
+         int ch = getNextChar();
          if (ch < 0)
          {
             quit = true;
@@ -99,7 +146,10 @@ private:
                break;
 
             case '\n':
-               curses.addch('\n');
+               if (script_fp == nullptr)
+               {
+                  curses.addch('\n');
+               }
                end_of_line = true;
                break;
 
@@ -129,8 +179,19 @@ private:
             default:
                if ((ch >= ' ') && (ch <= '~'))
                {
-                  cmd += char(ch);
-                  curses.addch(ch);
+                  if (ch == '#')
+                  {
+                     in_comment = true;
+                  }
+                  else if (!in_comment)
+                  {
+                     cmd += char(ch);
+                  }
+
+                  if (script_fp == nullptr)
+                  {
+                     curses.addch(ch);
+                  }
                }
                break;
             }
@@ -198,6 +259,10 @@ private:
          else if (argv[0] == "export")
          {
             // TODO env var setting
+         }
+         else if ((argv.size() == 1) && (argv[0].find(".tin") != std::string::npos))
+         {
+            openScript(argv[0]);
          }
          else
          {
