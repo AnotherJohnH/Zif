@@ -88,6 +88,12 @@ private:
    bool openScript(const std::string& filename)
    {
       script_fp = fopen(filename.c_str(), "r");
+      if (script_fp == nullptr)
+      {
+         curses.addstr("ERR: Failed to open '");
+         curses.addstr(filename.c_str());
+         curses.addstr("'\n");
+      }
       return script_fp != nullptr;
    }
 
