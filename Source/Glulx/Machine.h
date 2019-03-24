@@ -264,6 +264,9 @@ private:
 
    void call(uint32_t address, uint32_t arg)
    {
+      state.stack.push32(state.getPC());
+      state.stack.push32(state.frame_ptr);
+
       state.frame_ptr = state.stack.size();
 
       state.stack.push32(0); // Place holder for frame length
@@ -294,6 +297,13 @@ private:
 
       (void) type;
 
+   }
+
+   void doReturn(uint32_t value)
+   {
+      state.stack.shrink(state.frame_ptr);
+      state.frame_ptr = state.stack.pop32();
+      state.jump(state.stack.pop32());
    }
 
    void fetchDecodeExecute()
@@ -333,7 +343,7 @@ private:
       case  0x2D: /* jleu     */ fetchA(3); if (uLd(0) <= uLd(1)) jump(sLd(2)); break;
 
       case  0x30: /* call     */ fetchA(3); call(uLd(0), uLd(1)); break;
-      case  0x31: /* return   */ fetchA(1); break;
+      case  0x31: /* return   */ fetchA(1); doReturn(uLd(0)); break;
       case  0x32: /* catch    */ fetchA(2); break;
       case  0x33: /* throw    */ fetchA(2); break;
       case  0x34: /* tailcall */ fetchA(2); break;
