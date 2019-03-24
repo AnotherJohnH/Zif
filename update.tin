@@ -1,15 +1,9 @@
 #
 # tinbash script to update Zif
 #
-echo
-echo "Updating..."
-echo
 cp Games/list .
 gunzip Zif*.tgz
 tar xvf Zif*.tar
 rm Zif*.tar
 cp list Games
 restart
-echo
-echo "Done"
-echo
