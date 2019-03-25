@@ -81,6 +81,7 @@ private:
    FILE*                    script_fp{nullptr};
    bool                     prompt{false};
    bool                     quit{false};
+   std::string              prev_cmd;
    std::string              cmd;
    std::string              ext_cmd;
    std::vector<std::string> argv;
@@ -129,6 +130,7 @@ private:
    //! Read next user command
    void read()
    {
+      prev_cmd = cmd;
       cmd = "";
 
       bool end_of_line = false;
@@ -170,7 +172,19 @@ private:
                quit = true;
                break;
 
-            case PLT::UP: break;
+            case PLT::UP:
+               while(cmd != "")
+               {
+                  cmd.pop_back();
+                  curses.addstr("\b \b");
+               }
+               for(const auto& ch : prev_cmd)
+               {
+                  cmd += ch;
+                  curses.addch(ch);
+               }
+               break;
+
             case PLT::DOWN: break;
             case PLT::LEFT: break;
             case PLT::RIGHT: break;
