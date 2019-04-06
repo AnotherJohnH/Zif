@@ -26,6 +26,7 @@
 #include <cstdlib>
 
 #include "STB/Oil.h"
+#include "GUI/Bitmap.h"
 
 #include "Page.h"
 #include "SelectorItem.h"
@@ -92,6 +93,8 @@ public:
 private:
    TermConfig   config;
    TRM::Device* term{nullptr};
+   GUI::Bitmap  screen_saver{"Images/saver.png"};
+
 
    SelectorItem size{   this,  4, 3, "Font size ", "9,12,15,18"};
    SelectorItem border{ this,  5, 3, "Border    ", "0,4,8,16", "pixels"};
@@ -104,12 +107,13 @@ private:
    //! update the terminal configuration
    void configTerminal()
    {
-      term->ioctl(TRM::Device::IOCTL_TERM_PALETTE, 0, config.bg_colour);
-      term->ioctl(TRM::Device::IOCTL_TERM_PALETTE, 1, config.fg_colour);
-      term->ioctl(TRM::Device::IOCTL_TERM_BORDER, config.border_pixels);
-      term->ioctl(TRM::Device::IOCTL_TERM_LINE_SPACE, config.line_space);
-      term->ioctl(TRM::Device::IOCTL_TERM_FONT_SIZE, config.font_size);
-      term->ioctl(TRM::Device::IOCTL_TERM_SLEEP, config.sleep * 60);
+      term->ioctl(TRM::Device::IOCTL_TERM_PALETTE, 0,  config.bg_colour);
+      term->ioctl(TRM::Device::IOCTL_TERM_PALETTE, 1,  config.fg_colour);
+      term->ioctl(TRM::Device::IOCTL_TERM_BORDER,      config.border_pixels);
+      term->ioctl(TRM::Device::IOCTL_TERM_LINE_SPACE,  config.line_space);
+      term->ioctl(TRM::Device::IOCTL_TERM_FONT_SIZE,   config.font_size);
+      term->ioctl(TRM::Device::IOCTL_TERM_SLEEP,       config.sleep * 60);
+      term->ioctl(TRM::Device::IOCTL_TERM_SLEEP_IMAGE, &screen_saver);
 
       curses.init();
    }
