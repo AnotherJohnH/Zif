@@ -2,14 +2,15 @@
 
 A Z-code engine for playing interactive fiction games.
 
-Portability of the application between different platforms is a particular goal, and specifically
-portability to the third generation Kindle (aka Kindle Keyboard) which appears as an ideal
-platform for playing interactive fiction.
+Portability between different platforms, is a particular goal of Zif, and specifically
+portability to the third generation Kindle, aka Kindle Keyboard. The Kindle keyboard
+appears as an ideal platform for playing interactive fiction.
 
-The application includes a terminal emulator and a basic curses style front-end menu. So when
-running on the Kindle a third-party terminal emulator and launcher is not necessary.
+Zif includes an optional terminal emulator and a basic curses style front-end menu to
+select story files. So when running on a Kindle, a third-party terminal emulator and
+launcher is not necessary.
 
-Perfectly good Z-code engines already exist and some have already been ported to the Kindle.
+Excellent Z-code engines already exist and some have already been ported to the Kindle.
 This project is just for the fun of writing code and the learning that brings.
 
 ## Status
@@ -32,17 +33,14 @@ there is enough functionality in place to play most of the available games.
 
 ## How to run
 
-Running with no command line arguments will load the default launcher configuration file
-("zif.cfg") from the current working directory and will start the launcher front-end using the
-built-in terminal emulator.
+Zif should be run from the directory where it was installed. Starting Zif without any
+command line arguments will start the front-end menu using the built-in terminal emulator.
+The games available from the menus should be stored under the Games sub-directory and
+need to be listed in the file "Games/list".
 
-The command line option --help (or -h) provides basic help. Supplying a Z-code game
-file as a command line argument will load and run the game file directly bypassing
-the front-end.
-
-The launcher configuration file ("zif.cfg") file is used to provide a front-end menu where
-z-code games available in the local file system can be selected and the structure of the
-launcher menu system configured.
+The command line option --help (or -h) provides a list of all the command line options.
+Supplying a Z-code game file as a command line argument will load and run the game file
+directly bypassing the front-end menus.
 
 ## Thanks & Acknowledgements
 

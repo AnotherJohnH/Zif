@@ -1,0 +1,125 @@
+# Zif
+  
+A Z-code engine for playing interactive fiction games.
+
+Portability between different platforms, is a particular goal of Zif, and specifically
+portability to the third generation Kindle, aka Kindle Keyboard. The Kindle keyboard
+appears as an ideal platform for playing interactive fiction.
+
+Zif includes an optional terminal emulator and a basic curses style front-end menu to
+select story files. So when running on a Kindle, a third-party terminal emulator and
+launcher is not necessary.
+
+## How to run
+
+Zif should be run from the directory where it was installed. Starting Zif without any
+command line arguments will start the front-end menu using the built-in terminal emulator.
+The games available from the menus should be stored under the Games sub-directory and
+need to be listed in the file "Games/list".
+
+The command line option --help (or -h) provides a list of all the command line options.
+Supplying a Z-code game file as a command line argument will load and run the game file
+directly bypassing the front-end menus.
+
+## Recomended setup on a Kindle3
+
+1. Install a Kindle3 Jailbreak (see https://www.mobileread.com/forums/showthread.php?t=122519)
+
+2. Install and configure the usbnetwork package (see https://www.mobileread.com/forums/showpost.php?p=973688&postcount=1)
+
+3. Make sure that remote ssh access is up and running and is available by default after a reboot
+
+4. Really make sure that you completed step 3.
+
+5. Install the Zif <tgz-file> to the Kindle.
+
+```
+   scp <tgz-file> root@<kindle-hostname>:/mnt/us
+   ssh root@<kindle-hostname>
+   cd /mnt/us
+   mkdir Zif
+   cd Zif
+   mv ../<tgz-file> .
+   gunzip <tgz-file>
+   tar xvf <tar-file>
+```
+
+6. Kill the Amazon Kindle ebook framework. (It will restart when the Kindle next re-boots)
+
+```
+   ssh root@<kindle-hostname>    # if not already logged in
+   killall start.sh cvm
+```
+
+NOTE: If you want to restart the kindle and get the Kindle ebook framework back
+
+```
+   shutdown -r now
+```
+
+7. Check Zif works
+
+```
+   cd /mnt/us/Zif
+   ./zif --version
+   ./zif
+```
+
+8. An easy way to automatically start Zif on boot up is to modify the start script
+/opt/amazon/ebook/bin/start.sh. Find the "START OF SCRIPT LINE" which is around
+line 225 and then add the following lines before the while loop e.g.
+```
+   cd /mnt/us/Zif
+   ./zif
+```
+
+i.e.
+
+```
+   cd /opt/amazon/ebook/bin
+   mntroot rw
+   vi start.sh
+   mntroot ro
+   shutdown -r now
+```
+
+This will mean that Zif will start automatically on boot and on quiting Zif the normal
+Amazon Kindle startup will resume.
+
+## Thanks & Acknowledgements
+
+Graham Nelson for his "Z-Machine Standards Document" and test programs. Andrew Plotkin
+for his "Z-machine Exerciser". The contributers to Frotz, which has been an invaluable
+reference of correct Z-Machine behaviour. The Z-Code authors, and everyone else
+involved, for enabling their Z-code files to be freely available at the Interactive
+Fiction Archive (http://ifarchive.org/) and the Interactive Fiction Database
+(http://ifdb.tads.org/).
+
+## Source code
+
+All source code is freely available from https://github.com/AnotherJohnH/Zif
+
+## Sofware License
+
+MIT License
+  
+Copyright (c) 2015-2019 John D. Haughton
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+

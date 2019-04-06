@@ -1,0 +1,5 @@
+#
+# tinbash script to print battery status on Kindle3
+#
+gasgauge-info -c
+

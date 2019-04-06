@@ -88,11 +88,14 @@ private:
 
    bool openScript(const std::string& filename)
    {
-      script_fp = fopen(filename.c_str(), "r");
+      std::string filepath = "Scripts/";
+      filepath += filename;
+
+      script_fp = fopen(filepath.c_str(), "r");
       if (script_fp == nullptr)
       {
          std::string message = "Failed to open '";
-         message += filename;
+         message += filepath;
          message += "'";
          error(message);
       }
@@ -305,7 +308,7 @@ private:
       curses.addstr("cd <dir>     - Change directory\n");
       curses.addstr("exit         - Exit to launcher menu\n");
       curses.addstr("restart      - Reload and restart the whole application\n");
-      curses.addstr("<script>.tin - Run a tin script from the current directory\n");
+      curses.addstr("<script>.tin - Run a tin script from the Scripts sub-directory\n");
       curses.addstr("               The supplied 'update.tin' script will\n");
       curses.addstr("               unpack, update and restart the application\n");
       curses.addstr("               from a tgz file\n");
