@@ -99,8 +99,10 @@ private:
    SelectorItem size{   this,  4, 3, "Font size ", "9,12,15,18"};
    SelectorItem border{ this,  5, 3, "Border    ", "0,4,8,16", "pixels"};
    SelectorItem space{  this,  6, 3, "Line space", "0,1,2,3", "pixels"};
+#ifndef PROJ_TARGET_Kindle3
    SelectorItem colour{ this,  8, 3, "Colours   ", 
                         "Green Phosphor,Amber Phosphor,Blue Phosphor,Old Paper,White"};
+#endif
    SelectorItem video{  this,  9, 3, "Video     ", "Normal,Inverse"};
    SelectorItem sleep{  this, 11, 3, "Sleep     ", "Off,1,5,10", "min"};
 
@@ -134,6 +136,7 @@ private:
       {
          config.line_space = space.getInt();
       }
+#ifndef PROJ_TARGET_Kindle3
       else if (active == &colour)
       {
          if(value == "Green Phosphor")
@@ -162,6 +165,7 @@ private:
             config.fg_colour = 0x000000;
          }
       }
+#endif
       else if (active == &video)
       {
          bool invert = value == "Inverse";
