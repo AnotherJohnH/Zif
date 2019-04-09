@@ -2,7 +2,7 @@
 
 A Z-code engine for playing interactive fiction games.
 
-Portability between different platforms, is a particular goal of Zif, and specifically
+A particular goal of Zif is portability between different platforms and specifically
 portability to the third generation Kindle, aka Kindle Keyboard. The Kindle keyboard
 appears as an ideal platform for playing interactive fiction.
 
@@ -123,11 +123,11 @@ running a Debian based Linux has been found to be suitable platform to build the
 6. Kill the Amazon Kindle ebook framework. (It will restart when the Kindle next re-boots)
 
 ```
-   ssh root@<kindle-hostname>
+   ssh root@<kindle-hostname>    # if not already logged in
    killall start.sh cvm
 ```
 
-NOTE: If you want to restart the kindle and get the Kindle ebook framework back.
+NOTE: If you want to restart the kindle and get the Kindle ebook framework back
 
 ```
    shutdown -r now
@@ -144,7 +144,6 @@ NOTE: If you want to restart the kindle and get the Kindle ebook framework back.
 8. An easy way to automatically start Zif on boot up is to modify the start script
 /opt/amazon/ebook/bin/start.sh. Find the "START OF SCRIPT LINE" which is around
 line 225 and then add the following lines before the while loop e.g.
-
 ```
    cd /mnt/us/Zif
    ./zif

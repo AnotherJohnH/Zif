@@ -1,8 +1,8 @@
 # Zif
-  
+
 A Z-code engine for playing interactive fiction games.
 
-Portability between different platforms, is a particular goal of Zif, and specifically
+A particular goal of Zif is portability between different platforms and specifically
 portability to the third generation Kindle, aka Kindle Keyboard. The Kindle keyboard
 appears as an ideal platform for playing interactive fiction.
 
