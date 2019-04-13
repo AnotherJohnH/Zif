@@ -937,13 +937,14 @@ private:
 
       for(unsigned l = 0; l < height; l++)
       {
-         console.moveCursor(line + l, col);
-
          for(unsigned c = 0; c < width; c++)
          {
             uint8_t ch = state.memory.fetch8(addr++);
             stream.writeChar(ch);
          }
+
+         stream.flush();
+         console.moveCursor(line + l + 1, col);
 
          addr += skip;
       }
