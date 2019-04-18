@@ -85,11 +85,11 @@ be sourced and then the top level SConstruct invoked in the normal way.
 
 ### Linux and macOS
 
-Depend on SDL2 and SDL2-image, so a development installs of SDL2 and SDL2-image are required.
+Depend on SDL2, so a development installs of SDL2 is required.
 
 ### Kindle3
 
-Although a Linux build, the Kindle3 build does not depend on SDL2 or SDL2-image.
+Although a Linux build, the Kindle3 build does not depend on SDL2.
 
 #### Building
 
