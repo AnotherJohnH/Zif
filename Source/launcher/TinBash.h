@@ -90,15 +90,9 @@ private:
    {
       std::string filepath = "Scripts/";
       filepath += filename;
+      filepath += ".tin";
 
       script_fp = fopen(filepath.c_str(), "r");
-      if (script_fp == nullptr)
-      {
-         std::string message = "Failed to open '";
-         message += filepath;
-         message += "'";
-         error(message);
-      }
       return script_fp != nullptr;
    }
 
@@ -273,11 +267,7 @@ private:
          {
             // TODO env var setting
          }
-         else if ((argv.size() == 1) && (argv[0].find(".tin") != std::string::npos))
-         {
-            openScript(argv[0]);
-         }
-         else
+         else if (!openScript(argv[0]))
          {
             runExternal();
          }

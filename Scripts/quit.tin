@@ -1,0 +1,4 @@
+#
+# tinbash script to exit the shell in an IF sty;le
+#
+exit
