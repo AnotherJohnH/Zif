@@ -23,7 +23,7 @@
 #ifndef GLULX_STATE_H
 #define GLULX_STATE_H
 
-#include "share/SavableState.h"
+#include "common/SavableState.h"
 
 #include "Glulx/Story.h"
 

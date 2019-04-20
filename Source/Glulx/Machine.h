@@ -26,8 +26,8 @@
 #include <cmath>
 #include <cstring>
 
-#include "share/Log.h"
-#include "share/Machine.h"
+#include "common/Log.h"
+#include "common/Machine.h"
 
 #include "Glulx/State.h"
 #include "Glulx/Story.h"

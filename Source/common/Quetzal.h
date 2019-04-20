@@ -27,8 +27,8 @@
 
 #include "STB/IFF.h"
 
-#include "share/Story.h"
-#include "share/State.h"
+#include "common/Story.h"
+#include "common/State.h"
 
 namespace IF {
 

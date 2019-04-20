@@ -3,7 +3,7 @@ binaries = ['zif','zdmp', 'zcrape']
 app      = 'Zif'
 version  = '0.6.0-Beta'
 
-source  = ['Source/share/ConsoleImpl.cpp']
+source  = ['Source/common/ConsoleImpl.cpp']
 
 # Get a build environment
 env,libs = SConscript('Platform/build.scons', ['app', 'version'])

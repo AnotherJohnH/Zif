@@ -30,7 +30,7 @@
 
 #include "STB/IFF.h"
 
-#include "share/Memory.h"
+#include "common/Memory.h"
 
 namespace IF {
 

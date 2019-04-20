@@ -25,10 +25,10 @@
 
 #include <cassert>
 
-#include "share/Console.h"
-#include "share/Log.h"
-#include "share/Options.h"
-#include "share/Memory.h"
+#include "common/Console.h"
+#include "common/Log.h"
+#include "common/Options.h"
+#include "common/Memory.h"
 
 namespace Z {
 

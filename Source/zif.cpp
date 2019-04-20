@@ -20,9 +20,9 @@
 // SOFTWARE.
 //------------------------------------------------------------------------------
 
-#include "share/ConsoleImpl.h"
-#include "share/Options.h"
-#include "share/Blorb.h"
+#include "common/ConsoleImpl.h"
+#include "common/Options.h"
+#include "common/Blorb.h"
 
 #include "Z/Machine.h"
 #include "Glulx/Machine.h"

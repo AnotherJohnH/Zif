@@ -23,7 +23,7 @@
 #ifndef GLULX_STORY_H
 #define GLULX_STORY_H
 
-#include "share/Story.h"
+#include "common/Story.h"
 
 #include "Glulx/Header.h"
 

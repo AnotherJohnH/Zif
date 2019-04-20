@@ -26,7 +26,7 @@
 #include <cstdint>
 #include <string>
 
-#include "share/Disassembler.h"
+#include "common/Disassembler.h"
 
 namespace Z {
 

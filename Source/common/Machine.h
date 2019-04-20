@@ -23,8 +23,8 @@
 #ifndef IF_MACHINE_H
 #define IF_MACHINE_H
 
-#include "share/Memory.h"
-#include "share/Options.h"
+#include "common/Memory.h"
+#include "common/Options.h"
 
 namespace IF {
 

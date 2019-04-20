@@ -26,7 +26,7 @@
 #include <cstdint>
 #include <functional>
 
-#include "share/Memory.h"
+#include "common/Memory.h"
 
 #include "Z/Header.h"
 

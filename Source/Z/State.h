@@ -26,7 +26,7 @@
 #include "STB/Stack.h"
 #include "PLT/File.h"
 
-#include "share/SavableState.h"
+#include "common/SavableState.h"
 
 #include "Z/Header.h"
 #include "Z/Story.h"

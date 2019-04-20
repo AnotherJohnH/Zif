@@ -27,7 +27,7 @@
 #include <cstring>
 #include <string>
 
-#include "share/Disassembler.h"
+#include "common/Disassembler.h"
 
 namespace Glulx {
 

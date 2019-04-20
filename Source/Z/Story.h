@@ -29,7 +29,7 @@
 #include <string>
 #include <vector>
 
-#include "share/Story.h"
+#include "common/Story.h"
 
 #include "Z/Header.h"
 

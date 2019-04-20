@@ -23,7 +23,7 @@
 #ifndef Z_SCREEN_H
 #define Z_SCREEN_H
 
-#include "share/Console.h"
+#include "common/Console.h"
 
 #include "Z/Stream.h"
 

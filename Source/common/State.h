@@ -26,10 +26,10 @@
 #include <cstdint>
 #include <string>
 
-#include "share/Memory.h"
-#include "share/Random.h"
-#include "share/Stack.h"
-#include "share/Story.h"
+#include "common/Memory.h"
+#include "common/Random.h"
+#include "common/Stack.h"
+#include "common/Story.h"
 
 namespace IF {
 

@@ -26,7 +26,7 @@
 #include <cassert>
 #include <cstdint>
 
-#include "share/Memory.h"
+#include "common/Memory.h"
 
 namespace Z {
 

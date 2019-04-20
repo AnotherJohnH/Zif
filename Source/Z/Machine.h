@@ -31,7 +31,7 @@
 #include <cstring>
 #include <string>
 
-#include "share/Machine.h"
+#include "common/Machine.h"
 
 #include "Z/Config.h"
 #include "Z/Disassembler.h"

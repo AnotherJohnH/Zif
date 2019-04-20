@@ -28,7 +28,7 @@
 
 #include "STB/Endian.h"
 
-#include "share/Console.h"
+#include "common/Console.h"
 
 #include "Z/Config.h"
 

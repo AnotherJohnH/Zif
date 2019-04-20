@@ -23,9 +23,9 @@
 #ifndef IF_SAVABLE_STATE_H
 #define IF_SAVABLE_STATE_H
 
-#include "share/Story.h"
-#include "share/Quetzal.h"
-#include "share/State.h"
+#include "common/Story.h"
+#include "common/Quetzal.h"
+#include "common/State.h"
 
 namespace IF {
 

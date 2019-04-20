@@ -23,7 +23,7 @@
 #ifndef LEVEL9_STORY_H
 #define LEVEL9_STORY_H
 
-#include "share/Story.h"
+#include "common/Story.h"
 
 #include "Level9/Header.h"
 

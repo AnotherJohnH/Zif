@@ -20,7 +20,7 @@
 // SOFTWARE.
 //------------------------------------------------------------------------------
 
-#include "share/Quetzal.h"
+#include "common/Quetzal.h"
 #include "Z/Story.h"
 
 #include "STB/ConsoleApp.h"
