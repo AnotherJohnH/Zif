@@ -55,19 +55,8 @@ private:
    {
       size_t slash = story_file.rfind('/');
 
-      std::string save_path = (const char*)options.save_dir;
-      save_path += '/';
-      save_path += story_file.c_str() + slash;
-      save_path += ".qzl";
-
-      FILE* fp = fopen(save_path.c_str(), "rb");
-      if (fp != nullptr)
-      {
-         fclose(fp);
-         return true;
-      }
-
-      return false;
+      return IF::SavableState::saveFileExists((const char*)options.save_dir,
+                                              story_file.c_str() + slash);
    }
 
    virtual int runGame(const char* story_file, bool restore) override

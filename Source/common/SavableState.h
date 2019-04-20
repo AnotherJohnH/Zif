@@ -23,6 +23,8 @@
 #ifndef IF_SAVABLE_STATE_H
 #define IF_SAVABLE_STATE_H
 
+#include <cstdio>
+
 #include "common/Story.h"
 #include "common/Quetzal.h"
 #include "common/State.h"
@@ -33,6 +35,35 @@ namespace IF {
 class SavableState : public State
 {
 public:
+   //! Get save filename
+   static std::string saveFilename(const std::string& dir,
+                                   const std::string& story_filename,
+                                   const std::string& save_id = "")
+   {
+      std::string path = dir;
+      path += '/';
+      path += story_filename;
+      if (save_id != "")
+      {
+         path += '_';
+         path += save_id;
+      }
+      path += ".qzl";
+      return path;
+   }
+
+   static bool saveFileExists(const std::string& dir,
+                              const std::string& story_filename,
+                              const std::string& save_id = "")
+   {
+      std::string save_filename = saveFilename(dir, story_filename, save_id);
+
+      FILE* fp = fopen(save_filename.c_str(), "r");
+      if (fp == nullptr) return false;
+      fclose(fp);
+      return true;
+   }
+
    SavableState(const IF::Story&   story_,
                 const std::string& save_dir_,
                 unsigned           num_undo_,
@@ -63,8 +94,7 @@ public:
    {
       std::string path = getSaveFilename(name);
 
-      if (save_file.read(path) &&
-          save_file.decode(story, *this))
+      if (save_file.read(path) && save_file.decode(story, *this))
       {
          popContext();
          return true;
@@ -121,16 +151,7 @@ private:
    //! Get save filename
    std::string getSaveFilename(const std::string& name)
    {
-      std::string path = save_dir;
-      path += '/';
-      path += story.getFilename();
-      if (name != "")
-      {
-         path += '_';
-         path += name;
-      }
-      path += ".qzl";
-      return path;
+      return saveFilename(save_dir, story.getFilename(), name);
    }
 };
 
