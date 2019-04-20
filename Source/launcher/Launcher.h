@@ -195,8 +195,7 @@ private:
                }
                break;
 
-            case PLT::ESCAPE:
-            case PLT::MENU:
+            case PLT::BREAK:
                page->home();
                while(page_stack.size() > 1)
                {
@@ -208,7 +207,7 @@ private:
                break;
 
             case PLT::LEFT:
-            case PLT::BACK:
+            case PLT::ESCAPE:
                if (page->back())
                {
                   closePage();
