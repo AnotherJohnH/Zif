@@ -76,7 +76,7 @@ public:
 
       if (config.sleep == 0)
       {
-         sleep.set("Off");
+         sleep.set("off");
       }
       else
       {
@@ -95,15 +95,15 @@ private:
    TRM::Device* term{nullptr};
    GUI::Bitmap  screen_saver{"Images/saver.png"};
 
-   SelectorItem size{   this,  4, 3, "Font size ", "9,12,15,18"};
-   SelectorItem border{ this,  5, 3, "Border    ", "0,4,8,16", "pixels"};
-   SelectorItem space{  this,  6, 3, "Line space", "0,1,2,3", "pixels"};
+   SelectorItem size{   this,  7, 3, "Font size ", "9,12,15,18"};
+   SelectorItem border{ this,  8, 3, "Border    ", "0,4,8,16", "pixels"};
+   SelectorItem space{  this,  9, 3, "Line space", "0,1,2,3", "pixels"};
 
-   SelectorItem sleep{  this,  8, 3, "Sleep     ", "Off,1,5,10", "min"};
+   SelectorItem sleep{  this, 11, 3, "Sleep     ", "off,1,5,10", "min"};
 
-   SelectorItem video{  this, 10, 3, "Video     ", "Normal,Inverse"};
+   SelectorItem video{  this, 13, 3, "Invert    ", "off,ON"};
 #ifndef PROJ_TARGET_Kindle3
-   SelectorItem colour{ this, 11, 3, "Colours   ", 
+   SelectorItem colour{ this, 14, 3, "Colours   ", 
                         "Green Phosphor,Amber Phosphor,Blue Phosphor,Old Paper,White"};
 #endif
 
@@ -119,6 +119,18 @@ private:
       term->ioctl(TRM::Device::IOCTL_TERM_SLEEP_IMAGE, &screen_saver);
 
       curses.init();
+   }
+
+   virtual bool show(const std::string& program) override
+   {
+      bool status = Page::show(program);
+
+      curses.mvaddstr(4, 3, "Columns    : ");
+      curses.addstr(std::to_string(curses.cols).c_str());
+      curses.mvaddstr(5, 3, "Lines      : ");
+      curses.addstr(std::to_string(curses.lines).c_str());
+
+      return status;
    }
 
    virtual bool select(std::string& cmd, std::string& value) override
@@ -140,6 +152,8 @@ private:
 #ifndef PROJ_TARGET_Kindle3
       else if (active == &colour)
       {
+         video.set("off");
+
          if(value == "Green Phosphor")
          {
             config.bg_colour = 0x40FF40;
@@ -169,7 +183,7 @@ private:
 #endif
       else if (active == &video)
       {
-         bool invert = value == "Inverse";
+         bool invert = value == "ON";
 
          if(config.invert_video != invert)
          {
@@ -179,7 +193,7 @@ private:
       }
       else if (active == &sleep)
       {
-         if (value == "Off")
+         if (value == "off")
          {
             config.sleep = 0;
          }
