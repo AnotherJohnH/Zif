@@ -95,16 +95,17 @@ private:
    TRM::Device* term{nullptr};
    GUI::Bitmap  screen_saver{"Images/saver.png"};
 
-
    SelectorItem size{   this,  4, 3, "Font size ", "9,12,15,18"};
    SelectorItem border{ this,  5, 3, "Border    ", "0,4,8,16", "pixels"};
    SelectorItem space{  this,  6, 3, "Line space", "0,1,2,3", "pixels"};
+
+   SelectorItem sleep{  this,  8, 3, "Sleep     ", "Off,1,5,10", "min"};
+
+   SelectorItem video{  this, 10, 3, "Video     ", "Normal,Inverse"};
 #ifndef PROJ_TARGET_Kindle3
-   SelectorItem colour{ this,  8, 3, "Colours   ", 
+   SelectorItem colour{ this, 11, 3, "Colours   ", 
                         "Green Phosphor,Amber Phosphor,Blue Phosphor,Old Paper,White"};
 #endif
-   SelectorItem video{  this,  9, 3, "Video     ", "Normal,Inverse"};
-   SelectorItem sleep{  this, 11, 3, "Sleep     ", "Off,1,5,10", "min"};
 
    //! update the terminal configuration
    void configTerminal()
