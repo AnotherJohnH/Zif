@@ -99,7 +99,7 @@ int ConsoleImpl::getInput(unsigned timeout_ms)
    case PLT::MENU:      return 1;
 
    // Quit game
-   case PLT::HOME:      return -1;
+   case PLT::BREAK:     return -1;
    }
 
    return ch;
