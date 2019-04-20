@@ -141,6 +141,9 @@ public:
          }
       }
 
+      state.restoreUndo();
+      state.save("last");
+
       console.waitForKey();
 
       stream.info("quit");

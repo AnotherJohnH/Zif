@@ -54,21 +54,14 @@ public:
       // Make sure the save directory exists
       (void) PLT::File::createDir(save_dir.c_str());
 
-      std::string path = save_dir;
-      path += '/';
-      path += name == "" ? story.getFilename() : name;
-      path += ".qzl";
-
+      std::string path = getSaveFilename(name);
       return save_file.write(path);
    }
 
    //! Restore the dynamic state from a save file
    bool restore(const std::string& name = "")
    {
-      std::string path = save_dir;
-      path += '/';
-      path += name == "" ? story.getFilename() : name;
-      path += ".qzl";
+      std::string path = getSaveFilename(name);
 
       if (save_file.read(path) &&
           save_file.decode(story, *this))
@@ -124,6 +117,21 @@ private:
    std::vector<IF::Quetzal> undo;
    unsigned                 undo_oldest{0};
    unsigned                 undo_next{0};
+
+   //! Get save filename
+   std::string getSaveFilename(const std::string& name)
+   {
+      std::string path = save_dir;
+      path += '/';
+      path += story.getFilename();
+      if (name != "")
+      {
+         path += '_';
+         path += name;
+      }
+      path += ".qzl";
+      return path;
+   }
 };
 
 } // namespace IF
