@@ -96,9 +96,9 @@ int ConsoleImpl::getInput(unsigned timeout_ms)
    case PLT::PAGE_DOWN: return 1;
    case PLT::VOL_UP:    return 1;
    case PLT::VOL_DOWN:  return 1;
+   case PLT::MENU:      return 1;
 
    // Quit game
-   case PLT::MENU:      return -1;
    case PLT::BACK:      return -1;
    }
 
