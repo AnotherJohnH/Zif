@@ -1,0 +1,21 @@
+#
+# tinbash script to display help text
+#
+echo
+echo "Built in commands..."
+echo
+echo "cd <dir>      - Change directory"
+echo "exit          - Exit to launcher menu"
+echo "restart       - Reload and restart the whole application"
+echo "<script-name> - Run a tin script from the Scripts sub-directory."
+echo "                The .tin extension is implicit and should"
+echo "                not be added. The following tin scripts are"
+echo "                supplied..."
+echo
+echo "   update - unpack, update and restart the application"
+echo "             from a tgz file"
+echo "   batt   - show battery status on Kindle3"
+echo "   quit   - same as exit"
+echo
+echo "Other commands are passed to popen()"
+echo
