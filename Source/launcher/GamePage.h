@@ -123,9 +123,9 @@ private:
                         curses.attron(TRM::A_REVERSE);
                      }
 
-                     if (is_dir) curses.attron(TRM::A_BOLD);
+                     if (is_dir) curses.attron(TRM::A_UNDERLINE);
                      curses.mvaddstr(first_row + pos, 3, entry);
-                     curses.attroff(TRM::A_BOLD);
+                     curses.attroff(TRM::A_UNDERLINE);
 
                      curses.attroff(TRM::A_REVERSE);
 
