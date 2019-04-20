@@ -38,7 +38,7 @@ struct Options
    STB::Option<const char*> input{   'i', "input",    "Read keyboard input from a file"};
    STB::Option<unsigned>    seed{    'S', "seed",     "Initial random number seed", 0};
    STB::Option<unsigned>    undo{    'u', "undo",     "Number of undo buffers", 4};
-   STB::Option<const char*> save_dir{'s', "save-dir", "Directory for save files", "save"};
+   STB::Option<const char*> save_dir{'s', "save-dir", "Directory for save files", "Saves"};
 };
 
 #endif
