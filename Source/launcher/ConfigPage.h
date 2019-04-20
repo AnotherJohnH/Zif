@@ -36,8 +36,8 @@ struct TermConfig : public STB::Oil<TermConfig>
    unsigned font_size{18};
    unsigned border_pixels{0};
    unsigned line_space{0};
-   bool     invert_video{false};
    unsigned sleep{0};
+   bool     inverse_video{false};
 #ifdef PROJ_TARGET_Kindle3
    uint32_t bg_colour{0xFFFFFF};
    uint32_t fg_colour{0x000000};
@@ -53,6 +53,7 @@ BOIL(TermConfig)
    MOIL(border_pixels);
    MOIL(line_space);
    MOIL(sleep);
+   MOIL(inverse_video);
    MOIL(bg_colour); FOIL(bg_colour, HEX);
    MOIL(fg_colour); FOIL(fg_colour, HEX);
 }
@@ -73,6 +74,8 @@ public:
       size.setInt(config.font_size);
       border.setInt(config.border_pixels);
       space.setInt(config.line_space);
+
+      inverse.set(config.inverse_video ? "ON" : "off");
 
       if (config.sleep == 0)
       {
@@ -101,7 +104,7 @@ private:
 
    SelectorItem sleep{  this, 11, 3, "Sleep     ", "off,1,5,10", "min"};
 
-   SelectorItem video{  this, 13, 3, "Inverse V.", "off,ON"};
+   SelectorItem inverse{this, 13, 3, "Inverse V.", "off,ON"};
 #ifndef PROJ_TARGET_Kindle3
    SelectorItem colour{ this, 14, 3, "Colours   ", 
                         "Green Phosphor,Amber Phosphor,Blue Phosphor,Old Paper,White"};
@@ -110,8 +113,12 @@ private:
    //! update the terminal configuration
    void configTerminal()
    {
-      term->ioctl(TRM::Device::IOCTL_TERM_PALETTE, 0,  config.bg_colour);
-      term->ioctl(TRM::Device::IOCTL_TERM_PALETTE, 1,  config.fg_colour);
+      term->ioctl(TRM::Device::IOCTL_TERM_PALETTE, 0,
+                  config.inverse_video ? config.fg_colour : config.bg_colour);
+
+      term->ioctl(TRM::Device::IOCTL_TERM_PALETTE, 1, 
+                  config.inverse_video ? config.bg_colour : config.fg_colour);
+
       term->ioctl(TRM::Device::IOCTL_TERM_BORDER,      config.border_pixels);
       term->ioctl(TRM::Device::IOCTL_TERM_LINE_SPACE,  config.line_space);
       term->ioctl(TRM::Device::IOCTL_TERM_FONT_SIZE,   config.font_size);
@@ -152,7 +159,7 @@ private:
 #ifndef PROJ_TARGET_Kindle3
       else if (active == &colour)
       {
-         video.set("off");
+         inverse.set("off");
 
          if(value == "Green Phosphor")
          {
@@ -181,14 +188,13 @@ private:
          }
       }
 #endif
-      else if (active == &video)
+      else if (active == &inverse)
       {
-         bool invert = value == "ON";
+         bool inverse_video = value == "ON";
 
-         if(config.invert_video != invert)
+         if(config.inverse_video != inverse_video)
          {
-            config.invert_video = invert;
-            std::swap(config.bg_colour, config.fg_colour);
+            config.inverse_video = inverse_video;
          }
       }
       else if (active == &sleep)
