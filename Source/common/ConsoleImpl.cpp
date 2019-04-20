@@ -67,7 +67,7 @@ int ConsoleImpl::getInput(unsigned timeout_ms)
    case PLT::BACKSPACE: return 0x08;
    case PLT::TAB:       return 0x09;
    case PLT::RETURN:    return 0x0A;
-   case PLT::ESCAPE:    return 0x1B;
+   case PLT::BACK:      return 0x1B;
 
    case 0x7F:           return 0x08;
 
@@ -99,7 +99,7 @@ int ConsoleImpl::getInput(unsigned timeout_ms)
    case PLT::MENU:      return 1;
 
    // Quit game
-   case PLT::BACK:      return -1;
+   case PLT::HOME:      return -1;
    }
 
    return ch;
