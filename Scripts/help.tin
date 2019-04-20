@@ -13,8 +13,8 @@ echo "                not be added. The following tin scripts are"
 echo "                supplied..."
 echo
 echo "   update - unpack, update and restart the application"
-echo "             from a tgz file"
-echo "   batt   - show battery status on Kindle3"
+echo "            from a .tgz file in the CWD"
+echo "   batt   - show battery status (Kindle3)"
 echo "   quit   - same as exit"
 echo
 echo "Other commands are passed to popen()"

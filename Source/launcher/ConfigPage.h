@@ -101,7 +101,7 @@ private:
 
    SelectorItem sleep{  this, 11, 3, "Sleep     ", "off,1,5,10", "min"};
 
-   SelectorItem video{  this, 13, 3, "Invert    ", "off,ON"};
+   SelectorItem video{  this, 13, 3, "Inverse V.", "off,ON"};
 #ifndef PROJ_TARGET_Kindle3
    SelectorItem colour{ this, 14, 3, "Colours   ", 
                         "Green Phosphor,Amber Phosphor,Blue Phosphor,Old Paper,White"};
