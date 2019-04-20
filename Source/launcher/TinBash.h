@@ -166,8 +166,7 @@ private:
                // TODO tab completion
                break;
 
-            case PLT::BACK:
-            case PLT::MENU:
+            case PLT::BREAK:
             case PLT::ESCAPE:
                quit = true;
                break;
@@ -185,6 +184,7 @@ private:
                }
                break;
 
+            case PLT::MENU: break;
             case PLT::DOWN: break;
             case PLT::LEFT: break;
             case PLT::RIGHT: break;
