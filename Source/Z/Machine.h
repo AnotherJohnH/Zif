@@ -141,8 +141,11 @@ public:
          }
       }
 
-      state.restoreUndo();
-      state.save("last");
+      // Save last position
+      if (state.restoreUndo())
+      {
+         state.save("last");
+      }
 
       console.waitForKey();
 
