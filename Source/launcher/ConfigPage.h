@@ -26,7 +26,6 @@
 #include <cstdlib>
 
 #include "STB/Oil.h"
-#include "GUI/Bitmap.h"
 
 #include "Page.h"
 #include "SelectorItem.h"
@@ -90,13 +89,14 @@ public:
    void setTermDevice(TRM::Device& term_)
    {
       term = &term_;
+      term->ioctl(TRM::Device::IOCTL_TERM_SLEEP_IMAGE, "Images/saver.png");
+
       configTerminal();
    }
 
 private:
    TermConfig   config;
    TRM::Device* term{nullptr};
-   GUI::Bitmap  screen_saver{"Images/saver.png"};
 
    SelectorItem size{   this,  7, 3, "Font size ", "9,12,15,18"};
    SelectorItem border{ this,  8, 3, "Border    ", "0,4,8,16", "pixels"};
@@ -123,7 +123,6 @@ private:
       term->ioctl(TRM::Device::IOCTL_TERM_LINE_SPACE,  config.line_space);
       term->ioctl(TRM::Device::IOCTL_TERM_FONT_SIZE,   config.font_size);
       term->ioctl(TRM::Device::IOCTL_TERM_SLEEP,       config.sleep * 60);
-      term->ioctl(TRM::Device::IOCTL_TERM_SLEEP_IMAGE, &screen_saver);
 
       curses.init();
    }
