@@ -285,20 +285,23 @@ private:
    //! Change directory
    void cmd_cd()
    {
-      if (chdir(argv[1].c_str()) < 0)
+      if (argv.size() >= 2)
       {
-         error("cd: No such file or directory");
+         if (chdir(argv[1].c_str()) < 0)
+         {
+            error("cd: No such file or directory");
+         }
       }
    }
 
    //! Restart the application
    void cmd_restart()
    {
-      static char* argv[2];
-      argv[0] = (char*) program.c_str(); // naughty but the world just about to end
-      argv[1] = nullptr;
+      static char* args[2];
+      args[0] = (char*) program.c_str(); // bit naughty but the world is just about to end
+      args[1] = nullptr;
 
-      if (execve(program.c_str(), argv, nullptr) < 0)
+      if (execve(program.c_str(), args, nullptr) < 0)
       {
          error("restart: Failed");
       }
