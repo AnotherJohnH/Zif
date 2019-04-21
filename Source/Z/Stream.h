@@ -479,7 +479,7 @@ private:
    // Console stream state
    bool     console_enable{true};
    bool     console_extended_colours_enable{false};
-   uint8_t  console_text_style;
+   uint8_t  console_text_style{0};
    Console& console;
 
    // Buffer used for automatic line breaks
