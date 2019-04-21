@@ -98,15 +98,15 @@ private:
    TermConfig   config;
    TRM::Device* term{nullptr};
 
-   SelectorItem size{   this,  7, 3, "Font size ", "9,12,15,18"};
-   SelectorItem border{ this,  8, 3, "Border    ", "0,4,8,16", "pixels"};
-   SelectorItem space{  this,  9, 3, "Line space", "0,1,2,3", "pixels"};
+   SelectorItem size{   this,  7, 3, "Font size    ", "9,12,15,18"};
+   SelectorItem border{ this,  8, 3, "Border       ", "0,4,8,16", "pixels"};
+   SelectorItem space{  this,  9, 3, "Line space   ", "0,1,2,3", "pixels"};
 
-   SelectorItem sleep{  this, 11, 3, "Sleep     ", "off,1,5,10", "min"};
+   SelectorItem sleep{  this, 11, 3, "Screen save  ", "off,1,5,10", "min"};
 
-   SelectorItem inverse{this, 13, 3, "Inverse V.", "off,ON"};
+   SelectorItem inverse{this, 13, 3, "Inverse Video", "off,ON"};
 #ifndef PROJ_TARGET_Kindle3
-   SelectorItem colour{ this, 14, 3, "Colours   ", 
+   SelectorItem colour{ this, 14, 3, "Colours      ",
                         "Green Phosphor,Amber Phosphor,Blue Phosphor,Old Paper,White"};
 #endif
 
@@ -116,7 +116,7 @@ private:
       term->ioctl(TRM::Device::IOCTL_TERM_PALETTE, 0,
                   config.inverse_video ? config.fg_colour : config.bg_colour);
 
-      term->ioctl(TRM::Device::IOCTL_TERM_PALETTE, 1, 
+      term->ioctl(TRM::Device::IOCTL_TERM_PALETTE, 1,
                   config.inverse_video ? config.bg_colour : config.fg_colour);
 
       term->ioctl(TRM::Device::IOCTL_TERM_BORDER,      config.border_pixels);
@@ -131,9 +131,9 @@ private:
    {
       bool status = Page::show(program);
 
-      curses.mvaddstr(4, 3, "Columns    : ");
+      curses.mvaddstr(4, 3, "Columns       : ");
       curses.addstr(std::to_string(curses.cols).c_str());
-      curses.mvaddstr(5, 3, "Lines      : ");
+      curses.mvaddstr(5, 3, "Lines         : ");
       curses.addstr(std::to_string(curses.lines).c_str());
 
       return status;
