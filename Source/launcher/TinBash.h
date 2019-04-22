@@ -76,7 +76,7 @@ public:
 
 private:
    TRM::Curses&             curses;
-   std::string              program;
+   const std::string        program;
    bool                     interactive{true};
    FILE*                    script_fp{nullptr};
    bool                     prompt{false};
