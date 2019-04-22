@@ -11,10 +11,13 @@ env.Append(CCFLAGS = ['-DTERMINAL_EMULATOR'])
 
 # Project specific build config
 debug = ARGUMENTS.get('debug', 0)
-if int(debug) == 0:
-   env.Append(CCFLAGS = ['-O3', '-DNDEBUG'])
-else:
+if int(debug) == 1:
    env.Append(CCFLAGS = ['-O0', '-g'])
+elif int(debug) == 2:
+   env.Append(CCFLAGS = ['-O3', '-g', '-fsanitize=address'])
+   env.Append(LINKFLAGS = ['-fsanitize=address'])
+else:
+   env.Append(CCFLAGS = ['-O3', '-DNDEBUG'])
 
 env.Append(CPPPATH = ['Source'])
 
