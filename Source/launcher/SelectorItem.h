@@ -125,9 +125,9 @@ private:
       return true;
    }
 
+   const std::string        unit;
    std::vector<std::string> choice_list;
    size_t                   index{0};
-   std::string              unit;
 };
 
 #endif

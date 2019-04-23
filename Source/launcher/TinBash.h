@@ -27,7 +27,14 @@
 #include <string>
 #include <vector>
 #include <cstdio>
+
 #include <unistd.h>
+#include <sys/wait.h>
+
+#include <thread>
+#include <mutex>
+
+#include "Pipe.h"
 
 #include "TRM/Curses.h"
 
@@ -83,8 +90,8 @@ private:
    bool                     quit{false};
    std::string              prev_cmd;
    std::string              cmd;
-   std::string              ext_cmd;
    std::vector<std::string> argv;
+   std::mutex               curses_mutex;
 
    bool openScript(const std::string& filename)
    {
@@ -265,14 +272,8 @@ private:
               if (argv[0] == "exit")    { cmd_exit(); }
          else if (argv[0] == "restart") { cmd_restart(); }
          else if (argv[0] == "cd")      { cmd_cd(); }
-         else if (argv[0] == "export")
-         {
-            // TODO env var setting
-         }
-         else if (!openScript(argv[0]))
-         {
-            runExternal();
-         }
+         else if (argv[0] == "export")  { /* TODO env var setting */ }
+         else if (!openScript(argv[0])) { cmd_exec(); }
       }
    }
 
@@ -307,22 +308,88 @@ private:
       }
    }
 
-   //! Run command as an external process using the system shell
-   void runExternal()
+   //! Run command as an external process
+   void cmd_exec()
    {
-      ext_cmd = cmd;
-      ext_cmd += " 2>&1";
+      Pipe stdin_pipe;
+      Pipe stdout_pipe;
+      Pipe stderr_pipe;
 
-      FILE* pp = popen(ext_cmd.c_str(), "r");
-
-      while(true)
+      int pid = fork();
+      if (pid == -1)
       {
-         int ch = fgetc(pp);
-         if (ch < 0) break;
-         curses.addch(ch);
+         error("fork() failed");
+      }
+      else if (pid == 0)
+      {
+         // Child process
+         stdin_pipe.assignReadFD(STDIN_FILENO);
+         stdout_pipe.assignWriteFD(STDOUT_FILENO);
+         stderr_pipe.assignWriteFD(STDERR_FILENO);
+
+         // XXX no need to delete this the whole process is about to be swapped or die
+         char** args = new char*[argv.size() + 1];
+         for(size_t i=0; i<argv.size(); i++)
+         {
+            args[i] = (char*)argv[i].c_str();
+         }
+         args[argv.size()] = nullptr;
+
+         if (execvp(args[0], args) < 0)
+         {
+            error("execvp() failed");
+         }
       }
 
-      pclose(pp);
+      std::thread th_output{&TinBash::spoolOutputThunk, stdout_pipe.getReadFD(), this};
+      std::thread th_error{ &TinBash::spoolOutputThunk, stderr_pipe.getReadFD(), this};
+
+      //spoolInput(stdin_pipe.getWriteFD());
+
+      int status;
+      waitpid(pid, &status, WNOHANG);
+
+      th_output.join();
+      th_error.join();
+   }
+
+   void spoolInput(int fd)
+   {
+      curses.timeout(20);
+      while(true)
+      {
+         int status = curses.getch();
+         if (status < 0)
+         {
+            break;
+         }
+         else if (status > 0)
+         {
+            uint8_t ch = uint8_t(status);
+            if (::write(fd, &ch, 1) < 0)
+            {
+               break;
+            }
+         }
+      }
+      ::close(fd);
+      curses.timeout(0);
+   }
+
+   void spoolOutput(int fd)
+   {
+      uint8_t ch;
+      while(::read(fd, &ch, 1) > 0)
+      {
+         std::lock_guard<std::mutex> lock(curses_mutex);
+         curses.addch(ch);
+      }
+      ::close(fd);
+   }
+
+   static void spoolOutputThunk(int fd, TinBash* that)
+   {
+      that->spoolOutput(fd);
    }
 
    void error(const std::string& message)
