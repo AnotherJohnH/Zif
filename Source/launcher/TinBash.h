@@ -357,25 +357,43 @@ private:
 
    void spoolInput(int fd)
    {
-      curses.timeout(20);
+      {
+         std::lock_guard<std::mutex> lock(curses_mutex);
+         curses.timeout(50);
+      }
+
       while(true)
       {
-         int status = curses.getch();
+         int status;
+         {
+            std::lock_guard<std::mutex> lock(curses_mutex);
+            status = curses.getch();
+         }
          if (status < 0)
          {
+            // host application exit
             break;
          }
          else if (status > 0)
          {
+            // input read
             uint8_t ch = uint8_t(status);
             if (::write(fd, &ch, 1) < 0)
             {
                break;
             }
          }
+         else
+         {
+            // no input
+         }
       }
       ::close(fd);
-      curses.timeout(0);
+
+      {
+         std::lock_guard<std::mutex> lock(curses_mutex);
+         curses.timeout(0);
+      }
    }
 
    void spoolOutput(int fd)
