@@ -362,19 +362,16 @@ private:
    //! Spool curses input to the given file descriptor
    void spoolInput(int fd)
    {
+      unsigned prev_timeout;
       {
          std::lock_guard<std::mutex> lock(curses_mutex);
-         curses.timeout(20);
+         prev_timeout = curses.timeout(20);
       }
 
-      while(true)
+      while(!an_output_spooler_quit)
       {
-         int status;
-         {
-            std::lock_guard<std::mutex> lock(curses_mutex);
-            status = curses.getch();
-         }
-         if ((status < 0) || an_output_spooler_quit)
+         int status = curses.getch();
+         if (status < 0)
          {
             break;
          }
@@ -388,11 +385,12 @@ private:
             }
          }
       }
+
       ::close(fd);
 
       {
          std::lock_guard<std::mutex> lock(curses_mutex);
-         curses.timeout(0);
+         curses.timeout(prev_timeout);
       }
    }
 
