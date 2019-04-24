@@ -32,8 +32,9 @@
 #include <unistd.h>
 #include <sys/wait.h>
 
-#include <thread>
+#include <atomic>
 #include <mutex>
+#include <thread>
 
 #include "Pipe.h"
 
@@ -94,6 +95,7 @@ private:
    std::string              cmd;
    std::vector<std::string> argv;
    std::mutex               curses_mutex;
+   std::atomic<bool>        an_output_spooler_quit{false};
 
    bool openScript(const std::string& filename)
    {
@@ -266,7 +268,7 @@ private:
       }
    }
 
-   //! Run command
+   //! Run a command
    void run()
    {
       if (argv.size() > 0)
@@ -279,7 +281,7 @@ private:
       }
    }
 
-   //! 
+   //! Exit shell
    void cmd_exit()
    {
       quit = true;
@@ -343,6 +345,8 @@ private:
          }
       }
 
+      an_output_spooler_quit = false;
+
       std::thread th_output{&TinBash::spoolOutputThunk, stdout_pipe.getReadFD(), this};
       std::thread th_error{ &TinBash::spoolOutputThunk, stderr_pipe.getReadFD(), this};
 
@@ -355,11 +359,12 @@ private:
       waitpid(pid, &status, WNOHANG);
    }
 
+   //! Spool curses input to the given file descriptor
    void spoolInput(int fd)
    {
       {
          std::lock_guard<std::mutex> lock(curses_mutex);
-         curses.timeout(50);
+         curses.timeout(20);
       }
 
       while(true)
@@ -369,9 +374,8 @@ private:
             std::lock_guard<std::mutex> lock(curses_mutex);
             status = curses.getch();
          }
-         if (status < 0)
+         if ((status < 0) || an_output_spooler_quit)
          {
-            // host application exit
             break;
          }
          else if (status > 0)
@@ -383,10 +387,6 @@ private:
                break;
             }
          }
-         else
-         {
-            // no input
-         }
       }
       ::close(fd);
 
@@ -396,6 +396,7 @@ private:
       }
    }
 
+   //! Spool input from the file descriptor to curses
    void spoolOutput(int fd)
    {
       uint8_t ch;
@@ -405,8 +406,10 @@ private:
          curses.addch(ch);
       }
       ::close(fd);
+      an_output_spooler_quit = true;
    }
 
+   //! Spool input from the file descriptor to curses
    static void spoolOutputThunk(int fd, TinBash* that)
    {
       that->spoolOutput(fd);
