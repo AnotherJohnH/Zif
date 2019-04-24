@@ -28,6 +28,7 @@
 #include <vector>
 #include <cstdio>
 
+#include <signal.h>
 #include <unistd.h>
 #include <sys/wait.h>
 
@@ -46,6 +47,7 @@ public:
       : curses(curses_)
       , program(program_)
    {
+      signal(SIGPIPE, SIG_IGN);
    }
 
    //! Run the shells main execution loop
@@ -344,13 +346,13 @@ private:
       std::thread th_output{&TinBash::spoolOutputThunk, stdout_pipe.getReadFD(), this};
       std::thread th_error{ &TinBash::spoolOutputThunk, stderr_pipe.getReadFD(), this};
 
-      //spoolInput(stdin_pipe.getWriteFD());
-
-      int status;
-      waitpid(pid, &status, WNOHANG);
+      spoolInput(stdin_pipe.getWriteFD());
 
       th_output.join();
       th_error.join();
+
+      int status;
+      waitpid(pid, &status, WNOHANG);
    }
 
    void spoolInput(int fd)
