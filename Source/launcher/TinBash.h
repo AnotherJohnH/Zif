@@ -34,8 +34,8 @@
 
 #include <atomic>
 #include <mutex>
-#include <thread>
 
+#include "Thread.h"
 #include "Pipe.h"
 
 #include "TRM/Curses.h"
@@ -85,6 +85,22 @@ public:
    }
 
 private:
+   class OutputThread : public Thread
+   {
+   public:
+      OutputThread(int fd_, TinBash* shell_)
+         : fd(fd_)
+         , shell(shell_)
+      {
+      }
+
+   private:
+      void entry() override { shell->spoolOutput(fd); }
+
+      int      fd{0};
+      TinBash* shell{};
+   };
+
    TRM::Curses&             curses;
    const std::string        program;
    bool                     interactive{true};
@@ -347,8 +363,8 @@ private:
 
       an_output_spooler_quit = false;
 
-      std::thread th_output{&TinBash::spoolOutputThunk, stdout_pipe.getReadFD(), this};
-      std::thread th_error{ &TinBash::spoolOutputThunk, stderr_pipe.getReadFD(), this};
+      OutputThread th_output{stdout_pipe.getReadFD(), this};
+      OutputThread th_error{ stderr_pipe.getReadFD(), this};
 
       spoolInput(stdin_pipe.getWriteFD());
 
