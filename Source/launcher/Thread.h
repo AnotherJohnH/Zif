@@ -32,23 +32,9 @@
 class Thread
 {
 public:
-   Thread()
-   {
-      pthread_attr_t attr;
-      if (pthread_attr_init(&attr) != 0)
-      {
-         perror("pthread_attr_init");
-         exit(1);
-      }
+   Thread() = default;
 
-      if (pthread_create(&td, &attr, thunk, this) != 0)
-      {
-         perror("pthread_create");
-         exit(1);
-      }
-   }
-
-   ~Thread()
+   virtual ~Thread()
    {
       if (!joined)
       {
@@ -66,6 +52,22 @@ public:
    }
 
 protected:
+   void start()
+   {
+      pthread_attr_t attr;
+      if (pthread_attr_init(&attr) != 0)
+      {
+         perror("pthread_attr_init");
+         exit(1);
+      }
+
+      if (pthread_create(&td, &attr, thunk, this) != 0)
+      {
+         perror("pthread_create");
+         exit(1);
+      }
+   }
+
    virtual void entry() = 0;
 
 private:

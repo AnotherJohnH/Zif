@@ -92,6 +92,7 @@ private:
          : fd(fd_)
          , shell(shell_)
       {
+          start();
       }
 
    private:
