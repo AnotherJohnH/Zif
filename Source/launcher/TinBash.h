@@ -110,13 +110,15 @@ private:
    bool                     quit{false};
    std::string              prev_cmd;
    std::string              cmd;
+   std::string              filepath;
    std::vector<std::string> argv;
+   size_t                   argc{};
    std::mutex               curses_mutex;
    std::atomic<bool>        an_output_spooler_quit{false};
 
    bool openScript(const std::string& filename)
    {
-      std::string filepath = "Scripts/";
+      filepath = "Scripts/";
       filepath += filename;
       filepath += ".tin";
 
@@ -251,7 +253,7 @@ private:
    //! Split command into argument list
    void split()
    {
-      argv.clear();
+      argc = 0;
 
       bool in_space  = true;
       bool in_quotes = false;
@@ -261,13 +263,17 @@ private:
          {
             if (!in_quotes)
             {
-               argv.push_back("");
+               if (argv.size() == argc)
+               {
+                  argv.push_back("");
+               }
+               argv[argc++] = "";
             }
             in_quotes = !in_quotes;
          }
          else if (in_quotes)
          {
-            argv.back().push_back(ch);
+            argv[argc - 1] += ch;
          }
          else if ((ch == ' ') || (ch == '\t'))
          {
@@ -278,9 +284,13 @@ private:
             if (in_space)
             {
                in_space = false;
-               argv.push_back("");
+               if (argv.size() == argc)
+               {
+                  argv.push_back("");
+               }
+               argv[argc++] = "";
             }
-            argv.back().push_back(ch);
+            argv[argc - 1] += ch;
          }
       }
    }
@@ -288,7 +298,7 @@ private:
    //! Run a command
    void run()
    {
-      if (argv.size() > 0)
+      if (argc > 0)
       {
               if (argv[0] == "exit")    { cmd_exit(); }
          else if (argv[0] == "restart") { cmd_restart(); }
@@ -307,7 +317,7 @@ private:
    //! Change directory
    void cmd_cd()
    {
-      if (argv.size() >= 2)
+      if (argc >= 2)
       {
          if (chdir(argv[1].c_str()) < 0)
          {
@@ -340,6 +350,7 @@ private:
       if (pid == -1)
       {
          error("fork() failed");
+         return;
       }
       else if (pid == 0)
       {
@@ -349,17 +360,18 @@ private:
          stderr_pipe.assignWriteFD(STDERR_FILENO);
 
          // XXX no need to delete this the whole process is about to be swapped or die
-         char** args = new char*[argv.size() + 1];
-         for(size_t i=0; i<argv.size(); i++)
+         char** args = new char*[argc + 1];
+         for(size_t i=0; i<argc; i++)
          {
             args[i] = (char*)argv[i].c_str();
          }
-         args[argv.size()] = nullptr;
+         args[argc] = nullptr;
 
          if (execvp(args[0], args) < 0)
          {
-            error("execvp() failed");
+            fprintf(stderr, "ERROR - execvp(\"%s\", ...) failed\n", argv[0].c_str());
          }
+         exit(1);
       }
 
       an_output_spooler_quit = false;
