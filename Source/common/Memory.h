@@ -23,6 +23,7 @@
 #ifndef IF_MEMORY_H
 #define IF_MEMORY_H
 
+#include <cassert>
 #include <cstdint>
 #include <vector>
 
