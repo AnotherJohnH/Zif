@@ -1,12 +1,3 @@
-*.o
-*.a
-*.bc
 *.tgz
 .DS_Store
-.sconsign.dblite
-zif
-zdmp
-zcrape
-TermConfig.xml
-Saves
 build
