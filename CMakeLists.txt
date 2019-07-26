@@ -22,4 +22,4 @@ include(Platform/build.cmake NO_POLICY_SCOPE)
 #-------------------------------------------------------------------------------
 
 add_executable(${binary} ${source})
-target_link_libraries(${binary} ${platform_libs})
+target_link_libraries(${binary} ${PLT_libs})
