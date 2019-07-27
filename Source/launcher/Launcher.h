@@ -225,14 +225,13 @@ public:
             const char*  description,
             const char*  link,
             const char*  author,
-            const char*  version,
             const char*  copyright_year,
             const char*  args_help)
-      : App(program, description, link, author, version, copyright_year, args_help)
+      : App(program, description, link, author, copyright_year, args_help)
       , home_page(curses)
       , game_page(curses)
       , config_page(curses)
-      , info_page(curses, description, link, author, version, copyright_year)
+      , info_page(curses, description, link, author, copyright_year)
       , shell_page(curses, "zif")
       , restore_page(curses)
    {

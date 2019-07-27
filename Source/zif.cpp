@@ -34,7 +34,6 @@
 #define  DESCRIPTION     "Z-code engine for interactive fiction"
 #define  LINK            "https://github.com/AnotherJohnH/Zif"
 #define  AUTHOR          "John D. Haughton"
-#define  VERSION         PROJ_VERSION
 #define  COPYRIGHT_YEAR  "2015-2019"
 
 
@@ -130,7 +129,7 @@ private:
 
 public:
    ZifApp(int argc, const char* argv[])
-      : Launcher(PROGRAM, DESCRIPTION, LINK, AUTHOR, VERSION, COPYRIGHT_YEAR,
+      : Launcher(PROGRAM, DESCRIPTION, LINK, AUTHOR, COPYRIGHT_YEAR,
                  "[<story-file>]")
    {
       parseArgsAndStart(argc, argv);

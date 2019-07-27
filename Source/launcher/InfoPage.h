@@ -35,13 +35,11 @@ public:
             const std::string& description_,
             const std::string& link_,
             const std::string& author_,
-            const std::string& version_,
             const std::string& copyright_year_)
       : Page(curses_, "Info")
       , description(description_)
       , link(link_)
       , author(author_)
-      , version(version_)
       , copyright_year(copyright_year_)
    {
    }
@@ -54,10 +52,10 @@ public:
       curses.mvaddstr(3, 3, "Program     : "); curses.addstr(program.c_str());
       curses.mvaddstr(4, 3, "Description : "); curses.addstr(description.c_str());
       curses.mvaddstr(5, 3, "Author      : "); curses.addstr(author.c_str());
-      curses.mvaddstr(6, 3, "Version     : "); curses.addstr(version.c_str());
+      curses.mvaddstr(6, 3, "Version     : "); curses.addstr(PLT_PROJ_VERSION);
       curses.mvaddstr(7, 3, "Link        : "); if(link != "") curses.addstr(link.c_str());
 
-      curses.mvaddstr(8, 3, "Commit      : "); curses.addstr(PROJ_COMMIT);
+      curses.mvaddstr(8, 3, "Commit      : "); curses.addstr(PLT_PROJ_COMMIT);
       curses.mvaddstr(9, 3, "Built       : ");
       curses.addstr(__TIME__); curses.addstr(" "); curses.addstr(__DATE__);
 
@@ -80,7 +78,6 @@ private:
    const std::string description;
    const std::string link;
    const std::string author;
-   const std::string version;
    const std::string copyright_year;
 };
 
