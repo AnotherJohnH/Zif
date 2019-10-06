@@ -45,14 +45,14 @@ protected:
    TRM::Curses  curses;
 
 private:
-   std::string        filename{};
-   std::vector<Page*> page_stack;
-   HomePage           home_page;
-   GamePage           game_page;
-   ConfigPage         config_page;
-   InfoPage           info_page;
-   ShellPage          shell_page;
-   RestorePage        restore_page;
+   STB::Option<const char*> filename{'*', "*", "[<story-file>]"};
+   std::vector<Page*>       page_stack;
+   HomePage                 home_page;
+   GamePage                 game_page;
+   ConfigPage               config_page;
+   InfoPage                 info_page;
+   ShellPage                shell_page;
+   RestorePage              restore_page;
 
    //! Check for a save file
    virtual bool hasSaveFile(const std::string& file) const = 0;
@@ -119,11 +119,6 @@ private:
 
    // Implement TRM::App
 
-   virtual void parseArg(const char* arg_) override
-   {
-      filename = arg_;
-   }
-
    virtual int startTerminalApp(TRM::Device& term_) override
    {
       term = &term_;
@@ -133,9 +128,9 @@ private:
 
       term->ioctl(TRM::Device::IOCTL_TERM_CURSOR, 0);
 
-      if (filename != "")
+      if (strcmp(filename, "") != 0)
       {
-         return action("Select", filename);
+         return action("Select", filename.get());
       }
 
       openPage(home_page);
