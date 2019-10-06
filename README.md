@@ -53,10 +53,13 @@ Fiction Archive (http://ifarchive.org/) and the Interactive Fiction Database
 
 ## How to build
 
-Use scons in the top level directory to run the SConstruct file. e.g.
+Build using cmake e.g.
 
 ```
-scons
+mkdir build
+cd build
+cmake ..
+make
 ```
 
 The build files will work out whether the host system is Linux or macOS and configure the
