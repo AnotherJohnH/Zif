@@ -138,5 +138,6 @@ public:
 
 int main(int argc, const char* argv[])
 {
-   return ZifApp().parseArgsAndStart(argc, argv);
+   ZifApp app;
+   return app.parseArgsAndStart(argc, argv);
 }

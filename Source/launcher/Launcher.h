@@ -45,7 +45,7 @@ protected:
    TRM::Curses  curses;
 
 private:
-   STB::Option<const char*> filename{'*', "*", "[<story-file>]"};
+   STB::Option<const char*> filename{'*', "*", "[<story-file>]", ""};
    std::vector<Page*>       page_stack;
    HomePage                 home_page;
    GamePage                 game_page;
