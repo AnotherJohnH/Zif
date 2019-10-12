@@ -128,16 +128,15 @@ private:
    }
 
 public:
-   ZifApp(int argc, const char* argv[])
+   ZifApp()
       : Launcher(PROGRAM, DESCRIPTION, LINK, AUTHOR, COPYRIGHT_YEAR,
                  "[<story-file>]")
    {
-      parseArgsAndStart(argc, argv);
    }
 };
 
 
 int main(int argc, const char* argv[])
 {
-   ZifApp(argc, argv);
+   return ZifApp().parseArgsAndStart(argc, argv);
 }
