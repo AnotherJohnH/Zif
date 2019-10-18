@@ -21,7 +21,6 @@
 #-------------------------------------------------------------------------------
 
 cmake_minimum_required(VERSION 3.11.4)
-cmake_policy(SET CMP0048 NEW) # Humph! don't like having to do this
 
 project(Zif
         VERSION   0.6.2
