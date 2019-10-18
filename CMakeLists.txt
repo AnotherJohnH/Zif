@@ -20,9 +20,14 @@
 #  SOFTWARE.
 #-------------------------------------------------------------------------------
 
-set(app         Zif)
+cmake_minimum_required(VERSION 3.11.4)
+cmake_policy(SET CMP0048 NEW) # Humph! don't like having to do this
+
+project(Zif
+        VERSION   0.6.2
+        LANGUAGES C CXX ASM)
+
 set(author      "John D. Haughton")
-set(version     0.6.1-Beta)
 
 set(source      Source/zif.cpp Source/common/ConsoleImpl.cpp)
 set(binary      zif)
@@ -32,7 +37,6 @@ include_directories(Source)
 
 #-------------------------------------------------------------------------------
 
-cmake_minimum_required(VERSION 3.11.4)
 include(Platform/build.cmake NO_POLICY_SCOPE)
 
 #-------------------------------------------------------------------------------
