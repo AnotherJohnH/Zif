@@ -56,8 +56,8 @@ Fiction Archive (http://ifarchive.org/) and the Interactive Fiction Database
 Build using cmake e.g.
 
 ```
-mkdir build
-cd build
+mkdir build_native
+cd build_native
 cmake -DCMAKE_BUILD_TYPE=Release ..
 make
 ```

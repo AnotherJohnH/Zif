@@ -27,8 +27,8 @@ matrix:
      compiler: gcc
 
 script:
-   - mkdir build
-   - cd build
+   - mkdir build_native
+   - cd build_bative
    - cmake -DCMAKE_BUILD_TYPE=Debug ..
    - make package
 
