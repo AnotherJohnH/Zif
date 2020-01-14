@@ -28,7 +28,7 @@ matrix:
 
 script:
    - mkdir build_native
-   - cd build_bative
+   - cd build_native
    - cmake -DCMAKE_BUILD_TYPE=Debug ..
    - make package
 
