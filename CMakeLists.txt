@@ -22,21 +22,21 @@
 
 cmake_minimum_required(VERSION 3.10.2)
 
+include(Platform/build.cmake NO_POLICY_SCOPE)
+
+#-------------------------------------------------------------------------------
+
 project(Zif
         VERSION   0.6.2
         LANGUAGES C CXX ASM)
 
-set(author      "John D. Haughton")
+set(author "John D. Haughton")
 
-set(source      Source/zif.cpp Source/common/ConsoleImpl.cpp)
-set(binary      zif)
+set(source Source/zif.cpp Source/common/ConsoleImpl.cpp)
+set(binary zif)
 
 add_compile_options(-DTERMINAL_EMULATOR)
 include_directories(Source)
-
-#-------------------------------------------------------------------------------
-
-include(Platform/build.cmake NO_POLICY_SCOPE)
 
 #-------------------------------------------------------------------------------
 

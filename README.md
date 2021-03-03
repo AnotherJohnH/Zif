@@ -15,7 +15,7 @@ This project is just for the fun of writing code and the learning that brings.
 
 ## Status
 
-[![Build Status](https://travis-ci.org/AnotherJohnH/Zif.svg?branch=master)](https://travis-ci.org/AnotherJohnH/Zif)
+[![Build Status](https://github.com/AnotherJohnH/Zif/actions/workflows/build_on_push.yml/badge.svg)](https://github.com/AnotherJohnH/Zif/actions/workflows/build_on_push.yml)
 
 The application is currently beta quality. It has been built and seen to run on various platforms.
 Almost all Z-code files, .z# and .zblorb, downloaded from the interactive fiction archive, start
