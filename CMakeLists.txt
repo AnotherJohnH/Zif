@@ -22,12 +22,13 @@
 
 cmake_minimum_required(VERSION 3.10.2)
 
+set(CMAKE_PROJECT_VERSION "0.6.2")
+
 include(Platform/build.cmake NO_POLICY_SCOPE)
 
 #-------------------------------------------------------------------------------
 
 project(Zif
-        VERSION   0.6.2
         LANGUAGES C CXX ASM)
 
 set(author "John D. Haughton")
