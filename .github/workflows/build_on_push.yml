@@ -37,28 +37,26 @@ jobs:
   #---------------------------------------------------------------------
   # Linux CI
 
-#  XXX cannot get SDL2 on Linux projects to work for now
-# 
-#  build_Linux:
-#    runs-on: ubuntu-latest
-#
-#    steps:
-#    - uses: actions/checkout@v2
-#      with:
-#       submodules: 'recursive'
-#
-#    - name: Install dependencies
-#      run: sudo apt-get install libsdl2-dev
-#
-#    - name: Prepare build
-#      run: cmake -E make_directory ${{github.workspace}}/build_linux
-#
-#    - name: Configure CMake
-#      shell: bash
-#      working-directory: ${{github.workspace}}/build_linux
-#      run: export SDL2_DIR=${{github.workspace}}/.github/workflows; cmake ..
-#
-#    - name: Build
-#      working-directory: ${{github.workspace}}/build_linux
-#      shell: bash
-#      run: make
+  build_Linux:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+       submodules: 'recursive'
+
+    - name: Install dependencies
+      run: sudo apt-get install libsdl2-dev
+
+    - name: Prepare build
+      run: cmake -E make_directory ${{github.workspace}}/build_linux
+
+    - name: Configure CMake
+      shell: bash
+      working-directory: ${{github.workspace}}/build_linux
+      run: export SDL2_DIR=${{github.workspace}}/.github/workflows; cmake ..
+
+    - name: Build
+      working-directory: ${{github.workspace}}/build_linux
+      shell: bash
+      run: make
