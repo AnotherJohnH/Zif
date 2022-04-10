@@ -51,6 +51,20 @@ involved, for enabling their Z-code files to be freely available at the Interact
 Fiction Archive (http://ifarchive.org/) and the Interactive Fiction Database
 (http://ifdb.tads.org/).
 
+## How to checkout
+
+This repo uses git sub-modules so be sure to checkout using --recurse e.g.
+
+```
+git clone --recurse https://github.com/AnotherJohnH/Zif.git
+```
+
+or
+
+```
+git clone --recurse ssh://git@github.com/AnotherJohnH/Zif.git
+```
+
 ## How to build
 
 Build using cmake e.g.
