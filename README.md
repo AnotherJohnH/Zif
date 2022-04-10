@@ -11,7 +11,6 @@ select story files. So when running on a Kindle, a third-party terminal emulator
 launcher is not necessary.
 
 Excellent Z-code engines already exist and some have already been ported to the Kindle.
-This project is just for the fun of writing code and the learning that brings.
 
 ## Status
 
@@ -38,7 +37,7 @@ command line arguments will start the front-end menu using the built-in terminal
 The games available from the menus should be stored under the Games sub-directory and
 need to be listed in the file "Games/list".
 
-The command line option --help (or -h) provides a list of all the command line options.
+The command line option --help (or -h) provides a list of the command line options.
 Supplying a Z-code game file as a command line argument will load and run the game file
 directly bypassing the front-end menus.
 
@@ -51,9 +50,10 @@ involved, for enabling their Z-code files to be freely available at the Interact
 Fiction Archive (http://ifarchive.org/) and the Interactive Fiction Database
 (http://ifdb.tads.org/).
 
-## How to checkout
+## How to checkout buildable source code
 
-This repo uses git sub-modules so be sure to checkout using --recurse e.g.
+This repo uses git sub-modules, so checkout using --recurse to clone all the
+dependent source...
 
 ```
 git clone --recurse https://github.com/AnotherJohnH/Zif.git
@@ -67,7 +67,19 @@ git clone --recurse ssh://git@github.com/AnotherJohnH/Zif.git
 
 ## How to build
 
-Build using cmake e.g.
+### Build dependencies
+
+|Package|Min. Version|MacOS|Linux|Kindle3|
+|---|---|---|---|---|
+|C++ compiler|c++11|Y|Y|Y|
+|GNU Make|3.81|Y|Y|Y|
+|Python|3|Y|Y|Y|
+|cmake|3.10.2|Y|Y|Y|
+|SDL|2.0.10|Y|Y||
+
+### Running a build
+
+The build is CMake based so the usual CMake instructions apply...
 
 ```
 mkdir build_native
@@ -76,8 +88,17 @@ cmake -DCMAKE_BUILD_TYPE=Release ..
 make
 ```
 
-The build files will work out whether the host system is Linux or macOS and configure the
-build environment for the host system as the target. The automatic target selection can be
+A "helper" Makefile is provided in the main project directory
+so that the commands above can also be invoked just with...
+
+```
+make
+```
+
+This Makefile also provides some phony targets including "clean" and "debug"
+
+The build files will determine whether the host system is Linux or MacOS and configure the
+build environment for the host system as the target. This automatic target selection can be
 overriden by setting the PROJ\_TARGET environment variable. e.g.
 
 ```
@@ -100,13 +121,7 @@ The BUILD\_... .sh scripts are provided to initialise PROJ\_TARGET and set other
 environment variables required by each specific build. These scripts should
 be sourced and then the top level SConstruct invoked in the normal way.
 
-### Linux and macOS
-
-Depend on SDL2, so a development installs of SDL2 is required.
-
 ### Kindle3
-
-Although a Linux build, the Kindle3 build does not depend on SDL2.
 
 #### Building
 
@@ -204,8 +219,7 @@ project.
 
 ## Coding style
 
-The source is C++ but has the following non-typical for modern C++ features ...
-* Dynamic memory allocation is mostly avoided
-* Use of C style stdio API
-* In some places have re-invented the wheel avoiding functionality that is in standard libraries
-* 3 space indent
+The source is modern-ish C++ with the following attributes...
+* 3 space indent, no TABs
+* vertically aligned braces
+* use of C stdio API
