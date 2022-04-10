@@ -39,7 +39,7 @@ class State
 public:
    State(const IF::Story&   story_,
          uint32_t           initial_rand_seed_,
-         Stack::Address     stack_size_)
+         Stack::Offset      stack_size_)
       : story(story_)
       , initial_rand_seed(initial_rand_seed_)
       , stack(stack_size_)
@@ -54,7 +54,7 @@ public:
    Memory::Address getPC() const { return pc; }
 
    //! Current value of the frame pointer
-   Stack::Address getFramePtr() const { return frame_ptr; }
+   Stack::Offset getFramePtr() const { return frame_ptr; }
 
    //! Reset the dynamic state to the initial conditions
    void reset()
@@ -130,7 +130,7 @@ protected:
    bool            do_quit{false};
    Memory::Address pc{0};
 public:
-   Stack::Address  frame_ptr{0};
+   Stack::Offset   frame_ptr{0};
    IF::Memory      memory;
    IF::Stack       stack;
    IF::Random      random;

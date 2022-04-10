@@ -68,7 +68,7 @@ public:
                 const std::string& save_dir_,
                 unsigned           num_undo_,
                 uint32_t           initial_rand_seed_,
-                Stack::Address     stack_size_)
+                Stack::Offset      stack_size_)
       : IF::State(story_, initial_rand_seed_, stack_size_)
       , save_dir(save_dir_)
    {

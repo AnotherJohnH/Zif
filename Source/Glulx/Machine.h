@@ -100,7 +100,7 @@ private:
 
    State                state;
    IF::Memory::Address  ramstart{0};
-   IF::Stack::Address   local{0};
+   IF::Stack::Offset    local{0};
    Disassembler         dis;
    Log                  trace{"trace.log"};
 
