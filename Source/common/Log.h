@@ -20,13 +20,13 @@
 // SOFTWARE.
 //------------------------------------------------------------------------------
 
-#ifndef LOG_H
-#define LOG_H
+#ifndef COMMON_LOG_H
+#define COMMON_LOG_H
 
 #include <cstdio>
 #include <string>
 
-//! Log file
+//! A log file
 class Log
 {
 public:
@@ -69,6 +69,7 @@ public:
       }
    }
 
+   //! Start a partial write with prefix and suffix strings
    void writePart(const std::string& prefix_, char ch, const std::string& suffix_)
    {
       ensureOpen();
@@ -87,8 +88,8 @@ public:
 private:
    std::string filename;
    FILE*       fp{nullptr};
-   std::string prefix;
-   std::string suffix;
+   std::string prefix{};
+   std::string suffix{};
 
    void ensureOpen()
    {
