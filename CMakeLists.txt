@@ -20,30 +20,29 @@
 #  SOFTWARE.
 #-------------------------------------------------------------------------------
 
-cmake_minimum_required(VERSION 3.10.2)
+cmake_minimum_required(VERSION 3.11.2)
 
 project(Zif
-        VERSION 0.6.2
-        LANGUAGES C CXX ASM)
+        LANGUAGES C CXX ASM
+        VERSION 0.6.2)
 
-include(Platform/build.cmake NO_POLICY_SCOPE)
-
-#-------------------------------------------------------------------------------
-
-set(author "John D. Haughton")
-
-set(source Source/zif.cpp Source/common/ConsoleImpl.cpp)
-set(binary zif)
-
-add_compile_options(-DTERMINAL_EMULATOR)
-include_directories(Source)
+include(Platform/config.cmake)
 
 #-------------------------------------------------------------------------------
 
-add_executable(${binary} ${source})
-target_link_libraries(${binary} ${PLT_libs})
+add_executable(zif
+               Source/zif.cpp
+               Source/common/ConsoleImpl.cpp)
 
-install(TARGETS ${binary} RUNTIME DESTINATION .)
+target_compile_definitions(zif PRIVATE TERMINAL_EMULATOR)
+
+target_include_directories(zif PRIVATE Source)
+
+target_link_libraries(zif PLT)
+
+#-------------------------------------------------------------------------------
+
+install(TARGETS zif RUNTIME DESTINATION .)
 install(FILES README DESTINATION .)
 install(DIRECTORY Images DESTINATION .)
 install(DIRECTORY Games DESTINATION .)
