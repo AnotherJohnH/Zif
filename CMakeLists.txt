@@ -23,7 +23,7 @@
 cmake_minimum_required(VERSION 3.11.2)
 
 project(Zif
-        LANGUAGES C CXX ASM
+        LANGUAGES CXX
         VERSION 0.6.2)
 
 include(Platform/config.cmake)
@@ -38,7 +38,7 @@ target_compile_definitions(zif PRIVATE TERMINAL_EMULATOR)
 
 target_include_directories(zif PRIVATE Source)
 
-target_link_libraries(zif PLT)
+target_link_libraries(zif PRIVATE PLT)
 
 #-------------------------------------------------------------------------------
 
