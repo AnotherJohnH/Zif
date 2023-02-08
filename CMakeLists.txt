@@ -26,7 +26,7 @@ project(Zif
         LANGUAGES CXX
         VERSION 0.6.2)
 
-include(Platform/config.cmake)
+add_subdirectory(Platform)
 
 #-------------------------------------------------------------------------------
 
@@ -38,7 +38,7 @@ target_compile_definitions(zif PRIVATE TERMINAL_EMULATOR)
 
 target_include_directories(zif PRIVATE Source)
 
-target_link_libraries(zif PRIVATE PLT)
+target_link_libraries(zif PRIVATE GUI STB PLT)
 
 #-------------------------------------------------------------------------------
 

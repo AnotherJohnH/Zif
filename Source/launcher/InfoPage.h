@@ -52,10 +52,10 @@ public:
       curses.mvaddstr(3, 3, "Program     : "); curses.addstr(program.c_str());
       curses.mvaddstr(4, 3, "Description : "); curses.addstr(description.c_str());
       curses.mvaddstr(5, 3, "Author      : "); curses.addstr(author.c_str());
-      curses.mvaddstr(6, 3, "Version     : "); curses.addstr(PLT_PROJ_VERSION);
+      curses.mvaddstr(6, 3, "Version     : "); curses.addstr(PLT_VERSION);
       curses.mvaddstr(7, 3, "Link        : "); if(link != "") curses.addstr(link.c_str());
 
-      curses.mvaddstr(8, 3, "Commit      : "); curses.addstr(PLT_PROJ_COMMIT);
+      curses.mvaddstr(8, 3, "Commit      : "); curses.addstr(PLT_COMMIT);
       curses.mvaddstr(9, 3, "Built       : ");
       curses.addstr(__TIME__); curses.addstr(" "); curses.addstr(__DATE__);
 
