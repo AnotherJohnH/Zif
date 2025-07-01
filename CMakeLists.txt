@@ -20,7 +20,7 @@
 #  SOFTWARE.
 #-------------------------------------------------------------------------------
 
-cmake_minimum_required(VERSION 3.11.2)
+cmake_minimum_required(VERSION 3.19)
 
 project(Zif
         LANGUAGES CXX
@@ -38,7 +38,7 @@ target_compile_definitions(zif PRIVATE TERMINAL_EMULATOR)
 
 target_include_directories(zif PRIVATE Source)
 
-target_link_libraries(zif PRIVATE GUI STB PLT)
+target_link_libraries(zif PRIVATE PLT GUI STB)
 
 #-------------------------------------------------------------------------------
 
